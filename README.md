@@ -1,6 +1,6 @@
-# Pinyin Articulation Animations
+# Speech Articulation Animation Lab
 
-Interactive browser-based teaching animations for Mandarin pronunciation.
+Interactive browser-based teaching animations for speech articulation and voice production.
 
 ## Projects
 
