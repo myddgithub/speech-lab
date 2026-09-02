@@ -133,6 +133,23 @@ class PitchTests(unittest.TestCase):
         middle = output[int(0.15 * sr):int(0.85 * sr)]
         self.assertAlmostEqual(self.dominant_frequency(middle, sr), 90.0, delta=4.0)
 
+    def test_large_shift_does_not_retain_original_pitch(self) -> None:
+        sr = 16000
+        t = np.arange(sr, dtype=np.float64) / sr
+        samples = (0.3 * np.sin(2 * np.pi * 180.0 * t)).astype(np.float32)
+        times = np.arange(0.02, 0.99, 0.01)
+        f0_orig = np.full(len(times), 180.0, dtype=np.float64)
+        f0_new = np.full(len(times), 90.0, dtype=np.float64)
+        output = core.synthesize_with_f0(samples, sr, f0_new, f0_orig, times)
+        middle = output[int(0.15 * sr):int(0.85 * sr)]
+        self.assertAlmostEqual(self.dominant_frequency(middle, sr), 90.0, delta=4.0)
+        windowed = middle.astype(np.float64) * np.hanning(len(middle))
+        spectrum = np.abs(np.fft.rfft(windowed))
+        freqs = np.fft.rfftfreq(len(windowed), 1.0 / sr)
+        p90 = float(spectrum[int(np.argmin(np.abs(freqs - 90.0)))])
+        p180 = float(spectrum[int(np.argmin(np.abs(freqs - 180.0)))])
+        self.assertLess(p180, 0.35 * p90)
+
     def test_chunked_analysis_is_chunk_size_independent(self) -> None:
         sr = 16000
         t = np.arange(sr, dtype=np.float64) / sr

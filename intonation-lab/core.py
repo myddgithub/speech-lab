@@ -590,6 +590,46 @@ def _ola_window(out: np.ndarray, wsum: np.ndarray, x: np.ndarray, s: float, a: f
     wsum[o0 + k0:o0 + k1] += win
 
 
+def _ola_pitch_scaled_window(
+    out: np.ndarray,
+    wsum: np.ndarray,
+    x: np.ndarray,
+    s: float,
+    a: float,
+    source_period: float,
+    target_period: float,
+    sr: float,
+) -> None:
+    """把两个源周期缩放成两个目标周期后叠加，消除大变调时的双音高。"""
+    n = len(x)
+    source_half = max(2.0, float(source_period) * sr)
+    target_half = max(2.0, float(target_period) * sr)
+    length = max(8, int(round(2.0 * target_half)))
+    if length % 2 == 1:
+        length += 1
+    half = length // 2
+    o0 = int(round(s * sr)) - half
+    k0 = max(0, -o0)
+    k1 = min(length, n - o0)
+    if k1 <= k0:
+        return
+    k = np.arange(k0, k1, dtype=np.float64)
+    source_pos = a * sr + (k - half) * (source_half / target_half)
+    valid = (source_pos >= 0.0) & (source_pos <= n - 1)
+    if not valid.any():
+        return
+    values = np.zeros(k1 - k0, dtype=np.float64)
+    pos = source_pos[valid]
+    left = np.floor(pos).astype(np.int64)
+    right = np.minimum(left + 1, n - 1)
+    frac = pos - left
+    values[valid] = x[left] * (1.0 - frac) + x[right] * frac
+    win = np.hanning(length)[k0:k1]
+    win[~valid] = 0.0
+    out[o0 + k0:o0 + k1] += values * win
+    wsum[o0 + k0:o0 + k1] += win
+
+
 def synthesize_with_f0(
     samples: np.ndarray,
     sr: int,
@@ -668,15 +708,19 @@ def synthesize_with_f0(
             elif (not orig_here) and last_good_a is not None:
                 a = last_good_a
                 fa = last_good_fa if last_good_fa and last_good_fa > 0 else fa
-            Ta = 1.0 / fa if fa > 0 else 0.01
-            L = max(8, int(round(2.0 * Ta * sr)))
-            if L % 2 == 1:
-                L += 1
-            _ola_window(out, wsum, x, s, a, L, sr)
             ft = _interp_f0_at(f0_new, times, s)
             Tt = 1.0 / ft if ft > 0 else 0.01
             if Tt <= 0:
                 break
+            Ta = 1.0 / fa if fa > 0 else 0.01
+            ratio = ft / fa if fa > 0 else 1.0
+            if ratio < 2.0 ** (-1.0 / 12.0) or ratio > 2.0 ** (1.0 / 12.0):
+                _ola_pitch_scaled_window(out, wsum, x, s, a, Ta, Tt, sr)
+            else:
+                L = max(8, int(round(2.0 * Ta * sr)))
+                if L % 2 == 1:
+                    L += 1
+                _ola_window(out, wsum, x, s, a, L, sr)
             s += Tt
             guard += 1
 
@@ -692,12 +736,10 @@ def synthesize_with_f0(
     inst = _instantaneous_f0(f0_new, times, n, sr)
     if painted.any() and peak_in > 1e-9:
         # painted 表示保守分析没有任何可靠脉冲。弱检测只用来改善 OLA 的源窗，
-        # 但有能量的自然源窗应尽量保留。仅在没有弱检测源周期，或目标音高与源
-        # 音高相差很大（PSOLA 会听成原音高）时，才切换到目标谐波激励。
+        # 有可用弱检测周期时，上面的周期缩放窗已经保证只留下目标音高。只有连
+        # 弱源周期也找不到的部分才启用谐波激励，避免合成声覆盖自然语音。
         src_inst = _instantaneous_f0(detected_source, times, n, sr)
-        ratio = np.divide(inst, src_inst, out=np.zeros_like(inst), where=src_inst > 0)
-        hard_shift = (src_inst <= 0) | (ratio < 0.75) | (ratio > 1.333333)
-        needs_excitation = painted & hard_shift
+        needs_excitation = painted & (src_inst <= 0)
         if needs_excitation.any():
             fade = _smooth_mask(needs_excitation, sr, 0.006) * painted.astype(np.float64)
             buzz = _unit_buzz(inst, sr)
