@@ -117,6 +117,25 @@ class PitchTests(unittest.TestCase):
         np.testing.assert_allclose(f0_a, f0_b, rtol=0, atol=1e-10)
         self.assertAlmostEqual(float(np.median(f0_a[f0_a > 0])), 180.0, delta=2.0)
 
+    def test_resynthesis_keeps_energy_in_first_syllable(self) -> None:
+        sr = 16000
+        n = int(0.8 * sr)
+        t = np.arange(n, dtype=np.float64) / sr
+        y = np.zeros(n, dtype=np.float64)
+        y[t < 0.25] = 0.3 * np.sin(2 * np.pi * 180.0 * t[t < 0.25])
+        mid = (t >= 0.4) & (t < 0.7)
+        y[mid] = 0.3 * np.sin(2 * np.pi * 180.0 * t[mid])
+        samples = y.astype(np.float32)
+        times, f0 = core.analyze_pitch(samples, sr)
+        points = core.shift_semitones(core.make_edit_points(times, f0), 4, 75, 500)
+        tier = core.build_f0_tier(points, times, f0, 75, 500)
+        output = core.synthesize_with_f0(samples, sr, tier, f0, times)
+        first = slice(0, int(0.18 * sr))
+        orig_rms = float(np.sqrt(np.mean(samples[first] ** 2)))
+        out_rms = float(np.sqrt(np.mean(output[first] ** 2)))
+        self.assertGreater(orig_rms, 0.02)
+        self.assertGreater(out_rms, 0.35 * orig_rms)
+
     def test_resynthesis_is_finite_and_keeps_length_at_limits(self) -> None:
         sr = 16000
         t = np.arange(sr, dtype=np.float64) / sr
@@ -175,6 +194,26 @@ class PitchTests(unittest.TestCase):
         lag = int(round(sr / 100.0))
         corr = float(np.dot(tail[:-lag], tail[lag:]))
         self.assertGreater(corr, 0.0)
+
+    def test_painted_tail_does_not_keep_original_residue(self) -> None:
+        sr = 16000
+        n = int(0.5 * sr)
+        t = np.arange(n, dtype=np.float64) / sr
+        y = np.zeros(n, dtype=np.float64)
+        y[t < 0.2] = 0.3 * np.sin(2 * np.pi * 180.0 * t[t < 0.2])
+        y[t >= 0.2] = 0.25 * np.sin(2 * np.pi * 330.0 * t[t >= 0.2])
+        samples = y.astype(np.float32)
+        times = np.arange(0.02, 0.48, 0.01)
+        f0_orig = np.where(times < 0.2, 180.0, 0.0)
+        points = [[0.05, 180.0], [0.18, 160.0], [0.40, 100.0]]
+        tier = core.build_f0_tier(points, times, f0_orig, 75, 500)
+        output = core.synthesize_with_f0(samples, sr, tier, f0_orig, times)
+        tail = slice(int(0.26 * sr), int(0.40 * sr))
+        orig_tail = samples[tail].astype(np.float64)
+        out_tail = output[tail].astype(np.float64)
+        denom = float(np.sqrt(np.sum(orig_tail ** 2) * np.sum(out_tail ** 2)))
+        corr = float(np.dot(orig_tail, out_tail) / denom) if denom > 1e-12 else 0.0
+        self.assertLess(corr, 0.7)
 
     def test_resynthesis_does_not_rescale_unvoiced_samples(self) -> None:
         sr = 16000

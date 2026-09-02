@@ -556,6 +556,21 @@ def _smooth_mask(mask: np.ndarray, sr: float, fade_s: float = 0.008) -> np.ndarr
     return np.clip(np.convolve(mask.astype(np.float64), w, mode="same"), 0.0, 1.0)
 
 
+def _ola_window(out: np.ndarray, wsum: np.ndarray, x: np.ndarray, s: float, a: float, L: int, sr: float) -> None:
+    """把源标记 a 处的窗叠加到合成时刻 s；靠近文件头/尾时裁窗，不整窗丢弃。"""
+    n = len(x)
+    half = L // 2
+    o0 = int(round(s * sr)) - half
+    a0 = int(round(a * sr)) - half
+    k0 = max(0, -o0, -a0)
+    k1 = min(L, n - o0, n - a0)
+    if k1 <= k0:
+        return
+    win = np.hanning(L)[k0:k1]
+    out[o0 + k0:o0 + k1] += x[a0 + k0:a0 + k1] * win
+    wsum[o0 + k0:o0 + k1] += win
+
+
 def synthesize_with_f0(
     samples: np.ndarray,
     sr: int,
@@ -595,56 +610,34 @@ def synthesize_with_f0(
         marks = _find_pitch_marks(x, sr, t0, t1, f0_src, times)
         if not marks:
             continue
-        s = marks[0]
+        s = t0
         j = 0
         guard = 0
         last_good_a = None
         last_good_fa = None
-        while s <= t1 and guard < len(marks) * 4 + 100:
+        while s <= t1 and guard < len(marks) * 8 + 200:
             while j + 1 < len(marks) and abs(marks[j + 1] - s) < abs(marks[j] - s):
                 j += 1
             a = marks[j]
             fa = _interp_f0_at(f0_src, times, a)
-            Ta = 1.0 / fa if fa > 0 else 0.01
-            L = max(8, int(round(2.0 * Ta * sr)))
-            if L % 2 == 1:
-                L += 1
-            half = L // 2
-            i0 = int(round(s * sr)) - half
-            i1 = i0 + L
-            if i0 < 0 or i1 > n:
-                s += 1.0 / max(_interp_f0_at(f0_new, times, s), 1e-9)
-                guard += 1
-                continue
-            a0 = int(round(a * sr)) - half
-            if a0 < 0 or a0 + L > n:
-                s += 1.0 / max(_interp_f0_at(f0_new, times, s), 1e-9)
-                guard += 1
-                continue
             orig_here = _interp_f0_at(f0_orig, times, s) > 0
-            local_e = float(np.max(np.abs(x[a0:a0 + L])))
+            a_i = int(round(a * sr))
+            local_e = 0.0
+            if 0 <= a_i < n:
+                w0 = max(0, a_i - 8)
+                w1 = min(n, a_i + 9)
+                local_e = float(np.max(np.abs(x[w0:w1])))
             if local_e >= energy_floor:
                 last_good_a = a
                 last_good_fa = fa
             elif (not orig_here) and last_good_a is not None:
                 a = last_good_a
                 fa = last_good_fa if last_good_fa and last_good_fa > 0 else fa
-                Ta = 1.0 / fa if fa > 0 else Ta
-                L = max(8, int(round(2.0 * Ta * sr)))
-                if L % 2 == 1:
-                    L += 1
-                half = L // 2
-                i0 = int(round(s * sr)) - half
-                i1 = i0 + L
-                a0 = int(round(a * sr)) - half
-                if i0 < 0 or i1 > n or a0 < 0 or a0 + L > n:
-                    s += 1.0 / max(_interp_f0_at(f0_new, times, s), 1e-9)
-                    guard += 1
-                    continue
-            win = np.hanning(L)
-            seg = x[a0:a0 + L] * win
-            out[i0:i1] += seg
-            wsum[i0:i1] += win
+            Ta = 1.0 / fa if fa > 0 else 0.01
+            L = max(8, int(round(2.0 * Ta * sr)))
+            if L % 2 == 1:
+                L += 1
+            _ola_window(out, wsum, x, s, a, L, sr)
             ft = _interp_f0_at(f0_new, times, s)
             Tt = 1.0 / ft if ft > 0 else 0.01
             if Tt <= 0:
@@ -657,7 +650,7 @@ def synthesize_with_f0(
     psola_ok = wsum > 1e-6
     mixed = x.copy()
     mixed[new_s & psola_ok] = out[new_s & psola_ok] / wsum[new_s & psola_ok]
-    # 用户画进原清音区、PSOLA 又没盖住：先清掉原声，避免和补声叠在一起。
+    # 用户画进原清音区：不保留原波形，避免和补声叠音。
     painted = new_s & ~orig_s
     mixed[painted & ~psola_ok] = 0.0
 
@@ -666,11 +659,9 @@ def synthesize_with_f0(
         rms_mix = _local_rms(mixed, sr)
         still_empty = painted & (rms_mix < 0.03 * peak_in)
         if still_empty.any():
-            fade = _smooth_mask(still_empty, sr, 0.006)
+            fade = _smooth_mask(still_empty, sr, 0.006) * painted.astype(np.float64)
             buzz = _unit_buzz(inst, sr)
-            orig_rms = _local_rms(x, sr)
-            amp = np.maximum(orig_rms, 0.12 * peak_in)
-            mixed = mixed * (1.0 - fade) + (amp * buzz) * fade
+            mixed = mixed * (1.0 - fade) + (0.10 * peak_in * buzz) * fade
 
     synthesized = (new_s & psola_ok) | painted
     out = mixed
