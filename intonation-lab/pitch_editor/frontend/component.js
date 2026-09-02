@@ -142,6 +142,7 @@
   // 音频
   const audio = new Audio();
   let playToken = "none";
+  let audioLoadedUrl = null; // Audio 元素实际装载的版本；不能只看播放类型 token
   let playing = false;
   let rafId = null;
   let selPlay = null;   // {token:'selE'|'selO', t0, t1} 当前选中段播放区间
@@ -1402,11 +1403,14 @@
     btn.addEventListener("click", () => {
       const url = urlGetter();
       if (!url) return;
-      if (playToken === token) {
+      // 编辑重跑后 token 仍可能是 "edit"，但底层 Audio.src 已经是旧 WAV。
+      // 不能仅凭 token 判断可直接续播，必须同时核对实际加载的 URL。
+      if (playToken === token && audioLoadedUrl === url) {
         if (audio.paused) audio.play();
         else audio.pause();
       } else {
         audio.src = url;
+        audioLoadedUrl = url;
         playToken = token;
         audio.currentTime = 0;
         audio.play();
@@ -1441,7 +1445,10 @@
     const url = token === "selE" ? state.urlEdit : state.urlOrig;
     if (!url) return;
     if (playToken === token && playing) { audio.pause(); return; }
-    if (audio.src !== url) audio.src = url;
+    if (audioLoadedUrl !== url) {
+      audio.src = url;
+      audioLoadedUrl = url;
+    }
     playToken = token;
     selPlay = { token: token, t0: seg.t0, t1: seg.t1 };
     audio.currentTime = seg.t0;
@@ -1511,16 +1518,26 @@
       if (next !== prev && playKinds.indexOf(playToken) >= 0) {
         if (!next) {
           audio.pause();
+          audio.removeAttribute("src");
+          audio.load();
+          audioLoadedUrl = null;
           playToken = "none";
-        } else if (playing) {
-          const t = audio.currentTime;
+        } else {
+          // 无论当前正在播放还是暂停，都立即换掉底层媒体源。旧代码只在
+          // playing=true 时更新，导致暂停后编辑曲线，整段播放仍续播旧 WAV；
+          // 而选区播放会重设 src，所以表现为“单播一次后整段才生效”。
+          const wasPlaying = playing;
+          const t = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
           audio.src = next;
-          audio.currentTime = t;
+          audioLoadedUrl = next;
+          audio.currentTime = Math.min(t, state.dur || t);
+          if (wasPlaying) audio.play();
         }
       }
     }
     applyAudioUrl("orig", args.url_orig);
     applyAudioUrl("edit", args.url_edit);
+    onAudioState();
 
     // 外部修改（Python 侧操作）→ 采纳新数据（规范化比较，避免无谓抖动）
     const incPts = canonPts(args.points || []);

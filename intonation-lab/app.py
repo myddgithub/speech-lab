@@ -58,6 +58,7 @@ st.markdown(
 )
 
 SS = st.session_state
+PITCH_EDITOR_BUILD = "20260903r5"
 SS.setdefault("audio_bytes", None)
 SS.setdefault("audio_name", "")
 SS.setdefault("edit_points", [])
@@ -577,16 +578,17 @@ else:
     edit_wav = orig_wav
 
 epoch = int(SS.get("component_epoch", 0))
+component_mount_id = (epoch, PITCH_EDITOR_BUILD)
 audio_payload = core.component_audio_payload(
     orig_wav,
     edit_wav,
     prev_orig_hash=SS.get("comp_orig_hash"),
     prev_edit_hash=SS.get("comp_edit_hash"),
-    remount=SS.get("comp_audio_epoch") != epoch,
+    remount=SS.get("comp_audio_epoch") != component_mount_id,
 )
 SS["comp_orig_hash"] = audio_payload["orig_hash"]
 SS["comp_edit_hash"] = audio_payload["edit_hash"]
-SS["comp_audio_epoch"] = epoch
+SS["comp_audio_epoch"] = component_mount_id
 url_edit = audio_payload["url_edit"]
 url_orig = audio_payload["url_orig"]
 
@@ -609,7 +611,7 @@ result = pitch_editor(
     draft=SS.get("syl_draft", ""),
     lang=st.session_state["ui_lang"],
     # 同一音频内保持组件身份稳定；切换音频时换代，隔离旧组件事件。
-    key=f"pitch_editor_main_{SS['component_epoch']}",
+    key=f"pitch_editor_main_{PITCH_EDITOR_BUILD}_{SS['component_epoch']}",
 )
 if not audio_payload["embedded"]:
     st.caption(tr("图表内播放已关闭（音频较大）。请使用下方「试听对比」。"))

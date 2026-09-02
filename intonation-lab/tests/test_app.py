@@ -11,6 +11,19 @@ APP_PATH = Path(__file__).resolve().parents[1] / "app.py"
 
 
 class AppSmokeTests(unittest.TestCase):
+    def test_full_playback_reloads_edited_audio_while_paused(self) -> None:
+        js = (Path(__file__).parents[1] / "pitch_editor" / "frontend" / "component.js").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('playToken === token && audioLoadedUrl === url', js)
+        self.assertIn('audioLoadedUrl = next;', js)
+        self.assertIn('const wasPlaying = playing;', js)
+        self.assertIn('audio.src = next;', js)
+
+        app_source = APP_PATH.read_text(encoding="utf-8")
+        self.assertIn('component_mount_id = (epoch, PITCH_EDITOR_BUILD)', app_source)
+        self.assertIn('key=f"pitch_editor_main_{PITCH_EDITOR_BUILD}_', app_source)
+
     def test_empty_and_demo_views_render_without_exceptions(self) -> None:
         empty = AppTest.from_file(APP_PATH)
         empty.run(timeout=30)
