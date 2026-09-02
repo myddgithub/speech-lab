@@ -167,21 +167,19 @@ def _extend_voicing(
     voiced: np.ndarray,
     energy: np.ndarray,
     rmax: np.ndarray,
-    max_run: int = 24,
-    min_rmax: float = 0.16,
+    max_run: int = 5,
+    min_rmax: float = 0.22,
 ) -> np.ndarray:
-    """把浊音段向衰减尾部延伸，并填上很短的浊音空洞。
+    """仅向浊音段**尾部**作很短的延伸（约 50ms），并只填 1–2 帧的掉点。
 
-    去声/儿化（如 shir4）末尾脉冲变弱、周期变乱，自相关峰值经常掉到
-    主阈值以下。只要能量还在、候选 F0 与邻帧不超过约 8 个半音，就继续
-    当作浊音，这样末尾才有可拖的编辑点。
+    不向前延伸、不跨过下一个浊音段，避免把相邻音节粘成一个。
     """
     n = len(f0)
     voiced = voiced.copy()
     f0 = f0.copy()
 
     def accept(i: int, ref_f0: float, ref_e: float) -> bool:
-        if energy[i] < max(1e-7, 0.04 * ref_e):
+        if energy[i] < max(1e-7, 0.12 * ref_e):
             return False
         if rmax[i] < min_rmax:
             return False
@@ -189,7 +187,7 @@ def _extend_voicing(
         if not (cand > 0 and ref_f0 > 0):
             return False
         semis = abs(12.0 * np.log2(cand / ref_f0))
-        return bool(semis <= 8.0 or abs(semis - 12.0) <= 3.5)
+        return bool(semis <= 5.0)
 
     i = 0
     while i < n:
@@ -200,16 +198,13 @@ def _extend_voicing(
         while j < n and not voiced[j]:
             j += 1
         left, right = i - 1, j if j < n else -1
-        if left >= 0 and right >= 0 and (j - i) <= 4:
+        if left >= 0 and right >= 0 and (j - i) <= 2:
             ref_f = float(f0[left])
             ref_e = float(max(energy[left], energy[right]))
-            for k in range(i, j):
-                if accept(k, ref_f, ref_e):
+            if all(accept(k, ref_f, ref_e) for k in range(i, j)):
+                for k in range(i, j):
                     f0[k] = float(f0_cand[k])
-                else:
-                    w = (k - left) / max(right - left, 1)
-                    f0[k] = (1.0 - w) * f0[left] + w * f0[right]
-                voiced[k] = True
+                    voiced[k] = True
         i = j
 
     runs: list[tuple[int, int]] = []
@@ -223,28 +218,20 @@ def _extend_voicing(
             j += 1
         runs.append((i, j))
         i = j + 1
-    for a, b in runs:
+    for run_i, (a, b) in enumerate(runs):
+        next_a = runs[run_i + 1][0] if run_i + 1 < len(runs) else n
         ref_f, ref_e = float(f0[b]), float(energy[b])
         k, steps = b + 1, 0
-        while k < n and not voiced[k] and steps < max_run:
+        while k < next_a and not voiced[k] and steps < max_run:
             if not accept(k, ref_f, ref_e):
+                break
+            if energy[k] > energy[k - 1] * 1.15:
                 break
             f0[k] = float(f0_cand[k])
             voiced[k] = True
             ref_f = f0[k]
-            ref_e = max(ref_e * 0.85, float(energy[k]))
+            ref_e = float(energy[k])
             k += 1
-            steps += 1
-        ref_f, ref_e = float(f0[a]), float(energy[a])
-        k, steps = a - 1, 0
-        while k >= 0 and not voiced[k] and steps < max_run:
-            if not accept(k, ref_f, ref_e):
-                break
-            f0[k] = float(f0_cand[k])
-            voiced[k] = True
-            ref_f = f0[k]
-            ref_e = max(ref_e * 0.85, float(energy[k]))
-            k -= 1
             steps += 1
     return np.where(voiced, f0, 0.0)
 
@@ -579,9 +566,9 @@ def synthesize_with_f0(
 ) -> np.ndarray:
     """TD-PSOLA：用编辑后的 F0 重合成音频。
 
-    时长保持不变。f0_new>0 的区间按新基频重排基音窗。
-    原波形若已无脉冲（去声/儿化尾、静音上新加点），则沿用最后一个
-    有效周期；若仍无能量，再按目标 F0 补谐波源，保证加点能听见。
+    原浊音区只做周期重排并整段替换，不与原声混合。
+    用户画进原清音区时，沿用最后一个有效周期；仍无能量则补谐波，
+    并先清掉该处原声，避免叠音。
     """
     x = np.asarray(samples, dtype=np.float64)
     n = len(x)
@@ -634,11 +621,12 @@ def synthesize_with_f0(
                 s += 1.0 / max(_interp_f0_at(f0_new, times, s), 1e-9)
                 guard += 1
                 continue
+            orig_here = _interp_f0_at(f0_orig, times, s) > 0
             local_e = float(np.max(np.abs(x[a0:a0 + L])))
             if local_e >= energy_floor:
                 last_good_a = a
                 last_good_fa = fa
-            elif last_good_a is not None:
+            elif (not orig_here) and last_good_a is not None:
                 a = last_good_a
                 fa = last_good_fa if last_good_fa and last_good_fa > 0 else fa
                 Ta = 1.0 / fa if fa > 0 else Ta
@@ -664,34 +652,42 @@ def synthesize_with_f0(
             s += Tt
             guard += 1
 
-    voiced_idx = np.zeros(n, dtype=bool)
-    for t0, t1 in _voiced_segments(f0_new, times):
-        i0 = max(0, int(round(t0 * sr)))
-        i1 = min(n, int(round(t1 * sr)) + 1)
-        voiced_idx[i0:i1] = True
-    voiced_idx &= voiced_mask_continuous(x, f0_new, times, sr)
-    synthesized = voiced_idx & (wsum > 1e-6)
+    orig_s = _sample_voiced_mask(f0_orig, times, n, sr)
+    new_s = _sample_voiced_mask(f0_new, times, n, sr)
+    psola_ok = wsum > 1e-6
     mixed = x.copy()
-    mixed[synthesized] = out[synthesized] / wsum[synthesized]
-    out = mixed
+    mixed[new_s & psola_ok] = out[new_s & psola_ok] / wsum[new_s & psola_ok]
+    # 用户画进原清音区、PSOLA 又没盖住：先清掉原声，避免和补声叠在一起。
+    painted = new_s & ~orig_s
+    mixed[painted & ~psola_ok] = 0.0
 
-    # 源窗几乎是静音时 PSOLA 仍是静音：按用户 F0 补谐波，让加点能发声。
     inst = _instantaneous_f0(f0_new, times, n, sr)
-    if (inst > 0).any() and peak_in > 1e-9:
-        rms_out = _local_rms(out, sr)
-        thin = (inst > 0) & (rms_out < 0.045 * peak_in)
-        if thin.any():
-            gain = _smooth_mask(thin, sr)
+    if painted.any() and peak_in > 1e-9:
+        rms_mix = _local_rms(mixed, sr)
+        still_empty = painted & (rms_mix < 0.03 * peak_in)
+        if still_empty.any():
+            fade = _smooth_mask(still_empty, sr, 0.006)
             buzz = _unit_buzz(inst, sr)
             orig_rms = _local_rms(x, sr)
-            amp = np.maximum(orig_rms, 0.16 * peak_in)
-            out = out * (1.0 - gain) + (amp * buzz) * gain
-            synthesized = synthesized | (gain > 0.05)
+            amp = np.maximum(orig_rms, 0.12 * peak_in)
+            mixed = mixed * (1.0 - fade) + (amp * buzz) * fade
 
+    synthesized = (new_s & psola_ok) | painted
+    out = mixed
     peak_synth = float(np.max(np.abs(out[synthesized]))) if synthesized.any() else 0.0
     if peak_in > 1e-9 and peak_synth > peak_in:
         out[synthesized] *= peak_in / peak_synth
     return out.astype(np.float32)
+
+
+def _sample_voiced_mask(f0: np.ndarray, times: np.ndarray, n: int, sr: float) -> np.ndarray:
+    """帧级浊音 -> 样本掩码（不额外外扩，避免原声在段缘漏进来）。"""
+    mask = np.zeros(n, dtype=bool)
+    for t0, t1 in _voiced_segments(f0, times, min_gap_frames=1):
+        i0 = max(0, int(round(t0 * sr)))
+        i1 = min(n, int(round(t1 * sr)) + 1)
+        mask[i0:i1] = True
+    return mask
 
 
 def voiced_mask_continuous(x: np.ndarray, f0: np.ndarray, times: np.ndarray, sr: float) -> np.ndarray:

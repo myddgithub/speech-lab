@@ -278,7 +278,7 @@ class PitchTests(unittest.TestCase):
         samples, sr, _ = core.load_audio_bytes(data)
         times, f0 = core.analyze_pitch(samples, sr)
         boxes = core.auto_segment_syllables(samples, sr, times, f0)
-        self.assertGreaterEqual(len(boxes), 2)
+        self.assertEqual(len(boxes), 3)
         duration = len(samples) / sr
         self.assertEqual(boxes[0]["t0"], 0.0)
         self.assertAlmostEqual(boxes[-1]["t1"], duration, places=3)
