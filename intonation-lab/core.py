@@ -692,13 +692,18 @@ def synthesize_with_f0(
     inst = _instantaneous_f0(f0_new, times, n, sr)
     if painted.any() and peak_in > 1e-9:
         # painted 表示保守分析没有任何可靠脉冲。弱检测只用来改善 OLA 的源窗，
-        # 不能作为最终音高保证（尤其降八度时，窗内原主频仍可能占主导）。因此该
-        # 区域最终以目标 F0 激励替换，原信号的短时 RMS 仍用于保留响度轮廓。
-        fade = _smooth_mask(painted, sr, 0.006) * painted.astype(np.float64)
-        buzz = _unit_buzz(inst, sr)
-        source_rms = _local_rms(x, sr)
-        amp = np.maximum(np.sqrt(2.0) * source_rms, 0.10 * peak_in)
-        mixed = mixed * (1.0 - fade) + (amp * buzz) * fade
+        # 但有能量的自然源窗应尽量保留。仅在没有弱检测源周期，或目标音高与源
+        # 音高相差很大（PSOLA 会听成原音高）时，才切换到目标谐波激励。
+        src_inst = _instantaneous_f0(detected_source, times, n, sr)
+        ratio = np.divide(inst, src_inst, out=np.zeros_like(inst), where=src_inst > 0)
+        hard_shift = (src_inst <= 0) | (ratio < 0.75) | (ratio > 1.333333)
+        needs_excitation = painted & hard_shift
+        if needs_excitation.any():
+            fade = _smooth_mask(needs_excitation, sr, 0.006) * painted.astype(np.float64)
+            buzz = _unit_buzz(inst, sr)
+            source_rms = _local_rms(x, sr)
+            amp = np.maximum(np.sqrt(2.0) * source_rms, 0.10 * peak_in)
+            mixed = mixed * (1.0 - fade) + (amp * buzz) * fade
 
     synthesized = (new_s & psola_ok) | painted
     out = mixed
