@@ -157,6 +157,25 @@ class PitchTests(unittest.TestCase):
         tail = slice(int(0.22 * sr), int(0.34 * sr))
         self.assertFalse(np.allclose(output[tail], samples[tail], atol=1e-3))
 
+    def test_resynthesis_generates_sound_for_points_in_silence(self) -> None:
+        sr = 16000
+        n = int(0.5 * sr)
+        t = np.arange(n, dtype=np.float64) / sr
+        y = np.zeros(n, dtype=np.float64)
+        y[: int(0.2 * sr)] = 0.3 * np.sin(2 * np.pi * 180.0 * t[: int(0.2 * sr)])
+        samples = y.astype(np.float32)
+        times = np.arange(0.02, 0.48, 0.01)
+        f0_orig = np.where(times < 0.2, 180.0, 0.0)
+        points = [[0.05, 180.0], [0.18, 160.0], [0.40, 100.0]]
+        tier = core.build_f0_tier(points, times, f0_orig, 75, 500)
+        self.assertTrue(bool((tier[times > 0.3] > 0).any()))
+        output = core.synthesize_with_f0(samples, sr, tier, f0_orig, times)
+        tail = output[int(0.26 * sr) : int(0.40 * sr)]
+        self.assertGreater(float(np.max(np.abs(tail))), 0.02)
+        lag = int(round(sr / 100.0))
+        corr = float(np.dot(tail[:-lag], tail[lag:]))
+        self.assertGreater(corr, 0.0)
+
     def test_resynthesis_does_not_rescale_unvoiced_samples(self) -> None:
         sr = 16000
         t = np.arange(sr * 2, dtype=np.float64) / sr

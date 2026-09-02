@@ -523,6 +523,52 @@ def _find_pitch_marks(x: np.ndarray, sr: float, t0: float, t1: float, f0_src: np
     return marks
 
 
+def _local_rms(x: np.ndarray, sr: float, win_s: float = 0.02) -> np.ndarray:
+    """短时 RMS 包络（汉宁平滑）。"""
+    n = len(x)
+    win = max(8, int(round(win_s * sr)))
+    if win % 2 == 0:
+        win += 1
+    w = np.hanning(win)
+    w = w / max(float(np.sum(w)), 1e-12)
+    return np.sqrt(np.clip(np.convolve(np.asarray(x, dtype=np.float64) ** 2, w, mode="same"), 0.0, None))
+
+
+def _instantaneous_f0(f0: np.ndarray, times: np.ndarray, n: int, sr: float) -> np.ndarray:
+    """把帧级 F0 铺到样本；只填 f0>0 的浊音段，不跨越段间零值。"""
+    inst = np.zeros(n, dtype=np.float64)
+    for t0, t1 in _voiced_segments(f0, times, min_gap_frames=1):
+        i0 = max(0, int(round(t0 * sr)))
+        i1 = min(n, int(round(t1 * sr)) + 1)
+        if i1 <= i0:
+            continue
+        tt = np.arange(i0, i1, dtype=np.float64) / sr
+        inst[i0:i1] = np.interp(tt, times, f0)
+        inst[i0:i1] = np.where(inst[i0:i1] > 0, inst[i0:i1], 0.0)
+    return inst
+
+
+def _unit_buzz(f_inst: np.ndarray, sr: float) -> np.ndarray:
+    """按逐样本 F0 生成峰值约 1 的谐波源（无 F0 处为 0）。"""
+    n = len(f_inst)
+    phase = np.cumsum(2.0 * np.pi * np.maximum(f_inst, 0.0) / sr)
+    y = np.zeros(n, dtype=np.float64)
+    for k, a in enumerate([1.0, 0.40, 0.22, 0.13, 0.08]):
+        y += a * np.sin((k + 1) * phase)
+    y[f_inst <= 0] = 0.0
+    peak = float(np.max(np.abs(y))) if n else 0.0
+    if peak > 1e-12:
+        y /= peak
+    return y
+
+
+def _smooth_mask(mask: np.ndarray, sr: float, fade_s: float = 0.008) -> np.ndarray:
+    n = max(2, int(round(fade_s * sr)))
+    w = np.hanning(n * 2 + 1)
+    w = w / max(float(np.sum(w)), 1e-12)
+    return np.clip(np.convolve(mask.astype(np.float64), w, mode="same"), 0.0, 1.0)
+
+
 def synthesize_with_f0(
     samples: np.ndarray,
     sr: int,
@@ -533,8 +579,9 @@ def synthesize_with_f0(
 ) -> np.ndarray:
     """TD-PSOLA：用编辑后的 F0 重合成音频。
 
-    时长保持不变。f0_new>0 的区间按新基频重排基音窗（含用户画进
-    原清音区的尾段）；其余直接使用原信号。过载时只衰减合成区。
+    时长保持不变。f0_new>0 的区间按新基频重排基音窗。
+    原波形若已无脉冲（去声/儿化尾、静音上新加点），则沿用最后一个
+    有效周期；若仍无能量，再按目标 F0 补谐波源，保证加点能听见。
     """
     x = np.asarray(samples, dtype=np.float64)
     n = len(x)
@@ -545,9 +592,11 @@ def synthesize_with_f0(
     if np.array_equal(f0_new, f0_orig):
         return x.astype(np.float32)
 
-    voiced_mask = f0_new > 0
-    if not voiced_mask.any():
+    if not (f0_new > 0).any():
         return x.astype(np.float32)
+
+    peak_in = float(np.max(np.abs(x))) if n else 0.0
+    energy_floor = max(0.04 * peak_in, 1e-4)
 
     # 原浊音处用原周期找标记；用户新覆盖的尾段用目标 F0 在波形上找峰。
     f0_src = np.where(f0_orig > 0, f0_orig, f0_new)
@@ -562,8 +611,9 @@ def synthesize_with_f0(
         s = marks[0]
         j = 0
         guard = 0
+        last_good_a = None
+        last_good_fa = None
         while s <= t1 and guard < len(marks) * 4 + 100:
-            # 找离当前合成点最近的源标记
             while j + 1 < len(marks) and abs(marks[j + 1] - s) < abs(marks[j] - s):
                 j += 1
             a = marks[j]
@@ -579,12 +629,31 @@ def synthesize_with_f0(
                 s += 1.0 / max(_interp_f0_at(f0_new, times, s), 1e-9)
                 guard += 1
                 continue
-            win = np.hanning(L)
             a0 = int(round(a * sr)) - half
             if a0 < 0 or a0 + L > n:
                 s += 1.0 / max(_interp_f0_at(f0_new, times, s), 1e-9)
                 guard += 1
                 continue
+            local_e = float(np.max(np.abs(x[a0:a0 + L])))
+            if local_e >= energy_floor:
+                last_good_a = a
+                last_good_fa = fa
+            elif last_good_a is not None:
+                a = last_good_a
+                fa = last_good_fa if last_good_fa and last_good_fa > 0 else fa
+                Ta = 1.0 / fa if fa > 0 else Ta
+                L = max(8, int(round(2.0 * Ta * sr)))
+                if L % 2 == 1:
+                    L += 1
+                half = L // 2
+                i0 = int(round(s * sr)) - half
+                i1 = i0 + L
+                a0 = int(round(a * sr)) - half
+                if i0 < 0 or i1 > n or a0 < 0 or a0 + L > n:
+                    s += 1.0 / max(_interp_f0_at(f0_new, times, s), 1e-9)
+                    guard += 1
+                    continue
+            win = np.hanning(L)
             seg = x[a0:a0 + L] * win
             out[i0:i1] += seg
             wsum[i0:i1] += win
@@ -595,23 +664,32 @@ def synthesize_with_f0(
             s += Tt
             guard += 1
 
-    # 归一化并替换清音区
     voiced_idx = np.zeros(n, dtype=bool)
     for t0, t1 in _voiced_segments(f0_new, times):
         i0 = max(0, int(round(t0 * sr)))
         i1 = min(n, int(round(t1 * sr)) + 1)
         voiced_idx[i0:i1] = True
     voiced_idx &= voiced_mask_continuous(x, f0_new, times, sr)
-    # 没有被完整窗覆盖的浊音边缘保留原信号，避免除以极小值产生静音/爆点。
     synthesized = voiced_idx & (wsum > 1e-6)
     mixed = x.copy()
     mixed[synthesized] = out[synthesized] / wsum[synthesized]
     out = mixed
 
-    peak_in = float(np.max(np.abs(x))) if n else 0.0
+    # 源窗几乎是静音时 PSOLA 仍是静音：按用户 F0 补谐波，让加点能发声。
+    inst = _instantaneous_f0(f0_new, times, n, sr)
+    if (inst > 0).any() and peak_in > 1e-9:
+        rms_out = _local_rms(out, sr)
+        thin = (inst > 0) & (rms_out < 0.045 * peak_in)
+        if thin.any():
+            gain = _smooth_mask(thin, sr)
+            buzz = _unit_buzz(inst, sr)
+            orig_rms = _local_rms(x, sr)
+            amp = np.maximum(orig_rms, 0.16 * peak_in)
+            out = out * (1.0 - gain) + (amp * buzz) * gain
+            synthesized = synthesized | (gain > 0.05)
+
     peak_synth = float(np.max(np.abs(out[synthesized]))) if synthesized.any() else 0.0
     if peak_in > 1e-9 and peak_synth > peak_in:
-        # 只限制重合成样本；全局缩放会让本应逐样本保留的清音也发生变化。
         out[synthesized] *= peak_in / peak_synth
     return out.astype(np.float32)
 
