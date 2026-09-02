@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="dark" />
+<title>声带振动模拟 · Vocal Fold Vibration</title>
+<style>
+  :root{
+    --bg:#0d0b12; --panel:#17131f; --panel2:#1e1929; --text:#e8e2ef;
+    --muted:#9a90ad; --accent:#ff7aa8; --accent2:#ffb86b; --line:#2c2537;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(1200px 700px at 50% -10%, #241b2e 0%, var(--bg) 55%);
+    color:var(--text);
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    min-height:100vh; display:flex; justify-content:center; padding:28px 16px 60px;
+  }
+  .wrap{width:100%; max-width:720px;}
+  header{text-align:center; margin-bottom:18px;}
+  header h1{font-size:24px; font-weight:600; letter-spacing:1px;}
+  header p{color:var(--muted); font-size:13px; margin-top:6px;}
+  .card{
+    background:linear-gradient(180deg,var(--panel2),var(--panel));
+    border:1px solid var(--line); border-radius:16px; padding:16px;
+    box-shadow:0 18px 50px rgba(0,0,0,.45);
+  }
+  canvas{display:block; width:100%; height:auto; border-radius:10px; background:#0b0a10;}
+  .row{display:flex; gap:14px; margin-top:14px;}
+  .row canvas{flex:1; min-width:0;}
+  #coronal{margin-top:12px;}
+  .controls{margin-top:16px; display:flex; flex-direction:column; gap:12px;}
+  .ctl{display:flex; align-items:center; gap:12px;}
+  .ctl label{width:66px; font-size:13px; color:var(--muted); flex:none;}
+  .ctl input[type=range]{flex:1; accent-color:var(--accent);}
+  .ctl .val{width:215px; text-align:right; font-size:13px; font-variant-numeric:tabular-nums; color:var(--accent2); flex:none; white-space:nowrap;}
+  .freq-big{font-size:21px; font-weight:600; color:#fff;}
+  .btns{display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; align-items:center;}
+  .btns-line{flex-wrap:nowrap; justify-content:center;}
+  button{
+    background:var(--panel2); color:var(--text); border:1px solid var(--line);
+    border-radius:9px; padding:5px 10px; font-size:12px; cursor:pointer;
+    transition:all .15s; font-family:inherit; white-space:nowrap;
+  }
+  #btnHelp{position:fixed; top:14px; right:16px; z-index:40; padding:7px 16px; font-size:13px; border-radius:999px; box-shadow:0 6px 18px rgba(0,0,0,.45);}
+  #btnLang{position:fixed; top:14px; right:104px; z-index:40; padding:7px 12px; font-size:12px; border-radius:999px; box-shadow:0 6px 18px rgba(0,0,0,.45);}
+  button:hover{ border-color:var(--accent); color:#fff; }
+  button.on{ background:linear-gradient(135deg,#b3416b,#7d2f55); border-color:var(--accent); color:#fff; }
+  .preset{background:transparent;}
+  .hint{color:var(--muted); font-size:12px; line-height:1.8; margin-top:14px; text-align:center;}
+  #helpOverlay{position:fixed; inset:0; background:rgba(6,5,10,0.62); display:flex; justify-content:flex-end; z-index:45; padding:0;}
+  #helpOverlay.hidden{display:none;}
+  body.help-open{padding-right:calc(min(430px,46vw) + 24px);}
+  .helpBox{background:linear-gradient(180deg,#241d30,#171320); border:1px solid var(--line); border-right:none; border-radius:14px 0 0 14px; width:min(430px,46vw); max-width:100%; height:100%; display:flex; flex-direction:column; box-shadow:-14px 0 44px rgba(0,0,0,.55); animation:helpIn .28s ease;}
+  @keyframes helpIn{from{transform:translateX(100%);}to{transform:none;}}
+  .helpHead{display:flex; align-items:center; justify-content:space-between; padding:13px 18px; border-bottom:1px solid var(--line); font-size:15px; font-weight:600; flex:none;}
+  .helpHead button{background:transparent; border:none; color:var(--muted); font-size:19px; cursor:pointer; padding:0 6px; line-height:1;}
+  .helpHead button:hover{color:#fff;}
+  .helpBody{overflow-y:auto; padding:16px 20px 24px; font-size:13px; line-height:1.85; color:var(--text);}
+  .helpBody h3{font-size:14px; margin:20px 0 8px; color:var(--accent2);}
+  .helpBody h3:first-child{margin-top:0;}
+  .helpBody p{margin:6px 0;}
+  .helpBody table{width:100%; border-collapse:collapse; margin:8px 0 4px; font-size:12px;}
+  .helpBody th,.helpBody td{border:1px solid var(--line); padding:5px 8px; text-align:left; vertical-align:top;}
+  .helpBody th{background:#2a2340; color:var(--accent2); font-weight:600; white-space:nowrap;}
+  .helpBody code{background:#2a2338; padding:1px 5px; border-radius:5px; font-size:12px; color:#ffb86b;}
+  .kbd{background:#2a2338; border:1px solid var(--line); border-bottom-width:2px; border-radius:4px; padding:0 6px; font-size:11px;}
+  .voice-group{display:flex; flex-wrap:wrap; gap:6px; align-items:center;}
+  .voice-group .voice-title{color:var(--muted); font-size:12px; margin-right:2px;}
+  @media (max-width:760px){
+    body{padding:18px 10px 40px;}
+    body.help-open{padding-right:10px;}
+    header h1{font-size:21px; padding-right:150px; text-align:left;}
+    header p{text-align:left;}
+    .card{padding:10px; border-radius:12px;}
+    .row{gap:8px; margin-top:8px;}
+    .controls{margin-top:12px; gap:10px;}
+    .ctl{display:grid; grid-template-columns:66px minmax(0,1fr); gap:7px 8px;}
+    .ctl .val{grid-column:2; width:auto; text-align:left;}
+    .btns-line{flex-wrap:wrap;}
+    #btnHelp{top:10px; right:10px;}
+    #btnLang{top:10px; right:88px;}
+    .helpBox{width:100vw; border:0; border-radius:0;}
+    .helpBody{padding:14px 12px 22px;}
+    .hint{text-align:left;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🎤 声带振动模拟</h1>
+    <p>喉镜俯视 + 冠状切面 · 软骨与肌肉 · 黏膜波 · 气流粒子 · 实时合成音源</p>
+    <button id="btnLang" aria-label="切换到英文">EN</button>
+    <button id="btnHelp" aria-controls="helpOverlay" aria-expanded="false">❓ 帮助</button>
+  </header>
+
+  <div class="card">
+    <canvas id="larynx" width="640" height="430" role="img" aria-label="喉镜俯视声带振动动画"></canvas>
+    <canvas id="coronal" width="640" height="170" role="img" aria-label="喉部冠状切面声带振动动画"></canvas>
+    <div class="row">
+      <canvas id="wave" width="300" height="110" role="img" aria-label="声门面积波形"></canvas>
+      <canvas id="spec" width="300" height="110" role="img" aria-label="声音谐波谱"></canvas>
+    </div>
+
+    <div class="controls">
+      <div class="ctl">
+        <label for="f0">基频 f₀</label>
+        <input type="range" id="f0" min="50" max="440" step="1" value="130" />
+        <div class="val"><span class="freq-big" id="f0show">130</span> Hz · <span id="note"></span> <span id="mode"></span></div>
+      </div>
+      <div class="ctl">
+        <label for="amp">振幅</label>
+        <input type="range" id="amp" min="0" max="1" step="0.01" value="0.6" />
+        <div class="val" id="ampShow">0.60</div>
+      </div>
+      <div class="ctl">
+        <label for="breathy">气息感</label>
+        <input type="range" id="breathy" min="0" max="1" step="0.01" value="0.12" />
+        <div class="val" id="brShow">0.12</div>
+      </div>
+      <div class="ctl">
+        <label for="disp">慢放倍数</label>
+        <input type="range" id="disp" min="10" max="200" step="10" value="40" />
+        <div class="val"><span id="dispShow">40</span>×</div>
+      </div>
+      <div class="btns btns-line">
+        <button id="btnSound" aria-pressed="false">🔊 发声</button>
+        <button id="btnPause" aria-pressed="false">⏸ 暂停</button>
+        <button id="btnReal" aria-pressed="false">⏱ 实时</button>
+        <button id="btnStrobe" aria-pressed="false">⚡ 频闪</button>
+        <button id="btnLabels" aria-pressed="true">🔍 解剖标注</button>
+        <button id="btnCoronal" aria-pressed="true">🧬 冠状切面</button>
+      </div>
+      <div class="voice-group" aria-label="嗓音形态">
+        <span class="voice-title" data-i18n="voiceTitle">嗓音模态：</span>
+        <button class="voice-btn on" id="btnVoiceModal" aria-pressed="true">正常模态</button>
+        <button class="voice-btn" id="btnVoiceFalsetto" aria-pressed="false">假声</button>
+        <button class="voice-btn" id="btnVoiceBreathy" aria-pressed="false">气声</button>
+        <button class="voice-btn" id="btnVoicePressed" aria-pressed="false">紧喉</button>
+        <button class="voice-btn" id="btnVoiceCreaky" aria-pressed="false">气泡</button>
+        <button class="voice-btn" id="btnVoiceWhisper" aria-pressed="false">耳语</button>
+      </div>
+      <div class="btns">
+        <span id="presetTitle" style="color:var(--muted); font-size:12px;">预设：</span>
+        <button class="preset" data-f0="110" data-amp="0.9" data-br="0.1">男低音 110 Hz</button>
+        <button class="preset" data-f0="220" data-amp="0.85" data-br="0.12">女声 220 Hz</button>
+        <button class="preset" data-f0="300" data-amp="0.8" data-br="0.1">童声 300 Hz</button>
+        <button class="preset" data-f0="180" data-amp="0.6" data-br="0.85">气息声</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="hint" id="hintText">
+    上 = 前方（会厌方向），下 = 后方（杓状软骨）。两条声带周期性开合，气流从下方穿过声门。<br/>
+    声带表面移动的波纹是「黏膜波」；下方左图为声门面积波形，右图为谐波谱。<br/>
+    基频 130 Hz 表示每秒振动 130 次，太快看不清；默认「慢放 ×40」演示，调高基频画面会明显变快。点「实时」看真实速度，「频闪」固定为 1.2 周期/秒。<br/>
+    主视图为喉镜俯视：上=前（会厌），下=后（杓状软骨），可见会厌软骨、杓会厌襞、室襞（假声带）、喉室、声带、杓状软骨、杓间肌、环状软骨等；下方冠状切面展示声带肌（甲杓肌）、环杓侧肌、环甲肌。「🔍 解剖标注」可开关全部名称。「嗓音形态」可切换正常模态、假声、气声、紧喉、气泡五种简化模型。按空格暂停。
+  </p>
+</div>
+
+<div id="helpOverlay" class="hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle" aria-hidden="true">
+  <div class="helpBox">
+    <div class="helpHead"><span id="helpTitle">📖 声带振动模拟 · 帮助与知识解析</span> <button id="helpClose" title="关闭" aria-label="关闭帮助">✕</button></div>
+    <div class="helpBody" id="helpZh">
+      <h3>📌 这是什么</h3>
+      <p>本页面用动画模拟<b>声带振动发声</b>：喉镜俯视视角 + 冠状切面，实时合成嗓音。拖动基频、振幅、气息感等参数，观察声带如何开合、气流如何穿过声门，理解喉部解剖与发声机制。</p>
+
+      <h3>🦴 一、喉部解剖（主视图 · 喉镜俯视）</h3>
+      <p>图上为<b>前</b>（会厌方向），下为<b>后</b>（杓状软骨方向），两条声带之间的气道即<b>声门</b>。点「🔍 解剖标注」可看结构名称。</p>
+      <table>
+        <tr><th>结构</th><th>说明</th></tr>
+        <tr><td>会厌软骨</td><td>喉入口的叶片状软骨，吞咽时盖住喉口防呛；喉镜中可见其遮挡声带前部。</td></tr>
+        <tr><td>杓会厌襞</td><td>自杓状软骨连到会厌的黏膜皱襞，构成喉入口侧壁。</td></tr>
+        <tr><td>室襞（假声带）</td><td>真声带上方的黏膜皱襞，<b>正常发声时不振动</b>，主要起保护作用；若代替真声带振动，则属病理性「室带性发声障碍」。</td></tr>
+        <tr><td>喉室</td><td>真假声带之间的空隙，是喉部共鸣腔的一部分。</td></tr>
+        <tr><td>声带（声带肌）</td><td>真声带，发声的<b>振动源</b>；主体为甲杓肌（声带肌）。</td></tr>
+        <tr><td>声带突</td><td>杓状软骨前端的突起，声带后端附着处。</td></tr>
+        <tr><td>杓状软骨</td><td>成对小软骨，绕环杓关节转动，使声带内收（闭合）/外展（打开）。</td></tr>
+        <tr><td>杓间肌</td><td>连于两侧杓状软骨之间，收缩时拉拢声门后部。</td></tr>
+        <tr><td>环杓后肌</td><td>喉内<b>唯一的外展肌</b>，收缩打开声门（吸气时关键）。</td></tr>
+        <tr><td>环状软骨</td><td>喉的底座（形似印章戒指），声带各关节运动的支点。</td></tr>
+        <tr><td>前联合</td><td>两侧声带在前方（附着于甲状软骨）的汇合点。</td></tr>
+      </table>
+
+      <h3>🧬 二、冠状切面（前面观）</h3>
+      <p>从前方切开喉部看到的断面，展示软骨支架与肌肉的关系。</p>
+      <table>
+        <tr><th>结构</th><th>说明</th></tr>
+        <tr><td>甲状软骨</td><td>喉部最大的软骨，前正中凸起即"喉结"。</td></tr>
+        <tr><td>环状软骨</td><td>位于甲状软骨下方的底座软骨。</td></tr>
+        <tr><td>室襞 / 喉室</td><td>假声带断面及其与真声带之间的空隙。</td></tr>
+        <tr><td>声带肌（甲杓肌）</td><td>真声带主体；厚=真声，薄=假声。</td></tr>
+        <tr><td>环杓侧肌</td><td>收缩时把杓状软骨向内拉，使声带内收。</td></tr>
+        <tr><td>环甲肌</td><td>收缩拉长声带、增加张力，是<b>提高音高</b>的主要肌肉。</td></tr>
+      </table>
+
+      <h3>🎼 三、声带如何振动（发声机制）</h3>
+      <p><b>四个步骤，周而复始：</b></p>
+      <p>1️⃣ 声带内收靠拢 → 2️⃣ 声门下压升高并推开声门 → 3️⃣ 气流、声带组织的弹性与惯性、黏膜波及声门内压力变化共同促使声带回闭 → 4️⃣ 压力再次积聚并进入下一周期。<b>伯努利效应是其中一个因素，并非单独维持振动的全部机制。</b></p>
+      <p>每秒开合的次数就是<b>基频 f₀</b>（动画中的振动频率）。声带表面移动的波纹叫<b>黏膜波</b>——黏膜在气流作用下沿声带表面传播的波动，是评估声带健康的重要指标。</p>
+      <p><b>声门面积波形</b>：一个周期内声门张开面积随时间的变化。张开的占比叫<b>开商</b>（open quotient）。为突出视觉差异，本模型设置为真声 0.46、假声 0.88；真实开商会随个体、音高、响度和发声方式而变化，这两个数值不是临床诊断标准。</p>
+
+      <h3>🎭 四、真声 vs 假声</h3>
+      <table>
+        <tr><th></th><th>🎤 真声（modal）</th><th>🪶 假声（falsetto）</th></tr>
+        <tr><td>声带</td><td>厚、完全闭合</td><td>拉长变薄，仅边缘振动</td></tr>
+        <tr><td>模型开商</td><td>0.46，闭合相较长</td><td>0.88，开放相较长</td></tr>
+        <tr><td>波形 / 谐波</td><td>快开快闭，谐波丰富</td><td>近正弦波，谐波极少</td></tr>
+        <tr><td>模型听感</td><td>较厚实、谐波较多</td><td>较轻、较纯、如笛声</td></tr>
+      </table>
+      <p>点「嗓音模态」按钮可同时对比声带形态、波形、谐波谱与音色。</p>
+      <p style="background:#2a2340; border:1px solid var(--line); border-left:3px solid #ffb86b; border-radius:8px; padding:8px 10px; margin-top:10px;">
+        ⚠️ <b>常见误区：假声不是「假声带」在振动。</b><br/>
+        假声（falsetto）时振动的<b>仍然是真声带</b>——本模型用声带拉长变薄、以边缘振动为主和闭合不充分来表现其典型特征。而<b>假声带（室襞）不是这里“假声”的声源</b>；若室襞代替真声带参与主要振动，可形成低沉粗糙的室带性发声。本模拟器因此让假声模式中的真声带薄缘振动、室襞保持不动。不同声乐教学体系对“头声”的定义并不完全一致，本页面不把“头声”和“假声”作为严格同义词。
+      </p>
+
+      <h3>🎛 五、控件说明</h3>
+      <table>
+        <tr><th>控件</th><th>作用</th></tr>
+        <tr><td>基频 f₀</td><td>声带每秒开合次数 = 音高（50–440 Hz）。太快看不清，默认慢放演示。</td></tr>
+        <tr><td>振幅</td><td>声门张开幅度。</td></tr>
+        <tr><td>气息感</td><td>声门闭合不全程度，越大越"漏气"。</td></tr>
+        <tr><td>慢放倍数</td><td>显示速度 = 基频 ÷ 倍数，越大越慢。</td></tr>
+        <tr><td>⏱ 实时</td><td>真实速度（高基频下只见闪烁）。</td></tr>
+        <tr><td>⚡ 频闪</td><td>固定 1.2 周期/秒，类似临床喉镜频闪检查。</td></tr>
+        <tr><td>🔊 发声</td><td>开启 / 静音实时合成嗓音。</td></tr>
+        <tr><td>🔍 解剖标注</td><td>显示 / 隐藏两个视图的结构名称。</td></tr>
+        <tr><td>🧬 冠状切面</td><td>显示 / 隐藏切面视图。</td></tr>
+        <tr><td>嗓音模态</td><td>在正常模态、假声、气声、紧喉、气泡和耳语之间切换；动画、波形、谐波谱和合成音色会同步改变。</td></tr>
+        <tr><td>紧喉</td><td>用较强内收、较高声门下压和规则的硬起声表现“压低/压紧”的声音；它不等同于气泡音。</td></tr>
+        <tr><td>气泡</td><td>用较低气流、较松声带和跨周期不规则脉冲表现 vocal fry；它可以在非最低音区短暂出现。</td></tr>
+        <tr><td>耳语</td><td>以湍流噪声为主，几乎没有规则的周期性声带振动。</td></tr>
+        <tr><td><span class="kbd">空格</span></td><td>暂停 / 继续动画。</td></tr>
+      </table>
+
+      <h3>🔊 六、声音如何合成</h3>
+      <p>用<b>声门面积波形</b>构建周期性声波（PeriodicWave）作为声源——音高严格等于 f₀，音色随真声 / 假声自动变化；再经低通滤波与元音 /a/ 的共振峰（约 800 / 1150 / 2550 Hz）整形，并按「气息感」混入高频气流噪声。<b>真声</b>：低通更宽、共振峰增益更高、带约 5 Hz 轻颤音，听感厚实丰满；<b>假声</b>：低通更窄、共振峰增益压低、无颤音并带微量气流声，听感接近纯净哨音 / 笛声。</p>
+      <p style="margin-top:10px; color:var(--muted); font-size:12px;">🎓 知识要点：音高由 f₀ 决定（声带张力、长度、质量调节）；响度与声门下压、振幅有关；音色由波形谐波与共鸣腔（声道）决定。</p>
+      <p style="margin-top:8px; color:var(--muted); font-size:12px;">本页面是便于观察概念的简化教学模型，不用于疾病判断、喉镜检查解释或医疗诊断。</p>
+    </div>
+    <div class="helpBody" id="helpEn" hidden>
+      <h3>📌 About this simulator</h3>
+      <p>This educational model combines a top-view laryngoscopy animation, a coronal section, a glottal-area waveform, a harmonic spectrum, and a synthesized sound source.</p>
+      <h3>🦴 Anatomy</h3>
+      <p>Anterior is at the top (epiglottis) and posterior is at the bottom (arytenoid cartilages). The true vocal folds form the vibrating sound source; the false folds are shown as protective tissue, not as the source of falsetto.</p>
+      <h3>🎼 Phonation</h3>
+      <p>Vocal-fold vibration is a coupled interaction of subglottal pressure, airflow, tissue elasticity and inertia, mucosal-wave motion, and intraglottal pressure. The Bernoulli effect is one contributing factor, not the whole mechanism.</p>
+      <h3>🎭 Voice modes</h3>
+      <table><tr><th>Mode</th><th>Model behavior</th></tr>
+        <tr><td>Modal</td><td>Regular, fuller closure and richer harmonics.</td></tr>
+        <tr><td>Falsetto</td><td>Thin edge-dominant vibration with a longer open phase.</td></tr>
+        <tr><td>Breathy</td><td>Incomplete closure and added airflow noise.</td></tr>
+        <tr><td>Pressed</td><td>Strong medial compression and high-pressure, firm closure.</td></tr>
+        <tr><td>Creaky</td><td>Low-flow, slack-fold pulses with cross-cycle irregularity; it can occur outside the lowest pitch range.</td></tr>
+        <tr><td>Whisper</td><td>Mostly turbulent airflow with little periodic vibration.</td></tr>
+      </table>
+      <h3>🎛 Controls</h3>
+      <p><b>f₀</b> sets the nominal pitch; <b>Amplitude</b> sets excursion; <b>Breathiness</b> controls incomplete closure/noise; <b>Slow motion</b> changes display speed. Real-time and strobe modes change only the display rate.</p>
+      <p>Use the anatomy-label and coronal-section buttons to simplify the diagrams. Press <span class="kbd">Space</span> to pause when focus is not on a control.</p>
+      <p style="color:var(--muted);font-size:12px">This is a simplified teaching model, not a diagnostic tool or a substitute for laryngoscopy or medical advice.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ================= DOM ================= */
+const $ = id => document.getElementById(id);
+const lx = $('larynx'), co = $('coronal'), wv = $('wave'), sp = $('spec');
+function crispCanvas(canvas){
+  const logicalW = canvas.width, logicalH = canvas.height;
+  const dpr = Math.min(3, Math.max(1, window.devicePixelRatio || 1));
+  canvas.dataset.logicalWidth = logicalW;
+  canvas.dataset.logicalHeight = logicalH;
+  canvas.width = Math.round(logicalW * dpr);
+  canvas.height = Math.round(logicalH * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return ctx;
+}
+const lctx = crispCanvas(lx), cctx = crispCanvas(co),
+      wctx = crispCanvas(wv), sctx = crispCanvas(sp);
+
+/* ================= 参数 ================= */
+const P = { f0:130, amp:0.6, breathy:0.12, sound:false, paused:false, realtime:false, strobe:false, factor:40, labels:true, coronal:true, register:'modal', voice:'modal' };
+let LANG = 'zh';
+const VOICE_NAMES = {modal:'正常模态', falsetto:'假声', breathy:'气声', pressed:'紧喉', creaky:'气泡', whisper:'耳语'};
+const VOICE_NAMES_EN = {modal:'Modal', falsetto:'Falsetto', breathy:'Breathy', pressed:'Pressed', creaky:'Creaky', whisper:'Whisper'};
+const voiceName = voice => (LANG === 'en' ? VOICE_NAMES_EN[voice] : VOICE_NAMES[voice]) || voice;
+let time = 0;          // 动画时间（秒）
+let lastTs = 0;
+
+/* ================= 几何 ================= */
+const W = +lx.dataset.logicalWidth, H = +lx.dataset.logicalHeight, CX = W/2;
+const ANT = 96, POST = 356;          // 前联合 / 杓状软骨 y 坐标
+const LEN = POST - ANT;
+const MAX_GAP = 44;                  // 声门最大半宽（像素）
+const FOLD_W = 66, FOLD_BULGE = 30;  // 声带基底宽度 / 中段鼓起
+
+/* ================= 声门面积波形（一个周期，归一化 0..1） ================= */
+function displayRate(){ return P.realtime ? P.f0 : (P.strobe ? 1.2 : P.f0 / P.factor); }
+function areaShape(p, reg){
+  const voice = P.voice || reg || 'modal';
+  if (voice === 'creaky'){
+    // 用缓慢、跨周期的相位扰动表现气泡音的周期不规则性。
+    const cycle = Math.floor(time * displayRate());
+    p = (p + 0.055*Math.sin(cycle*2.17) + 0.025*Math.sin(cycle*3.71) + 1) % 1;
+  }
+  const cfg = ({
+    modal:{openQ:0.46, peakP:0.33, oPow:1.5, cPow:1.9},
+    falsetto:{openQ:0.88, peakP:0.44, oPow:1.15, cPow:1.1},
+    breathy:{openQ:0.72, peakP:0.38, oPow:1.25, cPow:1.25},
+    pressed:{openQ:0.30, peakP:0.18, oPow:1.8, cPow:2.5},
+    creaky:{openQ:0.22, peakP:0.11, oPow:0.72, cPow:2.8},
+    whisper:{openQ:0.98, peakP:0.48, oPow:1.05, cPow:1.05}
+  })[voice] || {openQ:0.46, peakP:0.33, oPow:1.5, cPow:1.9};
+  const {openQ, peakP, oPow, cPow} = cfg;
+  p = ((p % 1) + 1) % 1;
+  if (p >= openQ) return 0;
+  if (p < peakP){
+    const u = p / peakP;
+    return Math.pow(Math.sin(u * Math.PI/2), oPow);
+  }
+  const u = (p - peakP) / (openQ - peakP);
+  return Math.pow(Math.cos(u * Math.PI/2), cPow);
+}
+
+/* ================= 沿声带长度的开度分布 ================= */
+function gapProfile(phase, n){
+  const pts = [];
+  const voice = P.voice || 'modal';
+  const fals = voice === 'falsetto';
+  const breath = Math.min(1, P.breathy + (voice === 'breathy' || voice === 'whisper' ? 0.58 : 0));
+  const voiceAmp = voice === 'whisper' ? 0.08 : 1;
+  for (let i=0;i<=n;i++){
+    const s = i/n;
+    const lp = (phase - s*0.30 + 1) % 1;          // 黏膜波：相位沿长度滞后
+    let g = P.amp * voiceAmp * areaShape(lp, voice) * (fals ? 0.8 : voice === 'pressed' ? 0.72 : voice === 'creaky' ? 0.82 : 1);
+    const leak = breath * 0.16 * (0.25 + 0.75*s); // 气声：后部关不拢
+    const regGap = fals ? 0.14 * Math.sin(Math.PI*s) : 0;
+    g = Math.max(g, leak, regGap);
+    const h = MAX_GAP * (Math.pow(Math.sin(Math.PI*s), 1.35) * g + breath * 0.10 * s*s*s);
+    pts.push({ s, y: ANT + s*LEN, h });
+  }
+  return pts;
+}
+const avgGap = pts => pts.reduce((a,p)=>a+p.h,0) / pts.length;
+
+/* ================= 气流粒子 ================= */
+const particles = [];
+function spawnParticles(dt, pts, gap){
+  if (gap <= 0.5) return;
+  const want = Math.min(120, gap * 90 * dt * (0.5 + P.amp));
+  let n = Math.floor(want) + (Math.random() < (want - Math.floor(want)) ? 1 : 0);
+  for (let k=0;k<n;k++){
+    const s = 0.22 + Math.random()*0.56;
+    const idx = Math.min(pts.length-1, Math.max(0, Math.round(s*(pts.length-1))));
+    const h = pts[idx].h;
+    if (h < 1) continue;
+    particles.push({
+      y: ANT + s*LEN,
+      x: CX + (Math.random()*2-1) * Math.max(1, h*0.45),
+      vy: 26 + Math.random()*22,
+      vx: (Math.random()*2-1) * 7,
+      life: 0.35 + Math.random()*0.4,
+      age: 0
+    });
+  }
+}
+
+/* ================= 主视图：喉镜俯视 ================= */
+function drawLarynx(phase, dt){
+  lctx.clearRect(0,0,W,H);
+
+  // 背景
+  const bg = lctx.createRadialGradient(CX, H*0.6, 20, CX, H*0.6, H*0.85);
+  bg.addColorStop(0,'#2a2130'); bg.addColorStop(1,'#0a0910');
+  lctx.fillStyle = bg; lctx.fillRect(0,0,W,H);
+
+  // 气道暗区
+  lctx.beginPath();
+  lctx.ellipse(CX, ANT+LEN/2, MAX_GAP+86, LEN/2+34, 0, 0, Math.PI*2);
+  lctx.fillStyle = '#120e17'; lctx.fill();
+  lctx.strokeStyle = 'rgba(255,255,255,0.05)'; lctx.lineWidth = 1; lctx.stroke();
+
+  // 软骨与黏膜结构（由后向前）
+  drawCricoidHint(lctx);
+  drawAryepiglotticFolds(lctx);
+  drawEpiglottis(lctx);
+  drawFalseFolds(lctx);
+
+  const pts = gapProfile(phase, 90);
+  const gap = avgGap(pts);
+
+  // 声门气流辉光
+  const glow = Math.pow(Math.min(1, gap/(MAX_GAP*0.7)), 1.2);
+  if (glow > 0.01){
+    const g = lctx.createLinearGradient(0, ANT, 0, POST);
+    g.addColorStop(0,'rgba(255,190,120,0)');
+    g.addColorStop(0.5, 'rgba(255,170,110,' + (0.38*glow).toFixed(3) + ')');
+    g.addColorStop(1,'rgba(255,190,120,0)');
+    lctx.fillStyle = g;
+    lctx.beginPath();
+    lctx.moveTo(CX-3, ANT-6); lctx.lineTo(CX+3, ANT-6);
+    lctx.lineTo(CX+3, POST+6); lctx.lineTo(CX-3, POST+6);
+    lctx.closePath(); lctx.fill();
+  }
+
+  // 两条声带（声带肌）
+  drawFold(pts,  1, phase);   // 左
+  drawFold(pts, -1, phase);   // 右
+  drawVentricles(lctx);
+  drawInterarytenoid(lctx);
+  drawPCA(lctx);
+  drawArytenoids(lctx, phase);
+  drawThyroidNotch(lctx);
+
+  // 气流粒子（慢放时相应放慢）
+  const ms = P.realtime || P.strobe ? 1 : Math.max(0.08, 1 / P.factor);
+  spawnParticles(dt, pts, gap);
+  for (let i=particles.length-1;i>=0;i--){
+    const pt = particles[i];
+    pt.age += dt;
+    if (pt.age >= pt.life){ particles.splice(i,1); continue; }
+    pt.y -= pt.vy * dt * ms;
+    pt.x += pt.vx * dt * ms;
+    const a = Math.max(0, 1 - pt.age/pt.life) * (0.35 + 0.5*glow);
+    lctx.beginPath();
+    lctx.arc(pt.x, pt.y, 1.1 + pt.age*1.8, 0, Math.PI*2);
+    lctx.fillStyle = 'rgba(208,232,255,' + a.toFixed(3) + ')';
+    lctx.fill();
+  }
+
+  // 标注
+  lctx.fillStyle = 'rgba(255,255,255,0.35)';
+  lctx.font = '12px sans-serif';
+  lctx.textAlign = 'center';
+  lctx.fillText(diagramText('front'), CX, 26);
+  lctx.fillText(diagramText('back'), CX, H-14);
+  if (P.labels) drawMainLabels(lctx);
+}
+
+function drawFold(pts, side, phase){
+  const n = pts.length - 1;
+  const fals = P.voice === 'falsetto';
+  const fw = fals ? FOLD_W*0.78 : FOLD_W;          // 假声：声带拉薄
+  const bulge = fals ? FOLD_BULGE*0.7 : FOLD_BULGE;
+  // 外侧（基底，固定）
+  lctx.beginPath();
+  for (let i=0;i<=n;i++){
+    const s = i/n;
+    lctx.lineTo(CX - side*(fw + bulge*Math.sin(Math.PI*s)), ANT + s*LEN);
+  }
+  // 内侧（自由缘，振动）反向往回画
+  for (let i=n;i>=0;i--) lctx.lineTo(CX - side*pts[i].h, pts[i].y);
+  lctx.closePath();
+
+  // 组织渐变：真声厚而深红，假声薄而淡粉
+  const gr = lctx.createLinearGradient(CX - side*(fw+bulge), 0, CX - side*4, 0);
+  if (fals){
+    gr.addColorStop(0, '#9a4a66');
+    gr.addColorStop(0.55, '#d28aa4');
+    gr.addColorStop(1, '#f7dfe8');
+  } else {
+    gr.addColorStop(0, '#7c2e46');
+    gr.addColorStop(0.55, '#b85f78');
+    gr.addColorStop(1, '#efc3ce');
+  }
+  lctx.fillStyle = gr; lctx.fill();
+  lctx.strokeStyle = 'rgba(255,235,240,0.55)';
+  lctx.lineWidth = 1.5; lctx.stroke();
+
+  // 黏膜波：沿声带表面移动的波纹
+  lctx.save();
+  lctx.beginPath();
+  lctx.rect(CX - side*(FOLD_W+FOLD_BULGE+6), ANT-4, FOLD_W+FOLD_BULGE+8, LEN+8);
+  lctx.clip();
+  for (let k=0;k<3;k++){
+    lctx.beginPath();
+    for (let i=0;i<=n;i++){
+      const s = i/n;
+      const y = ANT + s*LEN + Math.sin(2*Math.PI*phase - s*2*Math.PI*1.6 + k*0.75) * (fals ? 2.8 : 5.5) * (0.5+0.5*Math.sin(Math.PI*s));
+      const x = CX - side*(FOLD_W*0.28 + k*FOLD_W*0.24 + FOLD_BULGE*Math.sin(Math.PI*s));
+      if (i===0) lctx.moveTo(x,y); else lctx.lineTo(x,y);
+    }
+    const alpha = 0.10 + 0.10*Math.abs(Math.sin(2*Math.PI*phase + k));
+    lctx.strokeStyle = 'rgba(255,255,255,' + alpha.toFixed(3) + ')';
+    lctx.lineWidth = 2;
+    lctx.stroke();
+  }
+  // 声带肌纹理（肌纤维走向；假声时声带肌松弛，纹理减弱）
+  lctx.strokeStyle = fals ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.10)';
+  lctx.lineWidth = fals ? 1 : 1.2;
+  const dMax = fals ? 28 : 40;
+  for (let d=14; d<=dMax; d+=(fals ? 14 : 13)){
+    lctx.beginPath();
+    for (let i=0;i<=n;i++){
+      const s = i/n;
+      const x = CX - side*(pts[i].h + d);
+      const y = ANT + s*LEN + 3*Math.sin(Math.PI*s);
+      if (i===0) lctx.moveTo(x,y); else lctx.lineTo(x,y);
+    }
+    lctx.stroke();
+  }
+  lctx.restore();
+}
+
+
+/* ================= 解剖结构：软骨与黏膜（喉镜俯视） ================= */
+function drawCricoidHint(ctx){
+  ctx.strokeStyle = 'rgba(230,214,186,0.28)';
+  ctx.lineWidth = 9; ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(CX-58, POST+8);
+  ctx.quadraticCurveTo(CX, POST+30, CX+58, POST+8);
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,240,214,0.18)';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(CX-40, POST+14);
+  ctx.quadraticCurveTo(CX, POST+27, CX+40, POST+14);
+  ctx.stroke();
+}
+function drawAryepiglotticFolds(ctx){
+  ctx.strokeStyle = 'rgba(216,124,124,0.22)';
+  ctx.lineWidth = 10; ctx.lineCap = 'round';
+  for (const s of [1,-1]){
+    ctx.beginPath();
+    ctx.moveTo(CX + s*30, POST-16);
+    ctx.quadraticCurveTo(CX + s*124, POST-30, CX + s*112, 92);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = 'rgba(255,190,180,0.16)';
+  ctx.lineWidth = 1.5;
+  for (const s of [1,-1]){
+    ctx.beginPath();
+    ctx.moveTo(CX + s*34, POST-12);
+    ctx.quadraticCurveTo(CX + s*126, POST-26, CX + s*114, 92);
+    ctx.stroke();
+  }
+}
+function drawEpiglottis(ctx){
+  const g = ctx.createLinearGradient(0, 40, 0, 160);
+  g.addColorStop(0, 'rgba(255,208,150,0.42)');
+  g.addColorStop(1, 'rgba(232,140,118,0.30)');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(CX, 38);
+  ctx.quadraticCurveTo(CX+132, 60, CX+112, 152);
+  ctx.quadraticCurveTo(CX+66, 128, CX+12, 121);
+  ctx.quadraticCurveTo(CX+5, 118, CX, 113);
+  ctx.quadraticCurveTo(CX-5, 118, CX-12, 121);
+  ctx.quadraticCurveTo(CX-66, 128, CX-112, 152);
+  ctx.quadraticCurveTo(CX-132, 60, CX, 38);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,228,184,0.5)';
+  ctx.lineWidth = 1.6;
+  ctx.stroke();
+  // 会厌茎（petiolus）→ 前联合
+  ctx.strokeStyle = 'rgba(255,220,180,0.30)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(CX, 44);
+  ctx.lineTo(CX, ANT-8);
+  ctx.stroke();
+  // 表面高光
+  ctx.strokeStyle = 'rgba(255,235,200,0.18)';
+  ctx.lineWidth = 3;
+  for (const s of [1,-1]){
+    ctx.beginPath();
+    ctx.moveTo(CX + s*6, 58);
+    ctx.quadraticCurveTo(CX + s*52, 76, CX + s*64, 116);
+    ctx.stroke();
+  }
+}
+function drawFalseFolds(ctx){
+  for (const s of [1,-1]){
+    const cx = CX + s*88;
+    const g = ctx.createLinearGradient(cx-34, 0, cx+34, 0);
+    g.addColorStop(0, 'rgba(196,86,104,0.85)');
+    g.addColorStop(0.5, 'rgba(178,70,92,0.9)');
+    g.addColorStop(1, 'rgba(150,52,74,0.9)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.ellipse(cx, 208, 30, 74, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,200,190,0.25)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+  }
+}
+function drawVentricles(ctx){
+  ctx.strokeStyle = 'rgba(18,8,12,0.45)';
+  ctx.lineWidth = 3; ctx.lineCap = 'round';
+  for (const s of [1,-1]){
+    ctx.beginPath();
+    ctx.moveTo(CX + s*(FOLD_W+2), ANT+14);
+    ctx.quadraticCurveTo(CX + s*(FOLD_W+10), ANT+LEN/2, CX + s*(FOLD_W+2), POST-16);
+    ctx.stroke();
+  }
+}
+function drawInterarytenoid(ctx){
+  const g = ctx.createLinearGradient(0, POST, 0, POST+10);
+  g.addColorStop(0, 'rgba(150,58,78,0.85)');
+  g.addColorStop(1, 'rgba(176,76,96,0.75)');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.ellipse(CX, POST+5, 17, 6, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,190,180,0.3)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(60,20,30,0.35)';
+  ctx.beginPath();
+  ctx.moveTo(CX-9, POST+4); ctx.lineTo(CX+9, POST+4);
+  ctx.moveTo(CX-9, POST+7); ctx.lineTo(CX+9, POST+7);
+  ctx.stroke();
+}
+function drawPCA(ctx){
+  ctx.strokeStyle = 'rgba(190,80,96,0.6)';
+  ctx.lineWidth = 5; ctx.lineCap = 'round';
+  for (const s of [1,-1]){
+    ctx.beginPath();
+    ctx.moveTo(CX + s*18, POST+14);
+    ctx.quadraticCurveTo(CX + s*30, POST+8, CX + s*42, POST);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = 'rgba(255,200,190,0.25)';
+  ctx.lineWidth = 1.2;
+  for (const s of [1,-1]){
+    ctx.beginPath();
+    ctx.moveTo(CX + s*22, POST+12);
+    ctx.quadraticCurveTo(CX + s*32, POST+7, CX + s*40, POST+1);
+    ctx.stroke();
+  }
+}
+function drawArytenoids(ctx, phase){
+  const wob = Math.sin(2*Math.PI*phase);
+  for (const s of [1,-1]){
+    ctx.save();
+    ctx.translate(CX + s*24, POST-2);
+    ctx.rotate(s * 0.07 * wob);
+    const gapAry = P.breathy * 9;
+    const g = ctx.createLinearGradient(-6, -8, 4, 4);
+    g.addColorStop(0, '#f6ecd6');
+    g.addColorStop(1, '#d8c6a4');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(s*8, -10);                 // 小角结节方向（后内）
+    ctx.lineTo(-s*(24 + gapAry), -2);     // 声带突（前，连接声带后端）
+    ctx.lineTo(s*16, 6);                  // 肌突（后外）
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(120,95,60,0.6)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    // 小角结节
+    ctx.beginPath();
+    ctx.arc(s*9, -11, 3, 0, Math.PI*2);
+    ctx.fillStyle = '#e9dcbe';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(120,95,60,0.5)';
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+function drawThyroidNotch(ctx){
+  ctx.strokeStyle = 'rgba(232,216,188,0.35)';
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(CX-10, ANT-22);
+  ctx.quadraticCurveTo(CX, ANT-12, CX+10, ANT-22);
+  ctx.stroke();
+}
+const COL_BONE = '#ffe9c8';    // 骨骼 / 软骨
+const COL_MUSCLE = '#ffb8c6';   // 肌肉
+const COL_MUCOSA = '#cfe4ff';   // 黏膜 / 其他
+const DIAGRAM_TEXT = {
+  zh:{front:'前 (会厌)', back:'后 (杓状软骨)', epiglottis:'会厌软骨', aryepiglottic:'杓会厌襞', falseFold:'室襞（假声带）', ventricle:'喉室', vocalFold:'声带（声带肌）', vocalProcess:'声带突', arytenoid:'杓状软骨', interarytenoid:'杓间肌', pca:'环杓后肌', cricoid:'环状软骨', anterior:'前联合', glottis:'声门', bone:'● 骨骼 / 软骨', muscle:'● 肌肉', mucosa:'● 黏膜', coronal:'冠状切面 · 前面观（骨骼与肌肉）', thyroid:'甲状软骨', vestibular:'室襞', thyroarytenoid:'声带肌（甲杓肌）', lateralCricoarytenoid:'环杓侧肌', cricothyroid:'环甲肌', vestibule:'喉前庭', waveform:'声门面积波形', spectrum:'谐波谱'},
+  en:{front:'Anterior (epiglottis)', back:'Posterior (arytenoids)', epiglottis:'Epiglottic cartilage', aryepiglottic:'Aryepiglottic fold', falseFold:'Vestibular (false) fold', ventricle:'Laryngeal ventricle', vocalFold:'Vocal fold (muscle)', vocalProcess:'Vocal process', arytenoid:'Arytenoid cartilage', interarytenoid:'Interarytenoid muscle', pca:'Posterior cricoarytenoid', cricoid:'Cricoid cartilage', anterior:'Anterior commissure', glottis:'Glottis', bone:'● Bone / cartilage', muscle:'● Muscle', mucosa:'● Mucosa', coronal:'Coronal section · anterior view (bone & muscle)', thyroid:'Thyroid cartilage', vestibular:'Vestibular fold', thyroarytenoid:'Vocalis (thyroarytenoid)', lateralCricoarytenoid:'Lateral cricoarytenoid', cricothyroid:'Cricothyroid', vestibule:'Laryngeal vestibule', waveform:'Glottal area waveform', spectrum:'Harmonic spectrum'}
+};
+const diagramText = key => DIAGRAM_TEXT[LANG][key] || key;
+function drawMainLabels(ctx){
+  ctx.font = '600 13px sans-serif';
+  ctx.strokeStyle = 'rgba(255,220,190,0.55)';
+  ctx.lineWidth = 1;
+  const items = [
+    {ax: CX-106, ay: 84, tx: CX-122, ty: 62, k:'epiglottis', align:'right', c:COL_BONE},
+    {ax: CX-112, ay: 116, tx: CX-126, ty: 116, k:'aryepiglottic', align:'right', c:COL_MUCOSA},
+    {ax: CX-92, ay: 186, tx: CX-126, ty: 178, k:'falseFold', align:'right', c:COL_MUCOSA},
+    {ax: CX-60, ay: 226, tx: CX-126, ty: 226, k:'ventricle', align:'right', c:COL_MUCOSA},
+    {ax: CX-34, ay: 268, tx: CX-126, ty: 268, k:'vocalFold', align:'right', c:COL_MUSCLE},
+    {ax: CX-24, ay: POST-22, tx: CX-126, ty: POST-28, k:'vocalProcess', align:'right', c:COL_BONE},
+    {ax: CX-36, ay: POST-8, tx: CX-126, ty: POST-6, k:'arytenoid', align:'right', c:COL_BONE},
+    {ax: CX-14, ay: POST+6, tx: CX-124, ty: POST+16, k:'interarytenoid', align:'right', c:COL_MUSCLE},
+    {ax: CX-34, ay: POST+12, tx: CX-124, ty: POST+48, k:'pca', align:'right', c:COL_MUSCLE},
+    {ax: CX-40, ay: POST+22, tx: CX-124, ty: POST+32, k:'cricoid', align:'right', c:COL_BONE},
+    {ax: CX, ay: ANT-14, tx: CX+10, ty: 60, k:'anterior', align:'left', c:COL_MUCOSA},
+    {ax: CX-6, ay: ANT+42, tx: CX+124, ty: 90, k:'glottis', align:'left', c:COL_MUCOSA}
+  ];
+  for (const it of items){
+    ctx.beginPath();
+    ctx.moveTo(it.ax, it.ay);
+    ctx.lineTo(it.tx, it.ty);
+    ctx.stroke();
+    ctx.textAlign = it.align;
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(10,8,14,0.85)';
+    ctx.strokeText(diagramText(it.k), it.tx, it.ty);
+    ctx.fillStyle = it.c;
+    ctx.fillText(diagramText(it.k), it.tx, it.ty);
+  }
+  // 图例（左上角）
+  ctx.font = '600 12px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = 'rgba(10,8,14,0.85)';
+  ctx.fillStyle = COL_BONE;   ctx.strokeText(diagramText('bone'), 12, 18); ctx.fillText(diagramText('bone'), 12, 18);
+  ctx.fillStyle = COL_MUSCLE; ctx.strokeText(diagramText('muscle'), 108, 18); ctx.fillText(diagramText('muscle'), 108, 18);
+  ctx.fillStyle = COL_MUCOSA; ctx.strokeText(diagramText('mucosa'), 156, 18); ctx.fillText(diagramText('mucosa'), 156, 18);
+}
+
+/* ================= 冠状切面（前面观）：骨骼与肌肉 ================= */
+function drawCoronal(phase){
+  const W2 = +co.dataset.logicalWidth, H2 = +co.dataset.logicalHeight, cx = W2/2;
+  cctx.clearRect(0,0,W2,H2);
+  cctx.fillStyle = '#0b0a10';
+  cctx.fillRect(0,0,W2,H2);
+
+  // 甲状软骨（盾形轮廓）
+  const gT = cctx.createLinearGradient(0, 10, 0, 96);
+  gT.addColorStop(0, 'rgba(214,202,178,0.16)');
+  gT.addColorStop(1, 'rgba(214,202,178,0.08)');
+  cctx.fillStyle = gT;
+  cctx.beginPath();
+  cctx.moveTo(cx-6, 14);
+  cctx.lineTo(cx-92, 52);
+  cctx.lineTo(cx-88, 104);
+  cctx.lineTo(cx-64, 104);
+  cctx.lineTo(cx-50, 74);
+  cctx.lineTo(cx-8, 62);
+  cctx.lineTo(cx+8, 62);
+  cctx.lineTo(cx+50, 74);
+  cctx.lineTo(cx+64, 104);
+  cctx.lineTo(cx+88, 104);
+  cctx.lineTo(cx+92, 52);
+  cctx.lineTo(cx+6, 14);
+  cctx.closePath();
+  cctx.fill();
+  cctx.strokeStyle = 'rgba(230,218,192,0.5)';
+  cctx.lineWidth = 1.4;
+  cctx.stroke();
+
+  // 气道（暗区）
+  cctx.fillStyle = '#141019';
+  cctx.fillRect(cx-16, 30, 32, 84);
+
+  // 室襞（假声带）
+  for (const s of [1,-1]){
+    cctx.beginPath();
+    cctx.ellipse(cx + s*54, 46, 24, 13, 0, 0, Math.PI*2);
+    cctx.fillStyle = 'rgba(196,86,104,0.85)';
+    cctx.fill();
+    cctx.strokeStyle = 'rgba(255,200,190,0.3)';
+    cctx.lineWidth = 1;
+    cctx.stroke();
+  }
+  // 喉室（窦）
+  cctx.fillStyle = '#0d0a10';
+  for (const s of [1,-1]){
+    cctx.beginPath();
+    cctx.moveTo(cx + s*34, 58);
+    cctx.quadraticCurveTo(cx + s*48, 66, cx + s*40, 74);
+    cctx.quadraticCurveTo(cx + s*30, 66, cx + s*34, 58);
+    cctx.closePath();
+    cctx.fill();
+  }
+
+  // 声门开度（与主视图同相位）
+  const gHalf = 22 * P.amp * areaShape(phase, P.voice) + Math.min(1, P.breathy + (P.voice === 'breathy' ? 0.58 : 0)) * 3 + (P.voice === 'falsetto' ? 2.5 : 0);
+
+  // 真声带（声带肌 / 甲杓肌；假声时拉薄变淡，仍为振动主体）
+  const falsC = P.voice === 'falsetto';
+  const fb = falsC ? 42 : 52;
+  for (const s of [1,-1]){
+    const gv = cctx.createLinearGradient(cx + s*8, 0, cx + s*(fb+4), 0);
+    if (falsC){
+      gv.addColorStop(0, '#f2c6d4');
+      gv.addColorStop(0.5, '#d99ab2');
+      gv.addColorStop(1, '#b06a86');
+    } else {
+      gv.addColorStop(0, '#e8a8b4');
+      gv.addColorStop(0.5, '#c06078');
+      gv.addColorStop(1, '#8f3a52');
+    }
+    cctx.fillStyle = gv;
+    cctx.beginPath();
+    cctx.moveTo(cx + s*fb, 76);
+    cctx.lineTo(cx + s*gHalf, 86);
+    cctx.lineTo(cx + s*fb, 98);
+    cctx.quadraticCurveTo(cx + s*(fb-22), 90, cx + s*fb, 76);
+    cctx.closePath();
+    cctx.fill();
+    cctx.strokeStyle = 'rgba(255,235,240,0.5)';
+    cctx.lineWidth = 1.2;
+    cctx.stroke();
+    // 肌纤维走向
+    cctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    cctx.lineWidth = 1;
+    for (let d=8; d<=22; d+=7){
+      cctx.beginPath();
+      cctx.moveTo(cx + s*(10+d), 78);
+      cctx.quadraticCurveTo(cx + s*(8+d), 88, cx + s*(10+d), 96);
+      cctx.stroke();
+    }
+  }
+
+  // 杓状软骨（声带后端外侧）
+  for (const s of [1,-1]){
+    cctx.beginPath();
+    cctx.moveTo(cx + s*48, 80);
+    cctx.lineTo(cx + s*44, 102);
+    cctx.lineTo(cx + s*60, 98);
+    cctx.closePath();
+    cctx.fillStyle = '#e9dcbe';
+    cctx.fill();
+    cctx.strokeStyle = 'rgba(120,95,60,0.6)';
+    cctx.lineWidth = 1;
+    cctx.stroke();
+  }
+
+  // 环杓侧肌（环状软骨 → 杓状软骨肌突）
+  for (const s of [1,-1]){
+    cctx.beginPath();
+    cctx.moveTo(cx + s*58, 98);
+    cctx.lineTo(cx + s*70, 113);
+    cctx.lineWidth = 6;
+    cctx.strokeStyle = 'rgba(176,70,86,0.75)';
+    cctx.stroke();
+  }
+
+  // 环状软骨
+  cctx.fillStyle = 'rgba(230,214,186,0.55)';
+  cctx.beginPath();
+  cctx.moveTo(cx-78, 116);
+  cctx.quadraticCurveTo(cx, 130, cx+78, 116);
+  cctx.lineTo(cx+78, 124);
+  cctx.quadraticCurveTo(cx, 138, cx-78, 124);
+  cctx.closePath();
+  cctx.fill();
+  cctx.strokeStyle = 'rgba(150,128,96,0.6)';
+  cctx.lineWidth = 1;
+  cctx.stroke();
+
+  // 环甲肌（前外侧，甲状软骨下缘 → 环状软骨弓）
+  cctx.fillStyle = 'rgba(184,78,94,0.8)';
+  cctx.beginPath();
+  cctx.ellipse(cx, 122, 24, 7, 0, 0, Math.PI*2);
+  cctx.fill();
+  cctx.strokeStyle = 'rgba(255,200,190,0.3)';
+  cctx.stroke();
+  cctx.strokeStyle = 'rgba(60,20,30,0.4)';
+  cctx.lineWidth = 1;
+  cctx.beginPath();
+  cctx.moveTo(cx-14, 121); cctx.lineTo(cx+14, 121);
+  cctx.stroke();
+
+  // 标题
+  cctx.fillStyle = 'rgba(255,255,255,0.65)';
+  cctx.font = '600 12px sans-serif';
+  cctx.textAlign = 'left';
+  cctx.fillText(diagramText('coronal'), 8, 14);
+  if (P.labels) drawCoronalLabels(cctx, cx);
+}
+function drawCoronalLabels(ctx, cx){
+  ctx.font = '600 11px sans-serif';
+  ctx.strokeStyle = 'rgba(255,220,190,0.55)';
+  ctx.lineWidth = 1;
+  const items = [
+    {ax:cx-88,ay:56,tx:cx-142,ty:48,k:'thyroid',align:'right',c:COL_BONE},
+    {ax:cx-46,ay:46,tx:cx-142,ty:64,k:'vestibular',align:'right',c:COL_MUCOSA},
+    {ax:cx-38,ay:86,tx:cx-142,ty:86,k:'thyroarytenoid',align:'right',c:COL_MUSCLE},
+    {ax:cx-50,ay:100,tx:cx-142,ty:104,k:'arytenoid',align:'right',c:COL_BONE},
+    {ax:cx-66,ay:104,tx:cx-142,ty:120,k:'lateralCricoarytenoid',align:'right',c:COL_MUSCLE},
+    {ax:cx-70,ay:124,tx:cx-142,ty:138,k:'cricoid',align:'right',c:COL_BONE},
+    {ax:cx,ay:122,tx:cx+62,ty:132,k:'cricothyroid',align:'left',c:COL_MUSCLE},
+    {ax:cx+6,ay:38,tx:cx+34,ty:26,k:'vestibule',align:'left',c:COL_MUCOSA}
+  ];
+  for (const it of items){
+    ctx.beginPath();
+    ctx.moveTo(it.ax, it.ay);
+    ctx.lineTo(it.tx, it.ty);
+    ctx.stroke();
+    ctx.textAlign = it.align;
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(10,8,14,0.85)';
+    ctx.strokeText(diagramText(it.k), it.tx, it.ty);
+    ctx.fillStyle = it.c;
+    ctx.fillText(diagramText(it.k), it.tx, it.ty);
+  }
+}
+
+/* ================= 声门面积波形 ================= */
+function drawWave(t, rate){
+  const phase = (t * rate) % 1;
+  const wW = +wv.dataset.logicalWidth, wH = +wv.dataset.logicalHeight;
+  wctx.clearRect(0,0,wW,wH);
+  wctx.fillStyle = '#0d0b13'; wctx.fillRect(0,0,wW,wH);
+
+  wctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  wctx.beginPath(); wctx.moveTo(0,wH/2); wctx.lineTo(wW,wH/2); wctx.stroke();
+
+  const cycles = 2.2;
+  const maxA = Math.max(0.15, P.amp);
+  const grad = wctx.createLinearGradient(0,0,wW,0);
+  grad.addColorStop(0,'#ff7aa8'); grad.addColorStop(1,'#ffb86b');
+
+  // 填充曲线下方面积
+  wctx.beginPath();
+  wctx.moveTo(0, wH-8);
+  for (let x=0;x<=wW;x++){
+    const p = (phase - (x/wW)*cycles + 1) % 1;
+    const a = areaShape(p, P.register) * P.amp;
+    const y = wH - 8 - (a/maxA)*(wH-24);
+    wctx.lineTo(x,y);
+  }
+  wctx.lineTo(wW, wH-8); wctx.closePath();
+  wctx.fillStyle = 'rgba(255,122,168,0.12)'; wctx.fill();
+
+  wctx.beginPath();
+  for (let x=0;x<=wW;x++){
+    const p = (phase - (x/wW)*cycles + 1) % 1;
+    const a = areaShape(p, P.register) * P.amp;
+    const y = wH - 8 - (a/maxA)*(wH-24);
+    if (x===0) wctx.moveTo(x,y); else wctx.lineTo(x,y);
+  }
+  wctx.strokeStyle = grad; wctx.lineWidth = 2; wctx.stroke();
+
+  // 「现在」标记
+  const yNow = wH - 8 - (areaShape(phase, P.register)*P.amp/maxA)*(wH-24);
+  wctx.beginPath(); wctx.arc(4, yNow, 3.5, 0, Math.PI*2);
+  wctx.fillStyle = '#ffb86b'; wctx.fill();
+
+  wctx.fillStyle = 'rgba(255,255,255,0.4)';
+  wctx.font = '9px sans-serif'; wctx.textAlign = 'left';
+  wctx.fillText(diagramText('waveform'), 6, 12);
+}
+
+/* ================= 谐波谱 ================= */
+function drawSpec(t){
+  const wW = +sp.dataset.logicalWidth, wH = +sp.dataset.logicalHeight;
+  sctx.clearRect(0,0,wW,wH);
+  sctx.fillStyle = '#0d0b13'; sctx.fillRect(0,0,wW,wH);
+
+  const nMax = Math.min(26, Math.floor(4500/P.f0));
+  const barW = wW / nMax;
+  const roll = P.voice === 'falsetto' ? 1.9 : P.voice === 'breathy' ? 1.25 : P.voice === 'pressed' ? 0.8 : P.voice === 'creaky' ? 0.72 : 1.05;
+  for (let n=1;n<=nMax;n++){
+    const f = n * P.f0;
+    let a = (1/Math.pow(n,roll)) * Math.max(0.05, Math.pow(Math.max(0,1 - f/5200), 1.5));
+    a *= 0.25 + 0.75*P.amp;
+    const bh = a * (wH-16);
+    sctx.fillStyle = n===1 ? '#ffb86b' : 'rgba(255,122,168,' + (0.35+0.6*a).toFixed(3) + ')';
+    sctx.fillRect(n*barW - barW*0.8, wH-8-bh, barW*0.6, Math.max(1, bh));
+  }
+  sctx.fillStyle = 'rgba(255,255,255,0.4)';
+  sctx.font = '9px sans-serif'; sctx.textAlign = 'left';
+  sctx.fillText(diagramText('spectrum'), 6, 12);
+}
+
+/* ================= Web Audio：合成「嗓音」 ================= */
+let actx=null, master=null, outGain=null, osc=null, lpf=null, f1=null, f2=null, f3=null, vibGain=null, vibOsc=null, creakGain=null, noiseSrc=null, noiseGain=null;
+function buildGlottalWave(){
+  if (!actx || !actx.createPeriodicWave || !osc) return;
+  try {
+    const real = new Float32Array(48), imag = new Float32Array(48);
+    const N = 512;
+    for (let k=1;k<48;k++){
+      let re = 0, im = 0;
+      for (let i=0;i<N;i++){
+        const p = i/N;
+        const v = areaShape(p, P.register);
+        const th = 2*Math.PI*k*i/N;
+        re += v*Math.cos(th); im += v*Math.sin(th);
+      }
+      real[k] = re/N; imag[k] = im/N;
+    }
+    osc.setPeriodicWave(actx.createPeriodicWave(real, imag));
+  } catch(e){ /* 回退三角波 */ }
+}
+function ensureAudio(){
+  if (actx) return true;
+  const AudioCtor = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtor) return false;
+  actx = new AudioCtor();
+  master = actx.createGain(); master.gain.value = 0; master.connect(actx.destination);
+
+  // 声门源：用声门面积波形合成周期性声波（音高严格等于 f0，音色随真声/假声变化）
+  osc = actx.createOscillator(); osc.type = 'triangle'; osc.frequency.value = P.f0;
+  buildGlottalWave();
+  // 真声带轻颤音（约 5 Hz LFO 调制基频；假声为纯音、无颤音）
+  vibGain = actx.createGain(); vibGain.gain.value = 0;
+  vibOsc = actx.createOscillator(); vibOsc.frequency.value = 5;
+  vibOsc.connect(vibGain); vibGain.connect(osc.frequency); vibOsc.start();
+
+  lpf = actx.createBiquadFilter(); lpf.type='lowpass'; lpf.frequency.value = P.f0*5; lpf.Q.value = 1.5;
+  osc.connect(lpf);
+
+  // 共鸣（元音 /a/ 的共振峰；增益随真声/假声调节）
+  outGain = actx.createGain(); outGain.gain.value = 0.8;
+  const creakOsc = actx.createOscillator(); creakOsc.frequency.value = 1.7;
+  creakGain = actx.createGain(); creakGain.gain.value = 0;
+  creakOsc.connect(creakGain); creakGain.connect(outGain.gain); creakOsc.start();
+  f1 = actx.createBiquadFilter(); f1.type='peaking'; f1.frequency.value=800;  f1.Q.value=5; f1.gain.value=9;
+  f2 = actx.createBiquadFilter(); f2.type='peaking'; f2.frequency.value=1150; f2.Q.value=8; f2.gain.value=6;
+  f3 = actx.createBiquadFilter(); f3.type='peaking'; f3.frequency.value=2550; f3.Q.value=6; f3.gain.value=4;
+  lpf.connect(f1); f1.connect(f2); f2.connect(f3); f3.connect(outGain);
+
+  // 气息噪声
+  const len = actx.sampleRate * 1.5;
+  const buf = actx.createBuffer(1, len, actx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i=0;i<len;i++) d[i] = Math.random()*2-1;
+  noiseSrc = actx.createBufferSource(); noiseSrc.buffer = buf; noiseSrc.loop = true;
+  const nf = actx.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=2300; nf.Q.value=0.6;
+  noiseGain = actx.createGain(); noiseGain.gain.value = P.breathy*0.5;
+  noiseSrc.connect(nf); nf.connect(noiseGain); noiseGain.connect(outGain);
+
+  noiseSrc.start(); osc.start();
+  outGain.connect(master);
+  applyRegisterAudio();
+  return true;
+}
+function setSound(on){
+  if (!ensureAudio()) return false;
+  if (actx.state === 'suspended') actx.resume();
+  master.gain.setTargetAtTime(on ? 0.5*P.amp : 0, actx.currentTime, 0.05);
+  return true;
+}
+function applyRegisterAudio(){
+  if (!actx) return;
+  const voice = P.voice || P.register;
+  const fals = voice === 'falsetto';
+  const breath = Math.min(1, P.breathy + (voice === 'breathy' || voice === 'whisper' ? 0.58 : 0));
+  const lpfMul = voice === 'pressed' ? 6 : voice === 'creaky' ? 3.5 : fals ? 2.5 : 5;
+  lpf.frequency.setTargetAtTime(P.f0 * lpfMul, actx.currentTime, 0.02);
+  lpf.Q.setTargetAtTime(voice === 'pressed' ? 2.2 : fals ? 0.8 : 1.5, actx.currentTime, 0.02);
+  const gainScale = voice === 'pressed' ? 1.15 : voice === 'breathy' ? 0.72 : voice === 'whisper' ? 0.2 : fals ? 0.45 : voice === 'creaky' ? 0.9 : 1;
+  f1.gain.setTargetAtTime(9 * gainScale, actx.currentTime, 0.05);
+  f2.gain.setTargetAtTime(6 * gainScale, actx.currentTime, 0.05);
+  f3.gain.setTargetAtTime(4 * gainScale, actx.currentTime, 0.05);
+  if (vibOsc) vibOsc.frequency.setTargetAtTime(voice === 'creaky' ? 1.7 : 5, actx.currentTime, 0.05);
+  if (vibGain) vibGain.gain.setTargetAtTime(fals || voice === 'creaky' || voice === 'whisper' ? 0 : P.f0*0.005, actx.currentTime, 0.05);
+  if (creakGain) creakGain.gain.setTargetAtTime(voice === 'creaky' ? 0.22 : 0, actx.currentTime, 0.05);
+  if (noiseGain) noiseGain.gain.setTargetAtTime(breath*0.5 + (fals ? 0.12 : 0), actx.currentTime, 0.05);
+}
+function audioFreq(){
+  if (!actx) return;
+  osc.frequency.setTargetAtTime(P.f0, actx.currentTime, 0.02);
+  applyRegisterAudio();
+}
+
+/* ================= 界面 ================= */
+const NOTES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const noteName = f => {
+  const m = Math.round(69 + 12*Math.log2(f/440));
+  return NOTES[((m%12)+12)%12] + (Math.floor(m/12)-1);
+};
+const el = {
+  f0:$('f0'), amp:$('amp'), br:$('breathy'), disp:$('disp'),
+  f0show:$('f0show'), note:$('note'), mode:$('mode'),
+  ampShow:$('ampShow'), brShow:$('brShow'), dispShow:$('dispShow'),
+  btnSound:$('btnSound'), btnPause:$('btnPause'), btnReal:$('btnReal'),
+  btnStrobe:$('btnStrobe'), btnLabels:$('btnLabels'), btnCoronal:$('btnCoronal'),
+  btnVoiceModal:$('btnVoiceModal'), btnVoiceFalsetto:$('btnVoiceFalsetto'),
+  btnVoiceBreathy:$('btnVoiceBreathy'), btnVoicePressed:$('btnVoicePressed'), btnVoiceCreaky:$('btnVoiceCreaky'), btnVoiceWhisper:$('btnVoiceWhisper'),
+  btnHelp:$('btnHelp'), btnLang:$('btnLang'), helpOverlay:$('helpOverlay'), helpClose:$('helpClose'), helpTitle:$('helpTitle'), helpZh:$('helpZh'), helpEn:$('helpEn')
+};
+const UI_TEXT = {
+  zh:{title:'🎤 声带振动模拟', subtitle:'喉镜俯视 + 冠状切面 · 软骨与肌肉 · 黏膜波 · 气流粒子 · 实时合成音源', f0:'基频 f₀', amp:'振幅', breathy:'气息感', disp:'慢放倍数', sound:'🔊 发声', pause:'⏸ 暂停', real:'⏱ 实时', strobe:'⚡ 频闪', labels:'🔍 解剖标注', coronal:'🧬 冠状切面', voiceTitle:'嗓音模态：', modes:['正常模态','假声','气声','紧喉','气泡','耳语'], presets:['男低音 110 Hz','女声 220 Hz','童声 300 Hz','气息声'], help:'❓ 帮助', close:'关闭', lang:'EN', ariaLang:'切换到英文'},
+  en:{title:'🎤 Vocal Fold Vibration Simulator', subtitle:'Top-view laryngoscopy + coronal section · anatomy · mucosal wave · airflow particles · real-time synthesis', f0:'Fundamental f₀', amp:'Amplitude', breathy:'Breathiness', disp:'Slow motion', sound:'🔊 Play voice', pause:'⏸ Pause', real:'⏱ Real-time', strobe:'⚡ Strobe', labels:'🔍 Anatomy labels', coronal:'🧬 Coronal section', voiceTitle:'Voice mode:', modes:['Modal','Falsetto','Breathy','Pressed','Creaky','Whisper'], presets:['Low male 110 Hz','Female 220 Hz','Child 300 Hz','Breathy voice'], help:'❓ Help', close:'Close', lang:'中文', ariaLang:'切换到中文'}
+};
+function applyLanguage(){
+  const t = UI_TEXT[LANG];
+  document.documentElement.lang = LANG === 'en' ? 'en' : 'zh-CN';
+  document.querySelector('header h1').textContent = t.title;
+  document.querySelector('header p').textContent = t.subtitle;
+  document.querySelectorAll('.ctl label').forEach((node,i)=> node.textContent = [t.f0,t.amp,t.breathy,t.disp][i]);
+  ['btnSound','btnPause','btnReal','btnStrobe','btnLabels','btnCoronal'].forEach((id,key)=> $(id).textContent = [P.sound ? (LANG === 'en' ? '🔇 Mute' : '🔇 静音') : t.sound, P.paused ? (LANG === 'en' ? '▶ Resume' : '▶ 继续') : t.pause, t.real,t.strobe,t.labels,t.coronal][key]);
+  document.querySelector('.voice-title').textContent = t.voiceTitle;
+  ['btnVoiceModal','btnVoiceFalsetto','btnVoiceBreathy','btnVoicePressed','btnVoiceCreaky','btnVoiceWhisper'].forEach((id,i)=> $(id).textContent=t.modes[i]);
+  document.querySelectorAll('.preset').forEach((node,i)=> node.textContent=t.presets[i]);
+  $('presetTitle').textContent = LANG === 'en' ? 'Presets:' : '预设：';
+  const canvasAria = LANG === 'en' ? ['Top-view vocal-fold vibration animation','Coronal vocal-fold vibration animation','Glottal area waveform','Harmonic spectrum'] : ['喉镜俯视声带振动动画','喉部冠状切面声带振动动画','声门面积波形','声音谐波谱'];
+  [lx,co,wv,sp].forEach((canvas,i)=> canvas.setAttribute('aria-label', canvasAria[i]));
+  document.querySelector('.voice-group').setAttribute('aria-label', LANG === 'en' ? 'Voice modes' : '嗓音模态');
+  $('hintText').innerHTML = LANG === 'en'
+    ? 'Top = anterior (epiglottis), bottom = posterior (arytenoids). The two vocal folds open and close while airflow passes through the glottis.<br/>The upper-left view shows a laryngoscopy-style top view; the lower section is a coronal view. Use the anatomy-label and voice-mode controls to compare the simplified patterns.<br/>Press <b>Space</b> to pause. Real-time shows the nominal speed; strobe fixes the display at 1.2 cycles/s.'
+    : '上 = 前方（会厌方向），下 = 后方（杓状软骨）。两条声带周期性开合，气流从下方穿过声门。<br/>上方为喉镜俯视图，下方为冠状切面。可用解剖标注和嗓音模态控件比较不同简化模式。<br/>按 <b>空格</b>暂停。实时模式显示名义速度；频闪模式固定为每秒 1.2 个周期。';
+  document.title = LANG === 'en' ? 'Vocal Fold Vibration Simulator' : '声带振动模拟 · Vocal Fold Vibration';
+  el.btnHelp.textContent=t.help; el.btnLang.textContent=t.lang; el.btnLang.setAttribute('aria-label',t.ariaLang);
+  el.helpClose.title=t.close; el.helpClose.setAttribute('aria-label',t.close);
+  el.helpTitle.textContent = LANG === 'en' ? '📖 Vocal Fold Simulator · Help' : '📖 声带振动模拟 · 帮助与知识解析';
+  el.helpZh.hidden = LANG === 'en'; el.helpEn.hidden = LANG !== 'en';
+  updateMode();
+}
+function updateMode(){
+  if (P.realtime){
+    el.mode.textContent = voiceName(P.voice) + (LANG === 'en' ? ' · Real-time' : ' · 实时');
+  } else if (P.strobe){
+    el.mode.textContent = voiceName(P.voice) + (LANG === 'en' ? ' · Strobe 1.2 Hz' : ' · 频闪 1.2 Hz');
+  } else {
+    el.mode.textContent = voiceName(P.voice) + (LANG === 'en' ? ' · Slow ×' : ' · 慢放×') + P.factor;
+  }
+  el.disp.disabled = P.realtime || P.strobe;
+  el.btnReal.classList.toggle('on', P.realtime);
+  el.btnReal.setAttribute('aria-pressed', String(P.realtime));
+  el.btnStrobe.classList.toggle('on', P.strobe);
+  el.btnStrobe.setAttribute('aria-pressed', String(P.strobe));
+}
+function setVoice(voice){
+  P.voice = voice;
+  P.register = voice === 'falsetto' ? 'falsetto' : 'modal';
+  const voiceButtons = {modal:el.btnVoiceModal, falsetto:el.btnVoiceFalsetto, breathy:el.btnVoiceBreathy, pressed:el.btnVoicePressed, creaky:el.btnVoiceCreaky, whisper:el.btnVoiceWhisper};
+  for (const [name, button] of Object.entries(voiceButtons)){
+    button.classList.toggle('on', name === voice);
+    button.setAttribute('aria-pressed', String(name === voice));
+  }
+  buildGlottalWave();
+  applyRegisterAudio();
+  updateMode();
+}
+el.f0.addEventListener('input', ()=>{ P.f0 = +el.f0.value; el.f0show.textContent = P.f0; el.note.textContent = noteName(P.f0); updateMode(); audioFreq(); });
+el.amp.addEventListener('input', ()=>{ P.amp = +el.amp.value; el.ampShow.textContent = P.amp.toFixed(2); if (P.sound && actx) master.gain.setTargetAtTime(0.5*P.amp, actx.currentTime, 0.05); });
+el.br.addEventListener('input', ()=>{ P.breathy = +el.br.value; el.brShow.textContent = P.breathy.toFixed(2); audioFreq(); });
+el.btnSound.addEventListener('click', ()=>{
+  const next = !P.sound;
+  if (!setSound(next)){
+    el.btnSound.textContent = '⚠️ 音频不可用';
+    el.btnSound.disabled = true;
+    return;
+  }
+  P.sound = next;
+  el.btnSound.classList.toggle('on', P.sound);
+  el.btnSound.setAttribute('aria-pressed', String(P.sound));
+  el.btnSound.textContent = P.sound ? (LANG === 'en' ? '🔇 Mute' : '🔇 静音') : (LANG === 'en' ? '🔊 Play voice' : '🔊 发声');
+});
+el.btnPause.addEventListener('click', ()=>{
+  P.paused = !P.paused;
+  el.btnPause.textContent = P.paused ? (LANG === 'en' ? '▶ Resume' : '▶ 继续') : (LANG === 'en' ? '⏸ Pause' : '⏸ 暂停');
+  el.btnPause.classList.toggle('on', P.paused);
+  el.btnPause.setAttribute('aria-pressed', String(P.paused));
+});
+el.disp.addEventListener('input', ()=>{
+  P.factor = +el.disp.value;
+  el.dispShow.textContent = P.factor;
+  updateMode();
+});
+el.btnReal.addEventListener('click', ()=>{
+  const turnOn = !P.realtime;
+  P.realtime = turnOn;
+  P.strobe = false;
+  updateMode();
+});
+el.btnStrobe.addEventListener('click', ()=>{
+  const turnOn = !P.strobe;
+  P.realtime = false;
+  P.strobe = turnOn;
+  updateMode();
+});
+document.querySelectorAll('.preset').forEach(b => b.addEventListener('click', ()=>{
+  P.f0 = +b.dataset.f0; P.amp = +b.dataset.amp; P.breathy = +b.dataset.br;
+  el.f0.value = P.f0; el.amp.value = P.amp; el.br.value = P.breathy;
+  el.f0show.textContent = P.f0; el.note.textContent = noteName(P.f0);
+  el.ampShow.textContent = P.amp.toFixed(2); el.brShow.textContent = P.breathy.toFixed(2);
+  audioFreq();
+}));
+el.btnLabels.addEventListener('click', ()=>{
+  P.labels = !P.labels;
+  el.btnLabels.classList.toggle('on', P.labels);
+  el.btnLabels.setAttribute('aria-pressed', String(P.labels));
+});
+el.btnCoronal.addEventListener('click', ()=>{
+  P.coronal = !P.coronal;
+  el.btnCoronal.classList.toggle('on', P.coronal);
+  el.btnCoronal.setAttribute('aria-pressed', String(P.coronal));
+  co.style.display = P.coronal ? 'block' : 'none';
+});
+el.btnVoiceModal.addEventListener('click', ()=> setVoice('modal'));
+el.btnVoiceFalsetto.addEventListener('click', ()=> setVoice('falsetto'));
+el.btnVoiceBreathy.addEventListener('click', ()=> setVoice('breathy'));
+el.btnVoicePressed.addEventListener('click', ()=> setVoice('pressed'));
+el.btnVoiceCreaky.addEventListener('click', ()=> setVoice('creaky'));
+el.btnVoiceWhisper.addEventListener('click', ()=> setVoice('whisper'));
+el.btnLang.addEventListener('click', ()=>{ LANG = LANG === 'zh' ? 'en' : 'zh'; applyLanguage(); });
+function openHelp(){
+  el.helpOverlay.classList.remove('hidden');
+  el.helpOverlay.setAttribute('aria-hidden', 'false');
+  el.btnHelp.setAttribute('aria-expanded', 'true');
+  document.body.classList.add('help-open');
+  el.helpClose.focus();
+}
+function closeHelp(){
+  if (el.helpOverlay.classList.contains('hidden')) return;
+  el.helpOverlay.classList.add('hidden');
+  el.helpOverlay.setAttribute('aria-hidden', 'true');
+  el.btnHelp.setAttribute('aria-expanded', 'false');
+  document.body.classList.remove('help-open');
+  el.btnHelp.focus();
+}
+el.btnHelp.addEventListener('click', openHelp);
+el.helpClose.addEventListener('click', closeHelp);
+el.helpOverlay.addEventListener('click', e => {
+  if (e.target === el.helpOverlay) closeHelp();
+});
+window.addEventListener('keydown', e => {
+  const tag = e.target && e.target.tagName;
+  const interactive = /^(A|BUTTON|INPUT|SELECT|TEXTAREA)$/.test(tag || '') || (e.target && e.target.isContentEditable);
+  if (e.code === 'Space' && !interactive && el.helpOverlay.classList.contains('hidden')){
+    e.preventDefault();
+    el.btnPause.click();
+  }
+  if (e.key === 'Escape') closeHelp();
+});
+el.note.textContent = noteName(P.f0);
+el.dispShow.textContent = P.factor;
+el.btnLabels.classList.add('on');
+el.btnCoronal.classList.add('on');
+applyLanguage();
+
+/* ================= 主循环 ================= */
+function frame(ts){
+  const dt = Math.min(0.05, (ts - lastTs)/1000 || 0.016);
+  lastTs = ts;
+  if (!P.paused) time += dt;
+  const rate = displayRate();
+  const phaseDisp = (time * rate) % 1;
+  drawLarynx(phaseDisp, P.paused ? 0 : dt);
+  if (P.coronal) drawCoronal(phaseDisp);
+  drawWave(time, rate);
+  drawSpec(time);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(ts => { lastTs = ts; requestAnimationFrame(frame); });
+</script>
+</body>
+</html>

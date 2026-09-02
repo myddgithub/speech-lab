@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>普通话声母发音动态图解 v2</title>
+<style>
+  :root{
+    --paper:#f7f4ee; --card:#ffffff; --ink:#2b2b33; --muted:#8a8578;
+    --teal:#0e7490; --teal-soft:#e0f2f6; --coral:#d95d39; --coral-soft:#fdeee5;
+    --line:#e6e0d4; --amber:#e8a013; --tongue:#e0718c;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--paper); color:var(--ink); font-family:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif; padding:22px 14px 50px;}
+  .wrap{max-width:1200px; margin:0 auto;}
+  header{text-align:center; margin-bottom:18px;}
+  header h1{font-size:27px; letter-spacing:3px; font-weight:700;}
+  header h1 span{color:var(--teal);}
+  header p{color:var(--muted); font-size:13px; margin-top:7px; line-height:1.8;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; box-shadow:0 3px 14px rgba(60,50,30,.06); margin-bottom:14px;}
+  .card-title{font-size:14px; font-weight:700; letter-spacing:1px; margin-bottom:10px; display:flex; align-items:center; gap:10px;}
+  .card-title::before{content:""; width:4px; height:15px; border-radius:2px; background:var(--teal);}
+  .hint-inline{font-weight:400; font-size:12px; color:var(--muted);}
+  .main{display:grid; grid-template-columns:1.35fr .95fr; gap:14px;}
+  @media(max-width:980px){.main{grid-template-columns:1fr;}}
+  svg#tract{display:block; width:100%; height:auto; background:linear-gradient(180deg,#fdfcf9,#f5efe4); border:1px solid var(--line); border-radius:10px;}
+  .stage-bar{display:flex; align-items:center; gap:8px; margin-top:10px; flex-wrap:wrap;}
+  .phase-line{display:flex; gap:6px; flex:1; min-width:220px;}
+  .phase{flex:1; text-align:center; font-size:12px; padding:5px 2px; border-radius:7px; background:#f1ece1; color:var(--muted); transition:all .2s; letter-spacing:1px;}
+  .phase.cur{background:var(--teal); color:#fff; font-weight:600;}
+  .phase-label-row{display:flex; gap:6px; flex:1; min-width:220px; margin-top:4px;}
+  .phase-desc{flex:1; font-size:11.5px; color:var(--muted); text-align:center; line-height:1.5; min-height:34px;}
+  button{font-family:inherit; background:#fff; color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:6px 14px; font-size:13px; cursor:pointer; transition:all .15s;}
+  button:hover{border-color:var(--teal); color:var(--teal);}
+  button.primary{background:var(--teal); border-color:var(--teal); color:#fff;}
+  button.primary:hover{background:#0b5d74; color:#fff;}
+  button.warm{background:var(--coral); border-color:var(--coral); color:#fff;}
+  button.warm:hover{background:#b94a2c; color:#fff;}
+  label.ck{display:flex; align-items:center; gap:5px; font-size:12px; color:var(--muted); cursor:pointer; user-select:none;}
+  .speed-box{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted);}
+  .speed-box input{width:110px; accent-color:var(--teal);}
+  .info-top{display:flex; align-items:center; gap:16px;}
+  .big-letter{width:84px; height:84px; flex:none; border-radius:16px; background:linear-gradient(135deg,var(--teal),#1597ad); color:#fff; font-size:46px; font-weight:700; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 16px rgba(14,116,144,.3); letter-spacing:1px;}
+  .big-letter small{font-size:18px; font-weight:500; opacity:.85; margin-left:2px;}
+  .info-meta{flex:1;}
+  .ipa{font-size:19px; color:var(--coral); font-weight:600; font-family:"Cambria Math","Segoe UI",serif;}
+  .tags{display:flex; flex-wrap:wrap; gap:5px; margin-top:7px;}
+  .tag{font-size:11.5px; padding:2px 9px; border-radius:999px; background:var(--teal-soft); color:var(--teal); border:1px solid #bfe3ec;}
+  .tag.warm{background:var(--coral-soft); color:var(--coral); border-color:#f6cdb8;}
+  .tag.gray{background:#f1ece1; color:var(--muted); border-color:var(--line);}
+  .sec-label{font-size:12px; font-weight:700; color:var(--teal); letter-spacing:2px; margin:14px 0 5px;}
+  .desc{font-size:13.5px; line-height:1.9; background:#fbfaf6; border:1px solid var(--line); border-radius:9px; padding:10px 12px;}
+  .tip{font-size:12.5px; line-height:1.8; color:#a05a10; background:#fdf6e7; border-left:3px solid var(--amber); border-radius:0 8px 8px 0; padding:8px 12px; margin-top:8px;}
+  .word-row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px; background:#fbfaf6; border:1px solid var(--line); border-radius:9px; padding:9px 12px;}
+  .word-box{display:flex; align-items:baseline; gap:10px;}
+  .word{font-size:23px; font-weight:700;}
+  .word-py{font-size:13px; color:var(--muted);}
+  .hudu-box{display:flex; align-items:baseline; gap:8px;}
+  .hudu{font-size:14px; color:var(--teal); font-weight:600;}
+  .hudu small{color:var(--muted); font-weight:400;}
+  .audio-row{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;}
+  .audio-row button{flex:1; min-width:120px; padding:9px 6px; font-size:13.5px;}
+  .voicenote{display:none; margin-top:8px; font-size:11.5px; color:var(--coral); line-height:1.6;}
+  table{width:100%; border-collapse:separate; border-spacing:4px;}
+  th{font-size:12px; font-weight:600; color:var(--muted); padding:4px 2px; letter-spacing:1px;}
+  th.rowh{text-align:right; padding-right:8px; white-space:nowrap;}
+  td{background:#fbfaf6; border:1px solid var(--line); border-radius:9px; text-align:center; padding:5px 3px; min-width:62px;}
+  td.empty{background:transparent; border:none;}
+  .syl{display:inline-block; min-width:30px; margin:2px; padding:4px 8px; border-radius:8px; border:1px solid #cfe4ea; background:var(--teal-soft); color:var(--teal); font-size:15px; font-weight:600; cursor:pointer; transition:all .12s; font-family:inherit;}
+  .syl:hover{transform:translateY(-1px); box-shadow:0 3px 8px rgba(14,116,144,.2);}
+  .syl.active{background:var(--teal); color:#fff; border-color:var(--teal);}
+  .syl.warm{background:var(--coral-soft); color:var(--coral); border-color:#f6cdb8;}
+  .syl.warm.active{background:var(--coral); color:#fff; border-color:var(--coral);}
+  .quick{display:flex; flex-wrap:wrap; gap:5px; align-items:center; margin-top:12px;}
+  .quick .qlabel{font-size:12px; color:var(--muted); margin-right:4px;}
+  .legend{display:flex; gap:16px; flex-wrap:wrap; justify-content:center; font-size:12px; color:var(--muted);}
+  .legend span{display:flex; align-items:center; gap:6px;}
+  .dot{width:10px; height:10px; border-radius:50%; display:inline-block;}
+  .footnote{text-align:center; color:var(--muted); font-size:11.5px; margin-top:6px; line-height:1.7;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>普通话<span>声母</span>发音动态图解</h1>
+    <p>侧面剖面动画 · 成阻 → 持阻 → 除阻 ｜ 蓝色粒子=气流，橙色=送气爆发 ｜ 点击任意声母查看动画并自动发音</p>
+  </header>
+
+  <div class="main">
+    <div class="card">
+      <div class="card-title">发音器官剖面 · 动态演示 <span class="hint-inline" id="stageHint">—</span></div>
+      <svg id="tract" viewBox="0 0 760 560" aria-label="发音器官剖面图"></svg>
+      <div class="stage-bar">
+        <button id="btnPlay" class="primary">⏸ 暂停</button>
+        <button id="btnStep">单步 ▶</button>
+        <div class="phase-line">
+          <div class="phase" id="ph0">① 成阻</div>
+          <div class="phase" id="ph1">② 持阻</div>
+          <div class="phase" id="ph2">③ 除阻</div>
+        </div>
+        <div class="speed-box">速度 <input type="range" id="speed" min="0.4" max="2.2" step="0.1" value="1"><span id="speedVal">1.0×</span></div>
+        <label class="ck"><input type="checkbox" id="ckLabels" checked> 器官标注</label>
+      </div>
+      <div class="phase-label-row">
+        <div class="phase-desc" id="pd0"></div>
+        <div class="phase-desc" id="pd1"></div>
+        <div class="phase-desc" id="pd2"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">当前声母</div>
+      <div class="info-top">
+        <div class="big-letter" id="bigLetter">b</div>
+        <div class="info-meta">
+          <div class="ipa" id="ipa">[p]</div>
+          <div class="tags" id="tags"></div>
+        </div>
+      </div>
+      <div class="sec-label">发音要领</div>
+      <div class="desc" id="desc"></div>
+      <div class="tip" id="tip"></div>
+      <div class="sec-label">发音示范</div>
+      <div class="word-row">
+        <div class="word-box"><span class="word" id="word">爸爸</span><span class="word-py" id="wordPy">bà ba</span></div>
+        <div class="hudu-box"><span class="hudu" id="hudu">呼读音 bō</span><small id="huduCh">（玻）</small></div>
+      </div>
+      <div class="audio-row">
+        <button id="btnHudu" class="primary">🔊 呼读音</button>
+        <button id="btnWord" class="warm">🔊 例词</button>
+        <label class="ck" style="align-self:center"><input type="checkbox" id="ckAuto" checked> 选音自动发音</label>
+      </div>
+      <div class="voicenote" id="voiceNote">⚠️ 未检测到中文语音包，可能无法发声或发音不准。<br>Windows：设置 → 时间和语言 → 语音 → 添加「中文(简体)」语音后刷新页面。</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">声母分类总表 <span class="hint-inline">按「发音方法 × 发音部位」归类 · 橙色=送气音，蓝色=不送气/其他</span></div>
+    <table id="tbl"></table>
+    <div class="quick" id="quickRow"><span class="qlabel">快速选音：</span></div>
+  </div>
+
+  <div class="card">
+    <div class="legend">
+      <span><i class="dot" style="background:#38a8c8"></i>气流粒子</span>
+      <span><i class="dot" style="background:#e8a013"></i>送气爆发</span>
+      <span><i class="dot" style="background:#e0718c"></i>舌体</span>
+      <span><i class="dot" style="background:#d95d39"></i>声带振动</span>
+      <span><i class="dot" style="background:#8a8578"></i>发音器官</span>
+    </div>
+    <div class="footnote">y、w 为零声母音节起首的半元音（介音），一并收录便于演示。呼读音按教材惯例：玻 坡 摸 佛 ｜ 得 特 讷 勒 ｜ 哥 科 喝 ｜ 基 欺 希 ｜ 知 吃 诗 日 ｜ 资 雌 思。</div>
+  </div>
+</div>
+
+<script>
+"use strict";
+window.addEventListener("error",e=>{const d=document.createElement("div");d.style.cssText="position:fixed;top:0;left:0;z-index:999;background:#c0392b;color:#fff;font-size:12px;padding:4px 8px;white-space:pre-wrap;max-width:100vw;";d.textContent="JSERR: "+e.message+" @"+e.lineno+":"+e.colno;document.body.appendChild(d);});
+/* ================= 数据 ================= */
+// 舌面 6 关键点：舌尖, 舌叶, 舌面前, 舌面中, 舌面后, 舌根
+const POSES = {
+  neutral:   [[196,388],[236,374],[296,362],[360,356],[425,362],[472,406]],
+  low:       [[196,396],[238,386],[298,376],[362,370],[426,368],[472,408]],
+  frontTeeth:[[208,322],[232,350],[282,362],[352,358],[424,362],[470,406]],
+  alveolar:  [[226,310],[250,336],[288,356],[352,358],[424,362],[470,406]],
+  retroflex: [[246,300],[270,316],[304,340],[358,350],[426,358],[472,404]],
+  palatal:   [[204,392],[240,384],[300,296],[362,300],[428,352],[472,404]],
+  velar:     [[200,394],[238,388],[292,378],[360,346],[418,286],[468,398]]
+};
+const TONGUE_BOTTOM = [[478,434],[440,470],[360,486],[278,480],[224,462],[200,432],[190,406]];
+
+const SVGNS = "http://www.w3.org/2000/svg";
+const $ = id => document.getElementById(id);
+
+/* 声母数据：group: stop/affr/fric/nasal/lateral/semi */
+const SOUNDS = {
+  b:{letter:"b", ipa:"[p]",  place:"双唇音", placeEn:"bilabial",  manner:"清塞音", group:"stop", asp:false, voiced:false, pose:"neutral", lips:"closed", velum:"up",   contact:[166,350],
+     desc:"双唇紧闭，软腭上升堵住鼻腔，气流憋在口腔里；然后双唇突然打开，气流迸裂而出。声带不振动，气流弱（不送气）。",
+     tip:"b 与 p 口形完全相同，唯一区别是送气强弱：把手放在嘴前，发 b 时几乎感觉不到气流。",
+     word:"爸爸", wordPy:"bà ba", hudu:"bō", huduCh:"玻", syl:"ba"},
+  p:{letter:"p", ipa:"[pʰ]", place:"双唇音", placeEn:"bilabial",  manner:"清塞音", group:"stop", asp:true,  voiced:false, pose:"neutral", lips:"closed", velum:"up",   contact:[166,350],
+     desc:"双唇紧闭憋住气流，然后突然打开，同时喷出一股强气流（送气）。声带不振动。",
+     tip:"发 p 时手掌能感到明显喷气。可用薄纸片放在嘴前检验：纸片被吹动即为送气。",
+     word:"爬坡", wordPy:"pá pō", hudu:"pō", huduCh:"坡", syl:"pa"},
+  m:{letter:"m", ipa:"[m]",  place:"双唇音", placeEn:"bilabial",  manner:"浊鼻音", group:"nasal", asp:false, voiced:true,  pose:"neutral", lips:"closed", velum:"down", contact:[166,350],
+     desc:"双唇闭合，软腭下垂打开鼻腔通道，气流振动声带后全部从鼻腔流出。",
+     tip:"捏住鼻子就发不出 m——因为气流必须走鼻腔。声带振动，摸喉咙有震感。",
+     word:"妈妈", wordPy:"mā ma", hudu:"mō", huduCh:"摸", syl:"ma"},
+  f:{letter:"f", ipa:"[f]",  place:"唇齿音", placeEn:"labiodental", manner:"清擦音", group:"fric", asp:false, voiced:false, pose:"low",   lips:"teeth",  velum:"up",   contact:[196,318],
+     desc:"上齿轻触下唇，留一条窄缝，气流从缝中挤出摩擦成声。声带不振动。",
+     tip:"关键是「齿咬唇」：不要读成双唇的 fu，摩擦点在上齿与下唇之间。",
+     word:"方法", wordPy:"fāng fǎ", hudu:"fó", huduCh:"佛", syl:"fa"},
+  z:{letter:"z", ipa:"[ts]", place:"舌尖前音", placeEn:"dental", manner:"清塞擦音", group:"affr", asp:false, voiced:false, pose:"frontTeeth", lips:"open", velum:"up", contact:[214,320],
+     desc:"舌尖抵住上齿背形成阻塞，然后稍微松开一条缝，气流摩擦而出——先塞后擦，不送气。",
+     tip:"舌尖平伸抵上齿背，不要翘舌（否则变成 zh）。",
+     word:"自尊", wordPy:"zì zūn", hudu:"zī", huduCh:"资", syl:"zi"},
+  c:{letter:"c", ipa:"[tsʰ]", place:"舌尖前音", placeEn:"dental", manner:"清塞擦音", group:"affr", asp:true,  voiced:false, pose:"frontTeeth", lips:"open", velum:"up", contact:[214,320],
+     desc:"与 z 相同部位，但松开时送出一股强气流（送气）。",
+     tip:"z/c/s 都是平舌音，舌尖始终抵着或靠近上齿背。",
+     word:"层次", wordPy:"céng cì", hudu:"cí", huduCh:"雌", syl:"ci"},
+  s:{letter:"s", ipa:"[s]",  place:"舌尖前音", placeEn:"dental", manner:"清擦音", group:"fric", asp:false, voiced:false, pose:"frontTeeth", lips:"open", velum:"up", contact:[214,320],
+     desc:"舌尖靠近上齿背，留窄缝，气流持续摩擦而出。声带不振动。",
+     tip:"保持缝隙稳定，气流均匀细长，像轻轻吹气。",
+     word:"三思", wordPy:"sān sī", hudu:"sī", huduCh:"思", syl:"si"},
+  d:{letter:"d", ipa:"[t]",  place:"舌尖中音", placeEn:"alveolar", manner:"清塞音", group:"stop", asp:false, voiced:false, pose:"alveolar", lips:"open", velum:"up", contact:[226,310],
+     desc:"舌尖抵住上齿龈，憋住气流后突然放开，气流迸出。声带不振动，不送气。",
+     tip:"阻塞点在齿龈（上牙床），比 z/c/s 的位置稍后一点。",
+     word:"大地", wordPy:"dà dì", hudu:"dé", huduCh:"得", syl:"de"},
+  t:{letter:"t", ipa:"[tʰ]", place:"舌尖中音", placeEn:"alveolar", manner:"清塞音", group:"stop", asp:true,  voiced:false, pose:"alveolar", lips:"open", velum:"up", contact:[226,310],
+     desc:"与 d 相同，但除阻时喷出强气流（送气）。",
+     tip:"d/t 对比：同部位同方法，只差送气。",
+     word:"探讨", wordPy:"tàn tǎo", hudu:"tè", huduCh:"特", syl:"te"},
+  n:{letter:"n", ipa:"[n]",  place:"舌尖中音", placeEn:"alveolar", manner:"浊鼻音", group:"nasal", asp:false, voiced:true,  pose:"alveolar", lips:"open", velum:"down", contact:[226,310],
+     desc:"舌尖抵住上齿龈封住口腔，软腭下垂，气流振动声带后从鼻腔流出。",
+     tip:"捏鼻则 n 中止；捏鼻发得出的是 l。用这个方法区分 n/l。",
+     word:"牛奶", wordPy:"niú nǎi", hudu:"nè", huduCh:"讷", syl:"ne"},
+  l:{letter:"l", ipa:"[l]",  place:"舌尖中音", placeEn:"alveolar", manner:"浊边音", group:"lateral", asp:false, voiced:true, pose:"alveolar", lips:"open", velum:"up", contact:[226,310],
+     desc:"舌尖抵住上齿龈，但舌头两侧留出通道，气流从舌的两边流出，声带振动。",
+     tip:"与 n 部位相同：n 走鼻腔，l 走口腔两侧。",
+     word:"理论", wordPy:"lǐ lùn", hudu:"lè", huduCh:"勒", syl:"le"},
+  zh:{letter:"zh", ipa:"[ʈʂ]", place:"舌尖后音", placeEn:"retroflex", manner:"清塞擦音", group:"affr", asp:false, voiced:false, pose:"retroflex", lips:"open", velum:"up", contact:[246,300],
+     desc:"舌尖上翘，抵住硬腭前部形成阻塞，再松开一条缝摩擦而出——先塞后擦，不送气。",
+     tip:"卷舌音：舌尖翘起来对着硬腭，与平舌 z 形成对比。",
+     word:"政治", wordPy:"zhèng zhì", hudu:"zhī", huduCh:"知", syl:"zhi"},
+  ch:{letter:"ch", ipa:"[ʈʂʰ]", place:"舌尖后音", placeEn:"retroflex", manner:"清塞擦音", group:"affr", asp:true,  voiced:false, pose:"retroflex", lips:"open", velum:"up", contact:[246,300],
+     desc:"与 zh 相同，但松开时送出强气流。",
+     tip:"zh/ch 对比只差送气，注意保持翘舌。",
+     word:"长城", wordPy:"cháng chéng", hudu:"chī", huduCh:"吃", syl:"chi"},
+  sh:{letter:"sh", ipa:"[ʂ]", place:"舌尖后音", placeEn:"retroflex", manner:"清擦音", group:"fric", asp:false, voiced:false, pose:"retroflex", lips:"open", velum:"up", contact:[246,300],
+     desc:"舌尖上翘接近硬腭前部，留窄缝，气流持续摩擦。声带不振动。",
+     tip:"与 s 对比：sh 翘舌，s 平舌。",
+     word:"山水", wordPy:"shān shuǐ", hudu:"shī", huduCh:"诗", syl:"shi"},
+  r:{letter:"r", ipa:"[ʐ]",  place:"舌尖后音", placeEn:"retroflex", manner:"浊擦音", group:"fric", asp:false, voiced:true,  pose:"retroflex", lips:"open", velum:"up", contact:[246,300],
+     desc:"口形与 sh 相同，但声带振动（浊音）。",
+     tip:"摸着喉咙发 sh，再让声带振动起来就是 r。",
+     word:"柔软", wordPy:"róu ruǎn", hudu:"rì", huduCh:"日", syl:"ri"},
+  j:{letter:"j", ipa:"[tɕ]", place:"舌面音", placeEn:"palatal", manner:"清塞擦音", group:"affr", asp:false, voiced:false, pose:"palatal", lips:"open", velum:"up", contact:[300,296],
+     desc:"舌尖下垂抵下齿背，舌面前部抬起抵住硬腭，先阻塞后松开摩擦，不送气。",
+     tip:"发音时嘴角向两边展开（带笑意），舌面贴硬腭。",
+     word:"经济", wordPy:"jīng jì", hudu:"jī", huduCh:"基", syl:"ji"},
+  q:{letter:"q", ipa:"[tɕʰ]", place:"舌面音", placeEn:"palatal", manner:"清塞擦音", group:"affr", asp:true,  voiced:false, pose:"palatal", lips:"open", velum:"up", contact:[300,296],
+     desc:"与 j 相同，但松开时送出强气流。",
+     tip:"j/q/x 都是舌面音，气流从舌面与硬腭之间通过。",
+     word:"亲切", wordPy:"qīn qiè", hudu:"qī", huduCh:"欺", syl:"qi"},
+  x:{letter:"x", ipa:"[ɕ]",  place:"舌面音", placeEn:"palatal", manner:"清擦音", group:"fric", asp:false, voiced:false, pose:"palatal", lips:"open", velum:"up", contact:[300,296],
+     desc:"舌面前部接近硬腭，留窄缝，气流持续摩擦。声带不振动。",
+     tip:"嘴角展开，气流从舌面中部挤出，不要读成 s。",
+     word:"学习", wordPy:"xué xí", hudu:"xī", huduCh:"希", syl:"xi"},
+  g:{letter:"g", ipa:"[k]",  place:"舌根音", placeEn:"velar", manner:"清塞音", group:"stop", asp:false, voiced:false, pose:"velar", lips:"open", velum:"up", contact:[418,286],
+     desc:"舌根抬起抵住软腭，憋住气流后突然放开，不送气。声带不振动。",
+     tip:"阻塞点在口腔最后部——舌根与软腭。",
+     word:"改革", wordPy:"gǎi gé", hudu:"gē", huduCh:"哥", syl:"ge"},
+  k:{letter:"k", ipa:"[kʰ]", place:"舌根音", placeEn:"velar", manner:"清塞音", group:"stop", asp:true,  voiced:false, pose:"velar", lips:"open", velum:"up", contact:[418,286],
+     desc:"与 g 相同，但除阻时喷出强气流。",
+     tip:"g/k 对比只差送气。",
+     word:"刻苦", wordPy:"kè kǔ", hudu:"kē", huduCh:"科", syl:"ke"},
+  h:{letter:"h", ipa:"[x]",  place:"舌根音", placeEn:"velar", manner:"清擦音", group:"fric", asp:false, voiced:false, pose:"velar", lips:"open", velum:"up", contact:[418,286],
+     desc:"舌根接近软腭，留窄缝，气流摩擦而出。声带不振动。",
+     tip:"摩擦点在舌根，比普通话「喝」的声母更靠后一点也没问题。",
+     word:"航海", wordPy:"háng hǎi", hudu:"hē", huduCh:"喝", syl:"he"},
+  y:{letter:"y", ipa:"[j]",  place:"零声母·介音", placeEn:"semivowel", manner:"半元音", group:"semi", asp:false, voiced:true, pose:"palatal", lips:"open", velum:"up", contact:[300,296],
+     desc:"舌面前部接近硬腭，缝隙比 x 宽得多，气流通过时几乎无摩擦，声带振动。即 i 作音节起首的写法。",
+     tip:"y 不是严格意义的声母，如 yi、ya、ye 中的 y 表示音节以 i 起头。",
+     word:"音乐", wordPy:"yīn yuè", hudu:"yī", huduCh:"衣", syl:"yi"},
+  w:{letter:"w", ipa:"[w]",  place:"零声母·介音", placeEn:"semivowel", manner:"半元音", group:"semi", asp:false, voiced:true, pose:"velar", lips:"round", velum:"up", contact:[166,350],
+     desc:"双唇收圆并向前突出，舌根抬高接近软腭，声带振动。即 u 作音节起首的写法。",
+     tip:"w 表示音节以 u 起头，如 wu、wa、wo；注意双唇要圆。",
+     word:"文物", wordPy:"wén wù", hudu:"wū", huduCh:"乌", syl:"wu"}
+};
+const ORDER = ["b","p","m","f","z","c","s","d","t","n","l","zh","ch","sh","r","j","q","x","g","k","h","y","w"];
+
+/* 分类表：行=方法，列=部位 */
+const COLS = ["双唇","唇齿","舌尖前","舌尖中","舌尖后","舌面","舌根"];
+const ROWS = [
+  {name:"塞音·不送气", cells:{ "双唇":["b"], "舌尖中":["d"], "舌根":["g"] }},
+  {name:"塞音·送气",   cells:{ "双唇":["p"], "舌尖中":["t"], "舌根":["k"] }},
+  {name:"塞擦音·不送气", cells:{ "舌尖前":["z"], "舌尖后":["zh"], "舌面":["j"] }},
+  {name:"塞擦音·送气",   cells:{ "舌尖前":["c"], "舌尖后":["ch"], "舌面":["q"] }},
+  {name:"擦音·清",     cells:{ "唇齿":["f"], "舌尖前":["s"], "舌尖后":["sh"], "舌面":["x"], "舌根":["h"] }},
+  {name:"擦音·浊",     cells:{ "舌尖后":["r"] }},
+  {name:"鼻音·浊",     cells:{ "双唇":["m"], "舌尖中":["n"] }},
+  {name:"边音·浊",     cells:{ "舌尖中":["l"] }}
+];
+
+/* ================= 气流路线 ================= */
+const ROUTE_ORAL  = [[498,525],[497,445],[496,382],[492,338],[470,314],[430,301],[372,296],[300,303],[242,323],[196,341],[172,352],[120,357]];
+const ROUTE_NASAL = [[498,525],[497,445],[494,372],[490,302],[484,254],[462,234],[420,224],[360,220],[300,222],[246,232],[206,246],[180,258],[152,268],[120,274]];
+
+function prepRoute(pts){
+  const segs=[]; let total=0;
+  for(let i=0;i<pts.length-1;i++){
+    const dx=pts[i+1][0]-pts[i][0], dy=pts[i+1][1]-pts[i][1];
+    const len=Math.hypot(dx,dy); segs.push({a:pts[i],b:pts[i+1],len,acc:total}); total+=len;
+  }
+  return {pts,segs,total};
+}
+const R_ORAL=prepRoute(ROUTE_ORAL), R_NASAL=prepRoute(ROUTE_NASAL);
+function sampleRoute(R,t){
+  const d=t*R.total;
+  for(const s of R.segs){
+    if(d<=s.acc+s.len){ const k=(d-s.acc)/s.len; return [s.a[0]+(s.b[0]-s.a[0])*k, s.a[1]+(s.b[1]-s.a[1])*k]; }
+  }
+  return R.pts[R.pts.length-1].slice();
+}
+function routeTofNearest(R,x,y){
+  let best=0,bd=1e9;
+  for(let i=0;i<=200;i++){ const p=sampleRoute(R,i/200); const d=(p[0]-x)**2+(p[1]-y)**2; if(d<bd){bd=d;best=i/200;} }
+  return best;
+}
+
+/* ================= SVG 场景 ================= */
+const svg = $("tract");
+function el(name,attrs,parent){
+  const e=document.createElementNS(SVGNS,name);
+  for(const k in attrs) e.setAttribute(k,attrs[k]);
+  (parent||svg).appendChild(e); return e;
+}
+/* 平滑曲线（Catmull-Rom → Bezier） */
+function smoothPath(pts,close){
+  let d="M "+pts[0][0].toFixed(1)+" "+pts[0][1].toFixed(1);
+  for(let i=0;i<pts.length-1;i++){
+    const p0=pts[Math.max(0,i-1)], p1=pts[i], p2=pts[i+1], p3=pts[Math.min(pts.length-1,i+2)];
+    const c1=[p1[0]+(p2[0]-p0[0])/6, p1[1]+(p2[1]-p0[1])/6];
+    const c2=[p2[0]-(p3[0]-p1[0])/6, p2[1]-(p3[1]-p1[1])/6];
+    d+=" C "+c1[0].toFixed(1)+" "+c1[1].toFixed(1)+", "+c2[0].toFixed(1)+" "+c2[1].toFixed(1)+", "+p2[0].toFixed(1)+" "+p2[1].toFixed(1);
+  }
+  if(close) d+=" Z";
+  return d;
+}
+
+/* --- 静态背景：头部轮廓 --- */
+el("path",{d:"M 152 178 C 224 146, 326 136, 402 150 C 478 164, 520 222, 530 300 L 544 548", fill:"none", stroke:"#cbb199", "stroke-width":3, "stroke-linecap":"round"});
+el("path",{d:"M 152 178 C 132 198, 120 214, 124 230 C 128 246, 140 254, 154 258 L 150 300", fill:"none", stroke:"#cbb199", "stroke-width":3, "stroke-linecap":"round"}); // 鼻梁→鼻
+el("path",{d:"M 152 412 C 156 442, 172 464, 200 476 C 236 490, 284 494, 318 492 L 332 548", fill:"none", stroke:"#cbb199", "stroke-width":3, "stroke-linecap":"round"}); // 下颌
+el("path",{d:"M 470 500 L 466 548 M 540 480 L 544 548", fill:"none", stroke:"#cbb199", "stroke-width":2.5, "stroke-linecap":"round"}); // 颈
+
+/* --- 气道（口腔→咽→喉 / 鼻腔） --- */
+el("path",{d:smoothPath(ROUTE_ORAL,false), fill:"none", stroke:"#4a3b46", "stroke-width":30, "stroke-linecap":"round"});
+el("path",{d:smoothPath(ROUTE_NASAL,false), fill:"none", stroke:"#4a3b46", "stroke-width":26, "stroke-linecap":"round"});
+el("path",{d:smoothPath(ROUTE_ORAL,false), fill:"none", stroke:"#5d4a58", "stroke-width":22, "stroke-linecap":"round"});
+el("path",{d:smoothPath(ROUTE_NASAL,false), fill:"none", stroke:"#5d4a58", "stroke-width":18, "stroke-linecap":"round"});
+
+/* --- 腭（硬腭+软腭基座） --- */
+el("path",{d:"M 196 270 L 196 246 C 240 236, 320 228, 388 224 L 396 254 C 330 260, 250 268, 214 280 Z", fill:"#e8d6ba", stroke:"#cbb199", "stroke-width":1.5});
+el("path",{d:"M 206 282 C 250 270, 330 260, 394 254", fill:"none", stroke:"#a98f6e", "stroke-width":2.5, "stroke-linecap":"round"}); // 硬腭下缘
+
+/* --- 牙齿 --- */
+const gTeethU=el("g",{},svg);
+el("rect",{x:200,y:264,width:24,height:50,rx:5,fill:"#fffef7",stroke:"#948b74","stroke-width":2},gTeethU);
+el("line",{x1:212,y1:266,x2:212,y2:312,stroke:"#c5bda6","stroke-width":1.5},gTeethU);
+el("rect",{x:206,y:404,width:22,height:36,rx:5,fill:"#fffef7",stroke:"#948b74","stroke-width":2},svg);
+
+/* --- 齿龈隆起 --- */
+el("path",{d:"M 226 268 C 234 278, 238 290, 236 302 C 246 296, 250 282, 244 268 Z", fill:"#e8d6ba", stroke:"#a98f6e", "stroke-width":1.5});
+
+/* --- 软腭瓣（动画） --- */
+const gVelum = el("g",{},svg);
+const velumBody = el("path",{d:"", fill:"#e8d6ba", stroke:"#a98f6e", "stroke-width":2, "stroke-linejoin":"round"}, gVelum);
+const VEL_PIVOT=[392,246];
+function velumAnglePath(deg){
+  const rad=deg*Math.PI/180, L=62, W=15;
+  const dx=Math.cos(rad), dy=Math.sin(rad), nx=-dy, ny=dx;
+  const bx=VEL_PIVOT[0], by=VEL_PIVOT[1];
+  const tipx=bx+dx*L, tipy=by+dy*L;
+  return "M "+(bx+nx*W/2).toFixed(1)+" "+(by+ny*W/2).toFixed(1)+
+         " L "+(tipx+nx*4).toFixed(1)+" "+(tipy+ny*4).toFixed(1)+
+         " Q "+(tipx).toFixed(1)+" "+(tipy+6).toFixed(1)+" "+(tipx-nx*4).toFixed(1)+" "+(tipy-ny*4).toFixed(1)+
+         " L "+(bx-nx*W/2).toFixed(1)+" "+(by-ny*W/2).toFixed(1)+" Z";
+}
+const VEL_DOWN=52, VEL_UP=-16; // 角度：下垂(鼻通) / 抬起(鼻闭)
+
+/* --- 会厌/声带区 --- */
+el("path",{d:"M 470 452 C 478 460, 482 470, 480 482", fill:"none", stroke:"#a98f6e", "stroke-width":3, "stroke-linecap":"round"});
+const gFolds=el("g",{},svg);
+const foldTop=el("path",{d:"", stroke:"#d95d39","stroke-width":4,"stroke-linecap":"round",fill:"none"},gFolds);
+const foldBot=el("path",{d:"", stroke:"#d95d39","stroke-width":4,"stroke-linecap":"round",fill:"none"},gFolds);
+const foldGlow=el("circle",{cx:492,cy:474,r:0,fill:"#d95d39",opacity:.25},gFolds);
+
+/* --- 舌（动画） --- */
+const tonguePath=el("path",{d:"", fill:"#e0718c", stroke:"#c05a74", "stroke-width":2, "stroke-linejoin":"round"});
+const tongueShine=el("path",{d:"", fill:"none", stroke:"#f0a3b6", "stroke-width":2.5, "stroke-linecap":"round", opacity:.8});
+
+/* --- 唇（动画） --- */
+const lipU=el("ellipse",{cx:160,cy:326,rx:21,ry:14,fill:"#e89a8a",stroke:"#c97a6a","stroke-width":1.5});
+const lipL=el("ellipse",{cx:160,cy:378,rx:22,ry:15,fill:"#e89a8a",stroke:"#c97a6a","stroke-width":1.5});
+
+/* --- 阻塞点标记 --- */
+const contactRing=el("circle",{r:9,fill:"none",stroke:"#d95d39","stroke-width":2.5,opacity:0});
+const contactDot=el("circle",{r:3.5,fill:"#d95d39",opacity:0});
+
+/* --- 粒子层 --- */
+const gParticles=el("g",{},svg);
+
+/* --- 器官标注 --- */
+const gLabels=el("g",{"font-size":"13px",fill:"#6b6353","font-family":"inherit"},svg);
+const LABELS=[
+  ["鼻腔",300,196],["硬腭",322,244],["软腭",430,232],["上齿",182,250],
+  ["舌尖",176,316],["舌",330,440],["咽腔",528,344],["声带",540,470],["气管",548,516],["唇",150,412]
+];
+for(const [t,x,y] of LABELS){
+  const tx=el("text",{x:x,y:y,"text-anchor":"middle"},gLabels); tx.textContent=t;
+}
+
+/* ================= 动画状态 ================= */
+let curKey="b";
+let phase=0;          // 0..1 循环进度
+let playing=true;
+let speed=1;
+let lastTs=0;
+const particles=[];
+
+function lerp(a,b,k){return a+(b-a)*k;}
+function smooth(k){return k*k*(3-2*k);}
+function poseLerp(a,b,k){
+  const out=[];
+  for(let i=0;i<a.length;i++) out.push([lerp(a[i][0],b[i][0],k), lerp(a[i][1],b[i][1],k)]);
+  return out;
+}
+
+/* 阶段划分 */
+function phaseBounds(s){
+  if(s.group==="stop"||s.group==="affr") return {A:0.30, B:0.58, C:0.78};
+  return {A:0.26, B:0.80, C:1.0};
+}
+function articK(s,p){
+  const b=phaseBounds(s);
+  if(p<b.A) return smooth(p/b.A);
+  if(p<b.B) return 1;
+  if(p<b.C){
+    if(s.group==="stop"||s.group==="affr"){ const r=Math.min(1,(p-b.B)/(b.C-b.B)/0.75); return lerp(1,0.25,smooth(r)); }
+    return 1;
+  }
+  return lerp(s.group==="stop"||s.group==="affr"?0.25:1, 0, (p-b.C)/(1-b.C));
+}
+function phaseIndex(s,p){
+  const b=phaseBounds(s);
+  if(p<b.A) return 0;
+  if(p<b.B) return 1;
+  return 2;
+}
+
+/* 粒子 */
+function spawn(route,color,spd,size,jitter,stopAt,startT){
+  if(particles.length>320) return;
+  particles.push({route,t:startT||0,color,spd:spd*(0.85+Math.random()*0.3),size:size*(0.8+Math.random()*0.4),jitter,stopAt:stopAt||1.02,ph:Math.random()*6.28});
+}
+function updateParticles(dt,s,p){
+  const b=phaseBounds(s);
+  const inHold=p>=b.A&&p<b.B, inRelease=p>=b.B&&p<b.C;
+  const route=(s.group==="nasal")?R_NASAL:R_ORAL;
+  const stopT=routeTofNearest(route,s.contact[0],s.contact[1]);
+  // 生成
+  if(s.group==="stop"||s.group==="affr"){
+    if(inHold){ /* 气压云：在阻塞点后方聚集 */
+      for(let i=0;i<2;i++) spawn(route,"#38a8c8",0.05,3.2,3,stopT-0.02, stopT-0.03-Math.random()*0.16);
+    }
+    if(inRelease){ /* 除阻：从阻塞点冲出 */
+      const n=s.asp?5:3;
+      for(let i=0;i<n;i++) spawn(route,s.asp?"#e8a013":"#38a8c8",s.asp?0.55:0.4,s.asp?3.6:3,s.asp?11:5,1.02,stopT-0.01);
+    }
+  }else if(s.group==="fric"){
+    if(inHold) for(let i=0;i<2;i++) spawn(route,s.voiced?"#d98a4a":"#38a8c8",0.9,2.8,7,1.02,0);
+  }else if(s.group==="nasal"){
+    if(inHold) for(let i=0;i<2;i++) spawn(route,"#d98a4a",0.85,3,3,1.02,0);
+  }else if(s.group==="lateral"){
+    if(inHold) for(let i=0;i<2;i++) spawn(route,"#d98a4a",0.85,2.8,9,1.02,0);
+  }else if(s.group==="semi"){
+    if(inHold) for(let i=0;i<2;i++) spawn(route,"#d98a4a",0.7,3,2,1.02,0);
+  }
+  // 更新与绘制
+  for(let i=particles.length-1;i>=0;i--){
+    const pt=particles[i];
+    if(inRelease && pt.stopT<1){ pt.stopT=1.02; pt.spd=Math.max(pt.spd,0.5); } /* 除阻放行并加速 */
+    pt.t+=pt.spd*dt*1.6;
+    if(pt.t>pt.stopT){ pt.t=pt.stopT; }
+    if(pt.t>=1.01){ particles.splice(i,1); if(pt.el) pt.el.remove(); continue; }
+    if(!pt.el){ pt.el=el("circle",{r:pt.size,fill:pt.color,opacity:.9},gParticles); }
+    const pos=sampleRoute(pt.route,Math.min(pt.t,1));
+    const jx=(Math.random()-0.5)*pt.jitter, jy=(Math.random()-0.5)*pt.jitter;
+    pt.el.setAttribute("cx",pos[0]+jx); pt.el.setAttribute("cy",pos[1]+jy);
+  }
+}
+function clearParticles(){ for(const p of particles) if(p.el) p.el.remove(); particles.length=0; }
+
+/* ================= 渲染帧 ================= */
+function drawFrame(ts,dt){
+  const s=SOUNDS[curKey];
+  if(playing) phase=(phase+dt*speed/3.4)%1;
+  const p=phase, k=articK(s,p);
+  const b=phaseBounds(s);
+  const inHold=p>=b.A&&p<b.B, inRelease=p>=b.B&&p<b.C;
+
+  /* 舌 */
+  const target=POSES[s.pose]||POSES.neutral;
+  const effK=(s.group==="fric"||s.group==="semi")?k*0.85:k;
+  const pts=poseLerp(POSES.neutral,target,effK);
+  const top=smoothPath(pts,false);
+  /* 舌体闭合路径：舌面顶部 + 底部轮廓 */
+  tonguePath.setAttribute("d", top+" L "+TONGUE_BOTTOM[0][0]+" "+TONGUE_BOTTOM[0][1]+" "+smoothPath(TONGUE_BOTTOM,false).substring(1)+" Z");
+  tongueShine.setAttribute("d", smoothPath(pts.slice(0,4),false));
+
+  /* 唇 */
+  let uCy=326,uRx=21,uRy=14,lCx=160,lCy=378,lRx=22,lRy=15;
+  if(s.lips==="closed"){
+    uCy=lerp(326,338,k); lCy=lerp(378,366,k);
+  }else if(s.lips==="round"){
+    uRx=lerp(21,13,k); uRy=lerp(14,9,k); lRx=lerp(22,13,k); lRy=lerp(15,9,k);
+    uCy=lerp(326,344,k); lCy=lerp(378,362,k);
+  }else if(s.lips==="teeth"){
+    lCx=lerp(160,180,k); lCy=lerp(378,340,k); lRx=lerp(22,17,k);
+  }
+  lipU.setAttribute("cy",uCy); lipU.setAttribute("rx",uRx); lipU.setAttribute("ry",uRy);
+  lipL.setAttribute("cx",lCx); lipL.setAttribute("cy",lCy); lipL.setAttribute("rx",lRx); lipL.setAttribute("ry",lRy);
+
+  /* 软腭 */
+  const wantUp=s.velum==="up";
+  const deg=lerp(VEL_DOWN, wantUp?VEL_UP:VEL_DOWN, k);
+  velumBody.setAttribute("d", velumAnglePath(deg));
+
+  /* 声带 */
+  const vib=s.voiced&&inHold?Math.sin(ts/28)*3:0;
+  const gap=s.voiced?(inHold?2.5+vib*0.4:5):7;
+  foldTop.setAttribute("d","M 476 "+(470-gap)+" L 506 "+(474-gap*0.5));
+  foldBot.setAttribute("d","M 476 "+(478+gap)+" L 506 "+(474+gap*0.5));
+  foldGlow.setAttribute("r", s.voiced&&inHold?14+vib:0);
+
+  /* 阻塞点 */
+  const showC=(inHold||(s.group==="stop"||s.group==="affr")&&p>=b.A*0.7&&p<b.C)&&s.group!=="semi";
+  contactRing.setAttribute("cx",s.contact[0]); contactRing.setAttribute("cy",s.contact[1]);
+  contactDot.setAttribute("cx",s.contact[0]); contactDot.setAttribute("cy",s.contact[1]);
+  contactRing.setAttribute("opacity",showC?0.9:0);
+  contactDot.setAttribute("opacity",showC?0.9:0);
+  if(showC) contactRing.setAttribute("r",8+Math.sin(ts/150)*2.5);
+
+  /* 粒子 */
+  updateParticles(dt,s,p);
+
+  /* 阶段指示 */
+  const pi=phaseIndex(s,p);
+  for(let i=0;i<3;i++) $("ph"+i).classList.toggle("cur",i===pi);
+}
+function render(ts){
+  const dt=Math.min(0.05,(ts-lastTs)/1000||0.016); lastTs=ts;
+  drawFrame(ts,dt);
+  requestAnimationFrame(render);
+}
+
+/* ================= 信息面板 ================= */
+function buildTags(s){
+  const tags=$("tags"); tags.innerHTML="";
+  const list=[[s.place,""],[s.manner,""],[s.voiced?"浊音（声带振动）":"清音（声带不振动）",s.voiced?"warm":"gray"]];
+  if(s.group==="stop"||s.group==="affr") list.push([s.asp?"送气":"不送气",s.asp?"warm":"gray"]);
+  for(const [t,c] of list){ const e=document.createElement("span"); e.className="tag "+c; e.textContent=t; tags.appendChild(e); }
+}
+function phaseTexts(s){
+  const placeAct={
+    "双唇音":"双唇闭合","唇齿音":"上齿触下唇","舌尖前音":"舌尖抵上齿背","舌尖中音":"舌尖抵上齿龈",
+    "舌尖后音":"舌尖翘起抵硬腭前","舌面音":"舌面抬起近硬腭","舌根音":"舌根抬起抵软腭","零声母·介音":"舌面/唇接近成阻点"
+  }[s.place];
+  if(s.group==="stop") return [placeAct+"，阻塞气流","保持阻塞，蓄足气压","突然放开，气流迸出"+(s.asp?"（强送气）":"")];
+  if(s.group==="affr") return [placeAct+"，形成阻塞","保持阻塞","松开窄缝，摩擦而出"+(s.asp?"（强送气）":"")];
+  if(s.group==="fric") return [placeAct+"，留出窄缝","气流持续摩擦成声","放松，回到自然状态"];
+  if(s.group==="nasal") return [placeAct+"，关闭口腔","软腭下垂，气走鼻腔，声带振动","放松，回到自然状态"];
+  if(s.group==="lateral") return [placeAct+"，舌两侧留缝","气流从舌侧流出，声带振动","放松，回到自然状态"];
+  return [placeAct+"，缝隙较宽","气流轻过，声带振动","放松，回到自然状态"];
+}
+function select(key,fromUser){
+  curKey=key; phase=0; clearParticles();
+  const s=SOUNDS[key];
+  $("bigLetter").textContent=key;
+  $("ipa").textContent=s.ipa;
+  buildTags(s);
+  $("desc").textContent=s.desc;
+  $("tip").textContent="💡 "+s.tip;
+  $("word").textContent=s.word; $("wordPy").textContent=s.wordPy;
+  $("hudu").textContent="呼读音 "+s.hudu; $("huduCh").textContent="（"+s.huduCh+"）";
+  $("stageHint").textContent=s.letter+" "+s.ipa+" · "+s.place+" · "+s.manner;
+  const pts=phaseTexts(s);
+  for(let i=0;i<3;i++) $("pd"+i).textContent=pts[i];
+  document.querySelectorAll(".syl").forEach(e=>e.classList.toggle("active",e.dataset.k===key));
+  if(fromUser && $("ckAuto").checked) speak(s.huduCh,0.85);
+}
+
+/* ================= 语音 ================= */
+let zhVoice=null;
+function pickVoice(){
+  const vs=speechSynthesis.getVoices();
+  zhVoice=vs.find(v=>/zh[-_]CN/i.test(v.lang))||vs.find(v=>/^zh/i.test(v.lang))||null;
+  $("voiceNote").style.display=zhVoice?"none":"block";
+}
+if("speechSynthesis" in window){
+  pickVoice(); speechSynthesis.onvoiceschanged=pickVoice;
+}
+function speak(text,rate){
+  if(!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang="zh-CN"; u.rate=rate||0.85; u.pitch=1;
+  if(zhVoice) u.voice=zhVoice;
+  speechSynthesis.speak(u);
+}
+
+/* ================= 表格 ================= */
+function buildTable(){
+  const tbl=$("tbl");
+  let html="<tr><th></th>"+COLS.map(c=>"<th>"+c+"</th>").join("")+"</tr>";
+  for(const row of ROWS){
+    html+="<tr><th class='rowh'>"+row.name+"</th>";
+    for(const col of COLS){
+      const items=(row.cells[col]||[]);
+      if(!items.length){ html+="<td class='empty'></td>"; continue; }
+      html+="<td>"+items.map(k=>{
+        const s=SOUNDS[k];
+        const warm=s.asp?" warm":"";
+        return "<button class='syl"+warm+"' data-k='"+k+"' title='"+s.manner+" "+s.ipa+"'>"+k+"</button>";
+      }).join("")+"</td>";
+    }
+    html+="</tr>";
+  }
+  tbl.innerHTML=html;
+  const q=$("quickRow");
+  for(const k of ORDER){
+    const s=SOUNDS[k];
+    const b=document.createElement("button");
+    b.className="syl"+(s.asp?" warm":""); b.dataset.k=k; b.textContent=k;
+    b.title=s.place+" · "+s.manner;
+    q.appendChild(b);
+  }
+  document.querySelectorAll(".syl").forEach(e=>e.addEventListener("click",()=>select(e.dataset.k,true)));
+}
+
+/* ================= 控件 ================= */
+$("btnPlay").addEventListener("click",()=>{
+  playing=!playing;
+  $("btnPlay").textContent=playing?"⏸ 暂停":"▶ 播放";
+  $("btnPlay").classList.toggle("primary",playing);
+});
+$("btnStep").addEventListener("click",()=>{
+  playing=false; $("btnPlay").textContent="▶ 播放"; $("btnPlay").classList.remove("primary");
+  const s=SOUNDS[curKey], b=phaseBounds(s);
+  if(phase<b.A) phase=b.A+0.01;
+  else if(phase<b.B) phase=b.B+0.01;
+  else phase=0.01;
+});
+$("speed").addEventListener("input",e=>{ speed=parseFloat(e.target.value); $("speedVal").textContent=speed.toFixed(1)+"×"; });
+$("ckLabels").addEventListener("change",e=>{ gLabels.style.display=e.target.checked?"":"none"; });
+$("btnHudu").addEventListener("click",()=>speak(SOUNDS[curKey].huduCh,0.8));
+$("btnWord").addEventListener("click",()=>speak(SOUNDS[curKey].word,0.85));
+
+/* ================= 启动 ================= */
+buildTable();
+/* 测试/深链钩子：?s=d&t=1.5 选中声母并快进到 t 秒（无头截图验证用） */
+const qp=new URLSearchParams(location.search);
+const qk=qp.get("s"), qt=parseFloat(qp.get("t")||"NaN");
+select(qk&&SOUNDS[qk]?qk:"b",false);
+if(!isNaN(qt)){
+  playing=false; $("btnPlay").textContent="▶ 播放"; $("btnPlay").classList.remove("primary");
+  let tt=0; const step=1/60;
+  while(tt<qt){ phase=(phase+step/3.4)%1; drawFrame(tt*1000,step); tt+=step; }
+}
+requestAnimationFrame(ts=>{lastTs=ts; requestAnimationFrame(render);});
+</script>
+</body>
+</html>

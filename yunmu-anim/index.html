@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="dark" />
+<title>汉语韵母发音动态图 · 元音与韵母发音演示</title>
+<style>
+  :root{ --zoom:1; --bg:#0d0b12; --panel:#17131f; --panel2:#1e1929; --text:#e8e2ef; --muted:#9a90ad; --accent:#ff7aa8; --accent2:#ffb86b; --line:#2c2537; --cyan:#7fd8ff; --amber:#ffd166; }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:radial-gradient(1200px 700px at 50% -10%, #241b2e 0%, var(--bg) 55%); color:var(--text); font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif; min-height:100vh; padding:28px 16px 60px; }
+  .wrap{max-width:1240px; margin:0 auto;}
+  header{text-align:center; margin-bottom:20px;}
+  header h1{font-size:calc(28px * 1.06 * var(--zoom)); font-weight:600; letter-spacing:2px;}
+  header p{color:var(--muted); font-size:calc(13.5px * 1.06 * var(--zoom)); margin-top:8px; line-height:1.8;}
+  header p b{color:var(--accent2); font-weight:600;}
+  .fontctl{display:flex; align-items:center; justify-content:center; gap:10px; margin-top:12px;}
+  .fontctl .fclabel{font-size:calc(13px * 1.06 * var(--zoom)); color:var(--muted);}
+  .fontctl input[type=range]{width:170px; accent-color:var(--accent);}
+  .fontctl .fcval{font-size:calc(12.5px * 1.06 * var(--zoom)); color:var(--accent2); width:52px; text-align:left; font-variant-numeric:tabular-nums;}
+  .card{background:linear-gradient(180deg,var(--panel2),var(--panel)); border:1px solid var(--line); border-radius:16px; padding:16px; box-shadow:0 18px 50px rgba(0,0,0,.45); margin-bottom:16px;}
+  .card-title{font-size:calc(14.5px * 1.06 * var(--zoom)); font-weight:600; letter-spacing:1px; margin-bottom:12px; color:var(--text); display:flex; align-items:center; gap:10px;}
+  .hint-inline{color:var(--muted); font-weight:400; font-size:calc(12.5px * 1.06 * var(--zoom));}
+  .main{display:grid; grid-template-columns:1.18fr .82fr; gap:16px; align-items:stretch;}
+  @media(max-width:960px){ .main{grid-template-columns:1fr;} }
+  canvas{display:block; width:100%; height:auto; border-radius:10px; background:#0b0a10; border:1px solid var(--line);}
+  .canvas-tools{display:flex; justify-content:space-between; align-items:center; margin-top:10px; gap:10px; flex-wrap:wrap;}
+  .canvas-tools label{font-size:calc(12.5px * 1.06 * var(--zoom)); color:var(--muted); cursor:pointer; display:flex; align-items:center; gap:6px;}
+  .badge{font-size:calc(12.5px * 1.06 * var(--zoom)); padding:4px 14px; border-radius:999px; border:1px solid var(--line); background:var(--panel2); color:var(--accent2); letter-spacing:2px;}
+  .big-letter{font-size:calc(66px * 1.06 * var(--zoom)); font-weight:700; color:#fff; line-height:1; text-align:center; letter-spacing:2px;}
+  .ipa{text-align:center; color:var(--cyan); font-size:calc(18px * 1.06 * var(--zoom)); margin-top:4px; font-family:"Charis SIL","Doulos SIL","Segoe UI","Cambria Math",serif;}
+  .chips{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:14px 0 4px;}
+  .chip{font-size:calc(12.5px * 1.06 * var(--zoom)); padding:3px 10px; border-radius:999px; background:var(--panel2); border:1px solid var(--line); color:var(--muted);}
+  .chip.hot{border-color:var(--accent); color:var(--accent);}
+  .desc{margin-top:14px; font-size:calc(13.5px * 1.06 * var(--zoom)); line-height:1.9; color:var(--text); min-height:52px;}
+  .tip{margin-top:8px; font-size:calc(13px * 1.06 * var(--zoom)); line-height:1.8; color:var(--accent2); border-left:3px solid var(--accent2); padding-left:10px; background:rgba(255,177,104,.06); border-radius:0 8px 8px 0;}
+  .word-row{display:flex; align-items:baseline; justify-content:center; gap:12px; margin-top:14px;}
+  .word{font-size:calc(25px * 1.06 * var(--zoom)); font-weight:600; color:#fff;}
+  .pinyin{font-size:calc(13.5px * 1.06 * var(--zoom)); color:var(--muted);}
+  .huduro{margin-top:12px; text-align:center; font-size:calc(13px * 1.06 * var(--zoom)); color:var(--muted);}
+  .huduro b{color:var(--cyan); font-size:calc(16px * 1.06 * var(--zoom)); font-weight:600;}
+  .voicenote{margin-top:8px; text-align:center; font-size:calc(11.5px * 1.06 * var(--zoom)); color:var(--amber); display:none;}
+  .controls{display:flex; gap:8px; margin-top:16px; flex-wrap:wrap; justify-content:center;}
+  button{background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:9px; padding:6px 14px; font-size:calc(13.5px * 1.06 * var(--zoom)); cursor:pointer; transition:all .15s; font-family:inherit;}
+  button:hover{border-color:var(--accent); color:#fff;}
+  .ctl{display:flex; align-items:center; gap:12px; margin-top:12px;}
+  .ctl label{font-size:calc(12.5px * 1.06 * var(--zoom)); color:var(--muted); flex:none; width:40px;}
+  .ctl input[type=range]{flex:1; accent-color:var(--accent);}
+  .ctl .val{width:44px; text-align:right; font-size:calc(12.5px * 1.06 * var(--zoom)); color:var(--accent2); font-variant-numeric:tabular-nums;}
+  table{width:100%; border-collapse:separate; border-spacing:3px; font-size:calc(13.5px * 1.06 * var(--zoom));}
+  th{font-size:calc(12.5px * 1.06 * var(--zoom)); font-weight:500; color:var(--muted); padding:4px 2px; border-bottom:1px solid var(--line); letter-spacing:1px;}
+  td{text-align:center; vertical-align:middle; background:rgba(255,255,255,.02); border:1px solid rgba(44,37,55,.6); border-radius:8px; padding:6px 2px; min-width:70px;}
+  td.rowlabel{background:transparent; border:none; text-align:right; font-size:calc(12.5px * 1.06 * var(--zoom)); color:var(--muted); white-space:nowrap; padding-right:8px; min-width:0;}
+  .tbtn{display:inline-block; min-width:30px; margin:2px; padding:3px 7px; border-radius:7px; border:1px solid var(--line); background:var(--panel2); color:var(--text); font-size:calc(14.5px * 1.06 * var(--zoom)); cursor:pointer; transition:all .12s; font-family:inherit; letter-spacing:.5px;}
+  .tbtn:hover,.qbtn:hover{border-color:var(--accent); color:#fff;}
+  .tbtn.active,.qbtn.active{background:linear-gradient(135deg,#b3416b,#7d2f55); border-color:var(--accent); color:#fff;}
+  .quick{margin-top:14px; display:flex; align-items:center; flex-wrap:wrap; gap:6px; font-size:calc(13.5px * 1.06 * var(--zoom));}
+  .qlabel{color:var(--muted); font-size:calc(12.5px * 1.06 * var(--zoom)); flex:none;}
+  .qbtn{min-width:34px; padding:4px 9px; border-radius:999px; border:1px solid var(--line); background:var(--panel2); color:var(--text); font-size:calc(14.5px * 1.06 * var(--zoom)); cursor:pointer; transition:all .12s; font-family:inherit;}
+  .note{width:100%; color:var(--muted); font-size:calc(12px * 1.06 * var(--zoom)); margin-top:6px;}
+  .compare{display:grid; grid-template-columns:1fr 52px 1fr; gap:12px; align-items:start;}
+  @media(max-width:860px){ .compare{grid-template-columns:1fr;} .vs{text-align:center;} }
+  .compare select{width:100%; background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:9px; padding:7px 10px; font-size:calc(14.5px * 1.06 * var(--zoom)); margin-bottom:8px; font-family:inherit;}
+  .vs{text-align:center; color:var(--accent); font-weight:700; padding-top:70px; font-size:calc(19px * 1.06 * var(--zoom)); letter-spacing:1px;}
+  .diff{margin-top:12px; font-size:calc(13.5px * 1.06 * var(--zoom)); line-height:2; color:var(--text);}
+  .diff b{color:var(--accent2);}
+  .hint{color:var(--muted); font-size:calc(12.5px * 1.06 * var(--zoom)); line-height:2; text-align:center; margin-top:6px;}
+  #btnHelp{position:fixed; top:14px; right:16px; z-index:40; padding:7px 16px; font-size:13px; border-radius:999px; box-shadow:0 6px 18px rgba(0,0,0,.45);}
+  #btnLang{position:fixed; top:14px; right:112px; z-index:40; padding:7px 12px; font-size:12px; border-radius:999px; box-shadow:0 6px 18px rgba(0,0,0,.45);}
+  #helpOverlay{position:fixed; inset:0; background:rgba(6,5,10,0.62); display:flex; justify-content:flex-end; z-index:45; padding:0;}
+  #helpOverlay.hidden{display:none;}
+  body.help-open{padding-right:min(430px,46vw);}
+  .helpBox{background:linear-gradient(180deg,#241d30,#171320); border:1px solid var(--line); border-right:none; border-radius:14px 0 0 14px; width:min(430px,46vw); max-width:100%; height:100%; display:flex; flex-direction:column; box-shadow:-14px 0 44px rgba(0,0,0,.55); animation:helpIn .28s ease;}
+  @keyframes helpIn{from{transform:translateX(100%);}to{transform:none;}}
+  .helpHead{display:flex; align-items:center; justify-content:space-between; padding:13px 18px; border-bottom:1px solid var(--line); font-size:15px; font-weight:600; flex:none;}
+  .helpHead button{background:transparent; border:none; color:var(--muted); font-size:19px; cursor:pointer; padding:0 6px; line-height:1;}
+  .helpHead button:hover{color:#fff;}
+  .helpBody{overflow-y:auto; padding:16px 20px 24px; font-size:calc(13.5px * 1.06 * var(--zoom)); line-height:2; color:var(--text);}
+  .helpBody h3{font-size:calc(14.5px * 1.06 * var(--zoom)); margin:18px 0 6px; color:var(--accent2);}
+  .legend{display:flex; gap:18px; justify-content:center; flex-wrap:wrap;}
+  .legend span{display:flex; align-items:center; gap:6px; color:var(--muted); font-size:calc(12.5px * 1.06 * var(--zoom));}
+  .dot{width:9px; height:9px; border-radius:50%; display:inline-block;}
+  .chart-box{position:relative; margin-top:10px;}
+  .front-box{display:flex; align-items:stretch; gap:14px; margin-top:12px;}
+  .front-pane{flex:none; width:240px;}
+  .fmt-pane{flex:1; min-width:0;}
+  .pane-title{font-size:calc(12px * 1.06 * var(--zoom)); color:var(--muted); letter-spacing:2px; margin-bottom:6px;}
+  #frontCv{width:240px; margin:0;}
+  #fmtCv{width:100%;}
+  @media(max-width:640px){ .front-box{flex-direction:column;} .front-pane{width:100%;} }
+  .phase-line{display:flex; gap:6px; margin-top:10px; width:100%;}
+  .phase-line button{flex:1; min-width:0; padding:6px 4px; font-size:calc(12.5px * 1.06 * var(--zoom));}
+  .phase-line button.cur{background:linear-gradient(135deg,#b3416b,#7d2f55); border-color:var(--accent); color:#fff;}
+  .phase-desc-row{display:flex; gap:6px; margin-top:6px;}
+  .phase-desc{flex:1; font-size:calc(11.5px * 1.06 * var(--zoom)); color:var(--muted); text-align:center; line-height:1.5; min-height:34px;}
+  .audio-note{margin-top:8px; font-size:calc(11.5px * 1.06 * var(--zoom)); color:var(--muted); line-height:1.7; text-align:center;}
+  .ckrow{display:flex; justify-content:center; gap:14px; margin-top:8px; font-size:calc(12px * 1.06 * var(--zoom)); color:var(--muted);}
+  .ckrow label{cursor:pointer; display:flex; align-items:center; gap:5px;}
+</style>
+</head>
+<body>
+<button id="btnLang" aria-label="切换到英文">EN</button>
+<button id="btnHelp" aria-controls="helpOverlay" aria-expanded="false">使用说明</button>
+<div class="wrap">
+  <header>
+    <h1>汉语韵母发音动态图</h1>
+    <p>元音舌位图 + 发音器官剖面 ｜ 单元音看<b>舌位高低前后</b>，复元音看<b>滑移动程</b>，鼻韵母看<b>鼻音收尾</b></p>
+    <div class="fontctl">
+      <span class="fclabel">字号</span>
+      <input type="range" id="fontSize" min="0.85" max="1.35" step="0.05" value="1" />
+      <span class="fcval" id="fontSizeVal">1.00×</span>
+    </div>
+  </header>
+
+  <div class="main">
+    <div class="card stage-card">
+      <div class="card-title">发音器官剖面 · 动态演示 <span class="hint-inline" id="stageHint">起始 → 保持/滑移 → 收束</span></div>
+      <div class="canvas-box"><canvas id="mainCv" width="780" height="560"></canvas></div>
+      <div class="canvas-tools">
+        <label><input type="checkbox" id="lblToggle" checked /> 显示器官标注</label>
+        <span class="badge" id="stageBadge">—</span>
+      </div>
+      <div class="phase-line" id="phaseLine"></div>
+      <div class="phase-desc-row">
+        <div class="phase-desc" id="pdA"></div>
+        <div class="phase-desc" id="pdB"></div>
+        <div class="phase-desc" id="pdC"></div>
+        <div class="phase-desc" id="pdRest"></div>
+      </div>
+      <div class="front-box">
+        <div class="front-pane">
+          <div class="pane-title">口型前视图</div>
+          <canvas id="frontCv" width="240" height="200"></canvas>
+        </div>
+        <div class="fmt-pane">
+          <div class="pane-title">共振峰示意图</div>
+          <canvas id="fmtCv" width="480" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="card info-card">
+      <div class="card-title">当前韵母</div>
+      <div class="big-letter" id="bigLetter">a</div>
+      <div class="ipa" id="ipa">[a]</div>
+      <div class="chips" id="chips"></div>
+      <div class="desc" id="desc"></div>
+      <div class="tip" id="tip"></div>
+      <div class="huduro" id="huduro">读音：<b>ā</b>（啊）</div>
+      <div class="word-row"><span class="word" id="word">啊</span><span class="pinyin" id="wordPinyin">ā</span></div>
+      <div class="chart-box"><canvas id="chartCv" width="220" height="170"></canvas></div>
+      <div class="voicenote" id="voiceNote">未检测到中文语音包，「例词」可能不标准。请安装系统「中文(简体)」语音后刷新。韵母示意不依赖语音包。</div>
+      <div class="controls">
+        <button id="btnPlay">暂停</button>
+        <button id="btnStep">单步</button>
+        <button id="btnFlat" title="嗓音合成，按动程播放，不是汉字读音">韵母示意</button>
+        <button id="btnSpeak">例词</button>
+      </div>
+      <div class="ckrow">
+        <label><input type="checkbox" id="ckAuto" checked /> 选音自动播放韵母示意</label>
+      </div>
+      <div class="audio-note">韵母示意用嗓音合成，跟着舌位/动程走，不是「啊、安、鞥」的汉字读音。例词仍读右侧汉字。</div>
+      <div class="ctl"><label for="speed">速度</label><input type="range" id="speed" min="0.4" max="2.5" step="0.1" value="1" /><span class="val" id="speedVal">1.0×</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">韵母总表 <span class="hint-inline">按「四呼 × 类别」归类（共 38 个，不含 ê）</span></div>
+    <table id="table"></table>
+    <div class="quick">
+      <span class="qlabel">快速选音：</span>
+      <span id="quickChips"></span>
+      <div class="note">单韵母 9 个（含 -i前/-i后、er）；复韵母 13 个；鼻韵母 16 个。拼写省写：ui = uei，iu = iou，un = uen。ong 为合口呼，iong 为撮口呼。</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">对比模式 <span class="hint-inline">并排对照两个韵母，重点观察舌位高低前后、动程与鼻音收尾</span></div>
+    <div class="compare">
+      <div>
+        <select id="cmpA"></select>
+        <canvas id="cmpCvA" width="780" height="560"></canvas>
+      </div>
+      <div class="vs">VS</div>
+      <div>
+        <select id="cmpB"></select>
+        <canvas id="cmpCvB" width="780" height="560"></canvas>
+      </div>
+    </div>
+    <div class="diff" id="diffBox"></div>
+  </div>
+
+  <div class="hint legend">
+    <span><i class="dot" style="background:#7fd8ff"></i>气流粒子</span>
+    <span><i class="dot" style="background:#ff7aa8"></i>舌体</span>
+    <span><i class="dot" style="background:#ffb86b"></i>声带振动（元音均浊音）</span>
+    <span><i class="dot" style="background:#ffd166"></i>舌位图指示点 / 动程</span>
+  </div>
+</div>
+
+<div id="helpOverlay" class="hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle" aria-hidden="true">
+  <div class="helpBox">
+    <div class="helpHead"><span id="helpTitle">帮助</span><button id="helpClose" aria-label="关闭帮助">×</button></div>
+    <div class="helpBody" id="helpZh">
+      <h3>元音舌位图</h3>
+      右侧四边形按标准元音图：上高下低、前左后右。每个标准点<b>左展右圆</b>（i 左 y 右，ɤ 左 o 右，ɛ 左 ɔ 右）。低元音：前 a、央 A、后 ɑ。卷舌 ɚ 与央 ə 同高、略偏右。黄点是当前舌位。
+      <h3>剖面</h3>
+      单元音看舌位高低前后和唇形；复元音看滑移；鼻韵母看软腭下垂、气流转鼻腔。下巴会随开口度下降。点击阶段条可跳到该段。
+      <h3>口型与共振峰</h3>
+      剖面下方左侧是唇形前视图，右侧是当前音的共振峰示意图：上为频谱包络（F1 开口、F2 前后、F3），下为随动程变化的 F1–F3 轨迹。各音基频相同（F0 158 Hz）。
+      <h3>听音</h3>
+      <b>韵母示意</b>是嗓音合成，跟着动程走，用来听舌位和鼻音收尾，不是汉字读音。<b>例词</b>用系统语音读右侧例字。o 呼读是「喔」，与 uo「窝」分开。
+      <h3>四呼与省写</h3>
+      ong 归合口呼（与 ueng 配套），iong 归撮口呼。拼写省写：uei→ui，iou→iu，uen→un。不含 ê。
+      <h3>快捷键</h3>
+      左右方向键切换韵母；空格播放 / 暂停；1–4 跳阶段；Esc 或点遮罩关闭说明。
+    </div>
+    <div class="helpBody" id="helpEn" hidden>
+      <h3>Vowel chart</h3>
+      <p>The quadrilateral follows the conventional vowel chart: high at top, low at bottom, front at left, and back at right. At each standard point, left means spread and right means rounded (i–y, ɤ–o, ɛ–ɔ). Low vowels include front a, central A, and back ɑ; rhotic ɚ is near central ə. The yellow dot is the current tongue position.</p>
+      <h3>Profile</h3>
+      <p>Monophthongs show tongue height, frontness/backness, and lip shape; diphthongs and triphthongs show movement; nasal finals show the velum lowering and airflow entering the nose. The jaw follows mouth opening. Click a phase bar to jump to that part.</p>
+      <h3>Lip shape and formants</h3>
+      <p>The lower-left panel is a front view of the lips. The lower-right panel is a formant schematic: F1 reflects opening, F2 frontness/backness, and F3 provides an additional resonance cue. The lower trace shows F1–F3 along the movement path; all finals use the same teaching F0 of 158 Hz.</p>
+      <h3>Listening</h3>
+      <p><b>Final demo</b> is voice synthesis following the tongue path and nasal ending, not a Chinese-character pronunciation. <b>Example</b> uses the system voice to read the example character when available. The hudu reading for o is “喔”, separate from uo “窝”.</p>
+      <h3>Four mouth groups and spelling</h3>
+      <p>ong belongs to the rounded-lip group (paired with ueng), while iong belongs to the pursed-lip group. Standard spelling abbreviations are uei→ui, iou→iu, and uen→un. The inventory does not include ê.</p>
+      <h3>Controls and shortcuts</h3>
+      <p>Choose a final in the inventory, compare two finals, adjust speed and label size, toggle anatomy labels, or click a phase. Press <span class="kbd">Space</span> to play/pause, use Left/Right to change finals, 1–4 to jump to phases, and Esc or the overlay to close Help. This is a simplified teaching model, not a clinical assessment.</p>
+      <p style="color:var(--muted);font-size:12px">This is a simplified pronunciation teaching model, not a clinical speech assessment.</p>
+    </div>
+  </div>
+</div>
+
+<script src="../pinyin-anim-common/tract.js"></script>
+<script src="../pinyin-anim-common/audio.js"></script>
+<script>
+window.addEventListener('error', function (e) {
+  try {
+    const d = document.createElement('div'); d.id = 'jserr';
+    d.style.cssText = 'position:fixed;top:0;left:0;z-index:999;color:#ff6b6b;background:#000;font-size:12px;white-space:pre-wrap;';
+    d.textContent = 'JSERR: ' + (e.message || e.error); document.body.appendChild(d);
+  } catch (_) {}
+});
+
+let APP_LANG = 'zh';
+const T = PinyinTract;
+const W = T.W, H = T.H;
+const lerp = T.lerp, lerpPt = T.lerpPt, easeIO = T.easeIO, blendPath = T.blendPath, currentKey = T.currentKey;
+
+const REST_POSE = [[206, 405], [236, 395], [276, 385], [336, 375], [430, 365], [470, 410]];
+const VOWEL_POSES = {
+  a:      [[212, 428], [240, 420], [280, 412], [340, 406], [432, 392], [472, 418]],
+  o:      [[206, 408], [236, 398], [276, 388], [336, 372], [430, 328], [470, 402]],
+  e:      [[208, 406], [236, 396], [276, 384], [340, 368], [436, 338], [470, 406]],
+  i:      [[214, 396], [240, 374], [280, 332], [340, 312], [430, 350], [470, 406]],
+  u:      [[206, 400], [236, 392], [276, 384], [336, 358], [430, 296], [468, 400]],
+  ü:      [[214, 396], [240, 374], [280, 332], [340, 312], [430, 350], [470, 406]],
+  er:     [[240, 292], [262, 320], [292, 350], [342, 358], [432, 354], [470, 406]],
+  /* 舌尖元音：双峰。0 舌尖隆起，1–2 凹谷，其后舌面再隆起（前音靠前、后音靠后）。 */
+  iq:     [[202, 308], [232, 372], [278, 352], [336, 296], [416, 348], [468, 412]],
+  ih:     [[240, 284], [266, 328], [304, 360], [352, 338], [424, 304], [470, 408]],
+  nEnd:   [[226, 290], [246, 330], [276, 352], [318, 358], [424, 358], [468, 412]],
+  ngEnd:  [[210, 400], [236, 392], [276, 382], [338, 350], [440, 272], [466, 400]],
+  uLax:   [[206, 402], [236, 394], [276, 386], [336, 368], [432, 312], [468, 400]],
+  eLax:   [[208, 412], [236, 400], [276, 388], [328, 382], [428, 368], [470, 410]],
+  eFront: [[214, 398], [238, 376], [278, 342], [336, 328], [428, 350], [470, 406]],
+  schwa:  [[210, 412], [238, 400], [278, 390], [332, 384], [426, 374], [470, 410]],
+  iLax:   [[212, 398], [238, 380], [278, 344], [338, 332], [430, 352], [470, 406]],
+  oLow:   [[208, 416], [238, 408], [278, 398], [336, 392], [432, 378], [470, 412]],
+  aFront: [[206, 430], [232, 422], [270, 414], [322, 408], [424, 398], [470, 416]],
+  aBack:  [[214, 426], [244, 418], [288, 410], [352, 406], [438, 392], [472, 416]]
+};
+
+/* 同一标准点：左展唇、右圆唇（间距 PAIR） */
+const PAIR = 11;
+const CP = {
+  closeFront: [40, 24], closeBack: [176, 24],
+  nearFront: [56, 42], nearBack: [164, 42],
+  midFront: [50, 64], midBack: [166, 64],
+  mid: [110, 86],
+  openMidFront: [58, 110], openMidBack: [156, 110],
+  openFront: [72, 146], openCent: [110, 146], openBack: [148, 146]
+};
+function CLft(p) { return [p[0] - PAIR, p[1]]; }
+function CRgt(p) { return [p[0] + PAIR, p[1]]; }
+const VOWEL_META = {
+  a:      { h:'低',   f:'央', round:0, gap:14, chart:CP.openCent.slice(), note:'央 A', lipW:46, lipH:34 },
+  aFront: { h:'低',   f:'前', round:0, gap:14, chart:CLft(CP.openFront), note:'前 a', lipW:46, lipH:34 },
+  aBack:  { h:'低',   f:'后', round:0, gap:14, chart:CLft(CP.openBack), note:'后 ɑ', lipW:46, lipH:34 },
+  o:      { h:'半高', f:'后', round:1, gap:11, chart:CRgt(CP.midBack), lipW:26, lipH:22 },
+  e:      { h:'半高', f:'后', round:0, gap:10, chart:CLft(CP.midBack), note:'鹅 [ɤ]', lipW:30, lipH:18 },
+  schwa:  { h:'中',   f:'央', round:0, gap:10, chart:CP.mid.slice(), note:'[ə]', lipW:32, lipH:18 },
+  eFront: { h:'半高', f:'前', round:0, gap:9,  chart:CLft(CP.midFront), note:'[e]', lipW:36, lipH:14 },
+  i:      { h:'高',   f:'前', round:0, gap:6,  chart:CLft(CP.closeFront), lipW:38, lipH:8 },
+  u:      { h:'高',   f:'后', round:1, gap:6,  chart:CRgt(CP.closeBack), lipW:18, lipH:14 },
+  ü:      { h:'高',   f:'前', round:1, gap:6,  chart:CRgt(CP.closeFront), lipW:20, lipH:15 },
+  uLax:   { h:'高',   f:'后', round:1, gap:7,  chart:CRgt(CP.nearBack), note:'松 u [ʊ]', lipW:20, lipH:16 },
+  eLax:   { h:'半低', f:'前', round:0, gap:11, chart:CLft(CP.openMidFront), note:'[ɛ]', lipW:42, lipH:24 },
+  iLax:   { h:'次高', f:'前', round:0, gap:8,  chart:CLft(CP.nearFront), note:'松 i [ɪ]', lipW:36, lipH:10 },
+  oLow:   { h:'半低', f:'后', round:1, gap:12, chart:CRgt(CP.openMidBack), note:'[ɔ]', lipW:28, lipH:26 },
+  er:     { h:'中',   f:'央', round:0, gap:11, chart:[CP.mid[0] + 14, CP.mid[1]], note:'卷舌 [ɚ]', lipW:30, lipH:20 },
+  iq:     { h:'高',   f:'前', round:0, gap:8,  chart:[72, 16], lipW:36, lipH:8 },
+  ih:     { h:'高',   f:'后', round:0, gap:8,  chart:[118, 16], lipW:34, lipH:10 },
+  nEnd:   { h:'-',    f:'-',  round:0, gap:8,  chart:CLft(CP.nearFront), lipW:24, lipH:14 },
+  ngEnd:  { h:'-',    f:'-',  round:0, gap:8,  chart:CRgt(CP.nearBack), lipW:24, lipH:14 }
+};
+
+function F(key, o) { o.key = key; return o; }
+const FINALS = {
+  a:   F('a',   { kind:'单韵母', hu:'开口呼', path:[['a',0],['a',1]], word:'啊', wpy:'ā', hudu:{py:'ā',ch:'啊'},
+                  desc:'口张大，舌位最低、居中，唇自然展开，声带振动。', tip:'口开大，舌头躺平居中，不要前伸也不要后缩。' }),
+  o:   F('o',   { kind:'单韵母', hu:'开口呼', path:[['uLax',0],['oLow',0.20],['oLow',1]], word:'哦', wpy:'ò', hudu:{py:'ō',ch:'喔'},
+                  desc:'单韵母。呼读「喔」。舌位半高、靠后，唇圆。在 b p m f 后实际常带短 u 音头，但不是「窝」uo。',
+                  tip:'唇收圆，读「喔」，不要读成「窝」。可与 uo 对照。' }),
+  e:   F('e',   { kind:'单韵母', hu:'开口呼', path:[['e',0],['e',1]], word:'鹅', wpy:'é', hudu:{py:'é',ch:'鹅'},
+                  desc:'舌位半高、靠后，唇不圆，音值 [ɤ]。不是 ei 里的前元音 [e]，也不是 en 里的 [ə]。',
+                  tip:'嘴自然，舌头后部抬起，像要说「饿」但拉长。' }),
+  i:   F('i',   { kind:'单韵母', hu:'齐齿呼', path:[['i',0],['i',1]], word:'衣', wpy:'yī', hudu:{py:'yī',ch:'衣'},
+                  desc:'舌位最高、靠前，舌尖抵下齿背，唇扁平，声带振动。', tip:'嘴角展开，舌面前部尽量抬高。' }),
+  u:   F('u',   { kind:'单韵母', hu:'合口呼', path:[['u',0],['u',1]], word:'乌', wpy:'wū', hudu:{py:'wū',ch:'乌'},
+                  desc:'舌位最高、靠后，双唇收圆前伸，声带振动。', tip:'双唇收成小圆孔，舌身后缩。' }),
+  ü:   F('ü',   { kind:'单韵母', hu:'撮口呼', path:[['ü',0],['ü',1]], word:'鱼', wpy:'yú', hudu:{py:'yū',ch:'迂'},
+                  desc:'舌位同 i，但双唇收圆，声带振动。', tip:'先发 i，舌头不动，再把嘴唇收圆就是 ü。' }),
+  er:  F('er',  { kind:'单韵母', hu:'开口呼', path:[['er',0],['er',1]], word:'儿', wpy:'ér', hudu:{py:'ér',ch:'儿'},
+                  desc:'卷舌元音：发接近 e 的音时舌尖翘起。', tip:'舌尖对着硬腭翘起来，不要抵住。' }),
+  iq:  F('iq',  { kind:'单韵母', hu:'开口呼', path:[['iq',0],['iq',1]], word:'思', wpy:'sī', hudu:{py:'sī',ch:'思'}, label:'-i(前)',
+                  desc:'舌尖前元音：舌尖近上齿背为一峰，舌面再隆起为第二峰，中间略凹。是 z c s 的韵母。',
+                  tip:'舌尖、舌面都要抬起，不要只抬舌尖，更不要把舌尖放下读成「衣」。' }),
+  ih:  F('ih',  { kind:'单韵母', hu:'开口呼', path:[['ih',0],['ih',1]], word:'师', wpy:'shī', hudu:{py:'shī',ch:'师'}, label:'-i(后)',
+                  desc:'舌尖后元音：舌尖后卷近硬腭为一峰，舌面后部再隆起为第二峰。是 zh ch sh r 的韵母。',
+                  tip:'翘舌的同时舌面也要隆起，不要只翘舌尖，也不要读成「衣」。' }),
+  ai:  F('ai',  { kind:'复韵母', hu:'开口呼', path:[['aFront',0],['aFront',0.58],['iLax',1]], word:'爱', wpy:'ài', hudu:{py:'āi',ch:'哀'},
+                  desc:'由前 a [a] 滑向松 i [ɪ]，舌位由前低升向高前，动程清晰。', tip:'口先开后收，动程要走完，不要读成单 a。' }),
+  ei:  F('ei',  { kind:'复韵母', hu:'开口呼', path:[['eFront',0],['eFront',0.55],['iLax',1]], word:'杯', wpy:'bēi', hudu:{py:'ēi',ch:'欸'},
+                  desc:'由前半高、偏亮的 [e] 滑向松 i [ɪ]。起点不是「鹅」的 [ɤ]。', tip:'起点靠前、口形扁平带笑意，再轻轻滑向 i，不要读成「鹅+衣」。' }),
+  ao:  F('ao',  { kind:'复韵母', hu:'开口呼', path:[['aBack',0],['aBack',0.58],['uLax',1]], word:'包', wpy:'bāo', hudu:{py:'āo',ch:'凹'},
+                  desc:'由后 a [ɑ] 滑向松 u [ʊ]，舌位由后低升向后，唇渐圆。', tip:'口先大开再收圆，a 要靠后。' }),
+  ou:  F('ou',  { kind:'复韵母', hu:'开口呼', path:[['o',0],['o',0.52],['u',1]], word:'欧', wpy:'ōu', hudu:{py:'ōu',ch:'欧'},
+                  desc:'由 o 滑向 u，舌位后移、唇更圆。', tip:'唇始终较圆，动程比 ao 短。' }),
+  ia:  F('ia',  { kind:'复韵母', hu:'齐齿呼', path:[['i',0],['a',0.20],['a',1]], word:'家', wpy:'jiā', hudu:{py:'yā',ch:'鸭'},
+                  desc:'由 i 滑向央 a，舌位由高前降至低央，唇渐开。', tip:'先有 i 的舌位，再迅速开口。' }),
+  ie:  F('ie',  { kind:'复韵母', hu:'齐齿呼', path:[['i',0],['eLax',1]], word:'叶', wpy:'yè', hudu:{py:'yē',ch:'噎'},
+                  desc:'由 i 滑向 [ɛ]（前、半低、不圆唇）。', tip:'不要滑到「鹅」的 [ɤ]，收在前半低。' }),
+  ua:  F('ua',  { kind:'复韵母', hu:'合口呼', path:[['u',0],['a',0.20],['a',1]], word:'瓜', wpy:'guā', hudu:{py:'wā',ch:'蛙'},
+                  desc:'由 u 滑向央 a，唇由圆渐展，舌位下降。', tip:'先圆唇，再张口，圆唇只在开头。' }),
+  uo:  F('uo',  { kind:'复韵母', hu:'合口呼', path:[['u',0],['o',0.22],['o',1]], word:'国', wpy:'guó', hudu:{py:'wō',ch:'窝'},
+                  desc:'由 u 滑向 o，唇保持圆。呼读「窝」，与单韵母「喔」不同。', tip:'对照 o：uo 开头圆唇更明显，是「窝」不是「喔」。' }),
+  üe:  F('üe',  { kind:'复韵母', hu:'撮口呼', path:[['ü',0],['eLax',1]], word:'学', wpy:'xué', hudu:{py:'yuē',ch:'约'},
+                  desc:'由 ü 滑向 [ɛ]，唇由圆渐展。', tip:'先撮口，再展开到 [ɛ]，不要读成 ie。' }),
+  iao: F('iao', { kind:'复韵母', hu:'齐齿呼', path:[['i',0],['aBack',0.18],['aBack',0.62],['uLax',1]], word:'小', wpy:'xiǎo', hudu:{py:'yāo',ch:'腰'},
+                  desc:'三合元音：i → 后 a [ɑ] → 松 u [ʊ]，舌位先降后升。', tip:'中间的 a 要开口、靠后，再收圆。' }),
+  iou: F('iou', { kind:'复韵母', hu:'齐齿呼', path:[['i',0],['o',0.20],['o',0.62],['u',1]], word:'有', wpy:'yǒu', hudu:{py:'yōu',ch:'优'}, label:'iou/iu',
+                  desc:'三合元音：i → o → u，唇渐圆。拼写省写作 iu。', tip:'有声母时写成 iu（如 liu），实际仍有 o 的过渡。' }),
+  uai: F('uai', { kind:'复韵母', hu:'合口呼', path:[['u',0],['aFront',0.18],['aFront',0.62],['iLax',1]], word:'快', wpy:'kuài', hudu:{py:'wāi',ch:'歪'},
+                  desc:'三合元音：u → 前 a [a] → 松 i [ɪ]。', tip:'从圆唇滑到开口再收向 i。' }),
+  uei: F('uei', { kind:'复韵母', hu:'合口呼', path:[['u',0],['eFront',0.18],['eFront',0.58],['iLax',1]], word:'水', wpy:'shuǐ', hudu:{py:'wēi',ch:'微'}, label:'uei/ui',
+                  desc:'三合元音：u → [e] → 松 i [ɪ]。拼写省写作 ui。', tip:'有声母时写成 ui（如 gui、shui），中间是前 [e] 不是 [ɤ]。' }),
+  an:  F('an',  { kind:'鼻韵母', hu:'开口呼', path:[['aFront',0],['aFront',0.62],['nEnd',1]], word:'安', wpy:'ān', hudu:{py:'ān',ch:'安'},
+                  desc:'先发前 a [a]，舌尖前移抵上齿龈，软腭下垂，气流转鼻腔收尾。', tip:'a 靠前；收尾舌尖抵齿龈，捏鼻则中断。' }),
+  en:  F('en',  { kind:'鼻韵母', hu:'开口呼', path:[['schwa',0],['schwa',0.58],['nEnd',1]], word:'恩', wpy:'ēn', hudu:{py:'ēn',ch:'恩'},
+                  desc:'先发央元音 [ə]，再收束为前鼻音 n。不是「鹅」[ɤ]。', tip:'起点口形比「鹅」松、居中。' }),
+  in:  F('in',  { kind:'鼻韵母', hu:'齐齿呼', path:[['i',0],['i',0.22],['schwa',0.38],['schwa',0.60],['nEnd',0.82],['nEnd',1]], word:'音', wpy:'yīn', hudu:{py:'yīn',ch:'因'},
+                  desc:'先发 i，较早进入模糊央元音 [ə]，再收前鼻音 n。', tip:'i 之后要听到一段央 e，再收 n。' }),
+  ün:  F('ün',  { kind:'鼻韵母', hu:'撮口呼', path:[['ü',0],['ü',0.22],['schwa',0.38],['schwa',0.60],['nEnd',0.82],['nEnd',1]], word:'云', wpy:'yún', hudu:{py:'yūn',ch:'晕'},
+                  desc:'先发 ü，较早进入 [ə]，再收前鼻音 n。唇保持撮口。', tip:'ü 之后要听到一段央 e，再收 n。' }),
+  ang: F('ang', { kind:'鼻韵母', hu:'开口呼', path:[['aBack',0],['aBack',0.62],['ngEnd',1]], word:'昂', wpy:'áng', hudu:{py:'āng',ch:'肮'},
+                  desc:'先发后 a [ɑ]，舌根抬抵软腭，软腭下垂，气流转鼻腔收尾。', tip:'a 靠后、口开大；收尾是 ng 不是 n。' }),
+  eng: F('eng', { kind:'鼻韵母', hu:'开口呼', path:[['schwa',0],['schwa',0.58],['ngEnd',1]], word:'风', wpy:'fēng', hudu:{py:'ēng',ch:'鞥'},
+                  desc:'先发 [ə]，再收束为后鼻音 ng。起点不是 [ɤ]。', tip:'对照 en：en 收 n，eng 收 ng。' }),
+  ong: F('ong', { kind:'鼻韵母', hu:'合口呼', path:[['o',0],['o',0.55],['ngEnd',1]], word:'红', wpy:'hóng', hudu:{py:'ōng',ch:''},
+                  desc:'合口呼。先发圆唇的 o / [ʊ]，舌根抬抵软腭收 ng。有声母时写成 ong，零声母写成 ueng（翁）。',
+                  tip:'唇要圆。它不是开口呼。零声母读「翁」ueng。' }),
+  ian: F('ian', { kind:'鼻韵母', hu:'齐齿呼', path:[['i',0],['eLax',0.50],['nEnd',1]], word:'天', wpy:'tiān', hudu:{py:'yān',ch:'烟'},
+                  desc:'由 i 经 [ɛ] 再收束为前鼻音 n。', tip:'中间是 [ɛ]（像「烟」），不是低 a。' }),
+  uan: F('uan', { kind:'鼻韵母', hu:'合口呼', path:[['u',0],['aFront',0.18],['aFront',0.60],['nEnd',1]], word:'关', wpy:'guān', hudu:{py:'wān',ch:'弯'},
+                  desc:'由 u 滑向前 a [a]，再收束为前鼻音 n。', tip:'开头圆唇，a 靠前，收 n。' }),
+  üan: F('üan', { kind:'鼻韵母', hu:'撮口呼', path:[['ü',0],['eLax',0.50],['nEnd',1]], word:'圆', wpy:'yuán', hudu:{py:'yuān',ch:'冤'},
+                  desc:'由 ü 经 [ɛ] 再收束为前鼻音 n。', tip:'中间接近 [ɛ]，不是低 a。' }),
+  uen: F('uen', { kind:'鼻韵母', hu:'合口呼', path:[['u',0],['schwa',0.20],['schwa',0.58],['nEnd',1]], word:'春', wpy:'chūn', hudu:{py:'wēn',ch:'温'}, label:'uen/un',
+                  desc:'由 u 滑向 [ə]，再收束为前鼻音 n。拼写省写作 un。', tip:'有声母时写成 un（如 lun、chun）。' }),
+  iang:F('iang',{ kind:'鼻韵母', hu:'齐齿呼', path:[['i',0],['aBack',0.18],['aBack',0.62],['ngEnd',1]], word:'样', wpy:'yàng', hudu:{py:'yāng',ch:'央'},
+                  desc:'由 i 滑向后 a [ɑ]，再收束为后鼻音 ng。', tip:'中间 a 开口、靠后。' }),
+  uang:F('uang',{ kind:'鼻韵母', hu:'合口呼', path:[['u',0],['aBack',0.18],['aBack',0.62],['ngEnd',1]], word:'王', wpy:'wáng', hudu:{py:'wāng',ch:'汪'},
+                  desc:'由 u 滑向后 a [ɑ]，再收束为后鼻音 ng。', tip:'开头圆唇，a 靠后。' }),
+  ing: F('ing', { kind:'鼻韵母', hu:'齐齿呼', path:[['i',0],['i',0.22],['schwa',0.38],['schwa',0.60],['ngEnd',0.82],['ngEnd',1]], word:'星', wpy:'xīng', hudu:{py:'yīng',ch:'英'},
+                  desc:'先发 i，较早进入 [ə]，再收后鼻音 ng。', tip:'i 之后要听到一段央 e；收尾是 ng 不是 n。' }),
+  iong:F('iong',{ kind:'鼻韵母', hu:'撮口呼', path:[['ü',0],['ü',0.28],['uLax',0.58],['ngEnd',0.82],['ngEnd',1]], word:'用', wpy:'yòng', hudu:{py:'yōng',ch:'雍'},
+                  desc:'撮口呼。以 ü 起头，滑向后圆唇，再收后鼻音 ng。', tip:'开头撮口，不是齐齿的 i。' }),
+  ueng:F('ueng',{ kind:'鼻韵母', hu:'合口呼', path:[['u',0],['schwa',0.20],['schwa',0.58],['ngEnd',1]], word:'翁', wpy:'wēng', hudu:{py:'wēng',ch:'翁'},
+                  desc:'合口呼零声母，与有声母的 ong 配套。', tip:'只出现在零声母，写成 weng。' })
+};
+
+const TABLE_COLS = ['开口呼','齐齿呼','合口呼','撮口呼'];
+const CELL_KEYS = {
+  '单韵母|开口呼':['iq','ih','a','o','e','er'], '单韵母|齐齿呼':['i'], '单韵母|合口呼':['u'], '单韵母|撮口呼':['ü'],
+  '复韵母|开口呼':['ai','ei','ao','ou'], '复韵母|齐齿呼':['ia','ie','iao','iou'], '复韵母|合口呼':['ua','uo','uai','uei'], '复韵母|撮口呼':['üe'],
+  '鼻韵母|开口呼':['an','en','ang','eng'], '鼻韵母|齐齿呼':['ian','in','iang','ing'], '鼻韵母|合口呼':['uan','uen','uang','ueng','ong'], '鼻韵母|撮口呼':['üan','ün','iong']
+};
+const QUICK_ORDER = ['a','o','e','i','u','ü','er','iq','ih','ai','ei','ao','ou','ia','ie','ua','uo','üe','iao','iou','uai','uei','an','en','in','ün','ang','eng','ong','ian','uan','üan','uen','iang','uang','ing','iong','ueng'];
+const ALIAS = { ui:'uei', iu:'iou', un:'uen' };
+const POSELABEL = { uLax:'ʊ', eLax:'ɛ', eFront:'e', schwa:'ə', iLax:'ɪ', oLow:'ɔ', aFront:'a', aBack:'ɑ', e:'ɤ' };
+const IPA = {
+  a:'A', o:'o', e:'ɤ', i:'i', u:'u', ü:'y', er:'ɚ', iq:'ɿ', ih:'ʅ',
+  ai:'ai', ei:'ei', ao:'ɑʊ', ou:'ou', ia:'ia', ie:'iɛ', ua:'ua', uo:'uo', üe:'yɛ',
+  iao:'iɑʊ', iou:'iou', uai:'uai', uei:'uei',
+  an:'an', en:'ən', in:'in', ün:'yn', ang:'ɑŋ', eng:'əŋ', ong:'ʊŋ',
+  ian:'iɛn', uan:'uan', üan:'yɛn', uen:'uən',
+  iang:'iɑŋ', uang:'uɑŋ', ing:'iŋ', iong:'yŋ', ueng:'uəŋ'
+};
+const PHASE_ORDER = ['A','B','C','rest'];
+const YM_KIND_EN = {'单韵母':'monophthong','复韵母':'diphthong/triphthong','鼻韵母':'nasal final'};
+const YM_HU_EN = {'开口呼':'open-mouth group','齐齿呼':'spread-lip group','合口呼':'rounded-lip group','撮口呼':'pursed-lip group'};
+function labelOf(k) { const s = FINALS[k]; if (s) { if (APP_LANG === 'en' && k === 'iq') return '-i (front)'; if (APP_LANG === 'en' && k === 'ih') return '-i (back)'; return s.label || k; } return POSELABEL[k] || k; }
+function isNasalFinal(s) { const last = s.path[s.path.length - 1][0]; return last === 'nEnd' || last === 'ngEnd'; }
+function nasalStartF(s) {
+  for (let i = 0; i < s.path.length; i++) {
+    if (s.path[i][0] === 'nEnd' || s.path[i][0] === 'ngEnd') return i > 0 ? s.path[i - 1][1] : 0;
+  }
+  return s.path[s.path.length - 2][1];
+}
+function isGlide(s) { return s.path.length > 2 || s.path[0][0] !== s.path[s.path.length - 1][0]; }
+function phaseNames(s) {
+  if (APP_LANG === 'en') {
+    if (isNasalFinal(s)) return { A:'Onset', B:'Glide · nasal', C:'Release', rest:'Rest' };
+    if (isGlide(s)) return { A:'Onset', B:'Glide', C:'Release', rest:'Rest' };
+    return { A:'Onset', B:'Hold', C:'Release', rest:'Rest' };
+  }
+  if (isNasalFinal(s)) return { A:'起始', B:'滑移', C:'收束', rest:'静息' };
+  if (isGlide(s)) return { A:'起始', B:'滑移', C:'收束', rest:'静息' };
+  return { A:'起始', B:'保持', C:'收束', rest:'静息' };
+}
+function phaseTexts(s) {
+  if (APP_LANG === 'en') {
+    if (isNasalFinal(s)) return ['Reach the vowel onset','Glide toward the nasal ending; lower the velum','Relax the constriction','Rest'];
+    if (isGlide(s)) return ['Reach the starting vowel','Glide toward the final target','Relax and return','Rest'];
+    return ['Set tongue and lip posture','Hold the vowel target','Relax and return','Rest'];
+  }
+  if (isNasalFinal(s)) return ['舌位到起始元音','滑向鼻音尾，软腭逐渐下垂','阻碍放松，回到自然状态','静息'];
+  if (isGlide(s)) return ['到达起始元音','沿动程滑向收尾','收束，回到自然状态','静息'];
+  return ['舌位、唇形到位','保持该元音','收束，回到自然状态','静息'];
+}
+
+class Scene {
+  constructor(canvas, opts) {
+    opts = opts || {};
+    this.cv = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = W * this.dpr; canvas.height = H * this.dpr;
+    this.key = opts.key || 'a'; this.speed = 1; this.playing = true;
+    this.phase = 'A'; this.phaseT = 0; this.time = 0;
+    this.particles = new T.Particles();
+    this.clock = opts.clock || null;
+    this.label = opts.label !== false;
+    this.compact = !!opts.compact;
+    this.onPhase = opts.onPhase || null;
+    this.reset();
+  }
+  setSound(k) { this.key = k; this.reset(); }
+  reset() { this.phase = 'A'; this.phaseT = 0; this.particles.reset(); if (this.onPhase) this.onPhase(this.phase); }
+  stepTo(next) { this.phase = next; this.phaseT = 0; this.particles.reset(); if (this.onPhase) this.onPhase(this.phase); }
+  durations() {
+    const s = FINALS[this.key];
+    return { A: 0.4, B: isGlide(s) ? 1.6 : 0.9, C: 0.5, rest: 0.3 };
+  }
+  update(dt) {
+    if (!this.playing) return;
+    const durs = this.durations();
+    if (this.clock) { this.phase = this.clock.phase; this.phaseT = this.clock.t; }
+    else {
+      this.phaseT += dt * this.speed;
+      if (this.phaseT >= durs[this.phase]) {
+        this.phaseT = 0;
+        const next = PHASE_ORDER[(PHASE_ORDER.indexOf(this.phase) + 1) % 4];
+        if (next === 'A') this.particles.reset();
+        this.phase = next;
+        if (this.onPhase) this.onPhase(this.phase);
+      }
+    }
+    const s = FINALS[this.key];
+    const nasalOn = isNasalFinal(s) && this.pathU() > nasalStartF(s) + 0.25 * (1 - nasalStartF(s));
+    this.particles.update(dt * this.speed, { mode: 'vowel', phase: this.phase, nasalOn: nasalOn });
+  }
+  poseU() {
+    const d = this.durations();
+    const p = this.phase;
+    const t = Math.min(this.phaseT, d[p]);
+    if (p === 'A') return easeIO(t / d.A);
+    if (p === 'B') return 1;
+    if (p === 'C') return 1 - easeIO(t / d.C);
+    return 0;
+  }
+  pathU() {
+    const s = FINALS[this.key];
+    const d = this.durations();
+    const p = this.phase;
+    const t = Math.min(this.phaseT, d[p]);
+    if (p === 'B') {
+      const seg = isGlide(s) ? 0.88 : 1;
+      return Math.min(1, t / (d.B * seg));
+    }
+    if (p === 'A') return 0;
+    if (p === 'C') return 1;
+    return 0;
+  }
+  tongueSurface() {
+    const s = FINALS[this.key];
+    const u = this.poseU();
+    const blend = blendPath(s.path, this.pathU(), VOWEL_POSES);
+    return blend.map(function (pp, i) { return lerpPt(REST_POSE[i], pp, u); });
+  }
+  velTip() {
+    const s = FINALS[this.key];
+    if (!isNasalFinal(s)) return T.VEL_UP;
+    const f0 = nasalStartF(s);
+    const p = this.pathU();
+    const nf = Math.max(0, Math.min(1, (p - f0) / (1 - f0)));
+    return lerpPt([T.VEL_UP.x, T.VEL_UP.y], [T.VEL_DOWN.x, T.VEL_DOWN.y], nf);
+  }
+  lipState() {
+    const s = FINALS[this.key];
+    const vk = currentKey(s.path, this.pathU());
+    const m = VOWEL_META[vk] || VOWEL_META.a;
+    const u = this.poseU();
+    const gap = lerp(14, m.gap, u);
+    const jaw = Math.max(0, Math.min(1, (gap - 5) / 10)) * u;
+    return { g: gap, raise: 0, round: m.round && u > 0.4 ? 1 : 0, jaw: jaw };
+  }
+  draw() {
+    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    if (this.cv.width !== W * this.dpr) { this.cv.width = W * this.dpr; this.cv.height = H * this.dpr; }
+    this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    const s = FINALS[this.key];
+    const vk = currentKey(s.path, this.pathU());
+    const vm = VOWEL_META[vk] || VOWEL_META.a;
+    const nasalOn = isNasalFinal(s) && this.pathU() > nasalStartF(s) + 0.25 * (1 - nasalStartF(s));
+    const names = phaseNames(s);
+    T.drawScene(this.ctx, {
+      inv: T.invFor(this.cv, ZOOM),
+      time: this.time,
+      tongueSurf: this.tongueSurface(),
+      vel: this.velTip(),
+      lip: this.lipState(),
+      voicedOn: this.phase !== 'rest',
+      labels: this.label && !this.compact,
+      compact: this.compact,
+      lang: APP_LANG,
+      phaseName: names[this.phase] || '',
+      footerLeft: APP_LANG === 'en' ? 'Voiced  ｜  ' + (nasalOn ? 'Airflow: nasal ending' : 'Airflow: oral') : '声带振动  ｜  ' + (nasalOn ? '气流：经鼻腔收尾' : '气流：口腔'),
+      footerRight: APP_LANG === 'en' ? (YM_KIND_EN[s.kind] || s.kind) + ' · ' + (YM_HU_EN[s.hu] || s.hu) : s.kind + ' · ' + s.hu + (vm.h !== '-' ? ' · ' + vm.h + vm.f + (vm.round ? '·圆' : '·不圆') : ''),
+      particles: this.particles
+    });
+  }
+}
+
+let ZOOM = 1;
+let cur = 'a';
+const mainCv = document.getElementById('mainCv');
+const mainScene = new Scene(mainCv, { onPhase: function (p) { syncPhaseUI(p); } });
+mainScene.label = document.getElementById('lblToggle').checked;
+document.getElementById('lblToggle').addEventListener('change', function (e) { mainScene.label = e.target.checked; });
+
+const cmpA = document.getElementById('cmpA'), cmpB = document.getElementById('cmpB');
+const cmpClock = { phase: 'A', t: 0 };
+const cmpScenes = [
+  new Scene(document.getElementById('cmpCvA'), { compact: true, label: false, clock: cmpClock }),
+  new Scene(document.getElementById('cmpCvB'), { compact: true, label: false, clock: cmpClock })
+];
+
+function fillSelects() {
+  const keys = Object.keys(FINALS);
+  [cmpA, cmpB].forEach(function (sel) {
+    sel.innerHTML = '';
+    keys.forEach(function (key) {
+      const o = document.createElement('option');
+      o.value = key;
+      o.textContent = labelOf(key) + '  ' + FINALS[key].kind + '·' + FINALS[key].hu;
+      sel.appendChild(o);
+    });
+  });
+  cmpA.value = 'a'; cmpB.value = 'i';
+}
+fillSelects();
+
+function resolveKey(k) { return ALIAS[k] || k; }
+function select(key, autoSpeak) {
+  key = resolveKey(key);
+  if (!FINALS[key]) return;
+  cur = key;
+  mainScene.setSound(key);
+  mainScene.playing = true;
+  document.getElementById('btnPlay').textContent = '暂停';
+  cmpClock.phase = 'A'; cmpClock.t = 0;
+  cmpScenes.forEach(function (sc) { sc.particles.reset(); });
+  updateInfo();
+  highlightButtons();
+  renderPhaseBar();
+  if (autoSpeak && document.getElementById('ckAuto').checked) PinyinAudio.playFinal(FINALS[key]);
+}
+function updateInfo() {
+  const s = FINALS[cur];
+  document.getElementById('bigLetter').textContent = labelOf(cur);
+  document.getElementById('ipa').textContent = '[' + (IPA[cur] || cur) + ']';
+  const chips = document.getElementById('chips');
+  chips.innerHTML = '';
+  const tags = ['类别：' + s.kind, '四呼：' + s.hu];
+  if (isNasalFinal(s)) tags.push('鼻音收尾');
+  else if (!isGlide(s)) {
+    const vm = VOWEL_META[s.path[0][0]];
+    tags.push(vm.h + vm.f + (vm.round ? '·圆' : '·不圆'));
+    if (vm.note) tags.push(vm.note);
+  } else tags.push('动程：' + labelOf(s.path[0][0]) + '→' + labelOf(s.path[s.path.length - 1][0]));
+  tags.forEach(function (t) {
+    const c = document.createElement('span');
+    c.className = 'chip' + (t.indexOf('鼻') >= 0 ? ' hot' : '');
+    c.textContent = t; chips.appendChild(c);
+  });
+  const infoData = APP_LANG === 'en' ? ymEnglishData(s) : s;
+  document.getElementById('desc').textContent = infoData.desc;
+  document.getElementById('tip').textContent = APP_LANG === 'en' ? 'Tip: ' + infoData.tip : '要领：' + infoData.tip;
+  document.getElementById('word').textContent = s.word;
+  document.getElementById('wordPinyin').textContent = s.wpy;
+  const h = s.hudu || { py: '', ch: '' };
+  document.getElementById('huduro').innerHTML = APP_LANG === 'en' ? 'Reading: <b>' + h.py + '</b>' + (h.ch ? ' (' + h.ch + ')' : '') : '读音：<b>' + h.py + '</b>' + (h.ch ? '（' + h.ch + '）' : '');
+  const names = phaseNames(s);
+  document.getElementById('stageHint').textContent = [names.A, names.B, names.C, names.rest].join(' → ');
+  const texts = phaseTexts(s);
+  document.getElementById('pdA').textContent = texts[0];
+  document.getElementById('pdB').textContent = texts[1];
+  document.getElementById('pdC').textContent = texts[2];
+  document.getElementById('pdRest').textContent = texts[3];
+}
+function highlightButtons() {
+  document.querySelectorAll('.tbtn,.qbtn').forEach(function (b) { b.classList.toggle('active', b.dataset.key === cur); });
+}
+function renderPhaseBar() {
+  const names = phaseNames(FINALS[cur]);
+  document.getElementById('phaseLine').innerHTML = PHASE_ORDER.map(function (k) {
+    return '<button type="button" data-phase="' + k + '">' + names[k] + '</button>';
+  }).join('');
+  syncPhaseUI(mainScene.phase);
+}
+function syncPhaseUI(p) {
+  if (!FINALS[cur]) return;
+  document.getElementById('stageBadge').textContent = phaseNames(FINALS[cur])[p] || p;
+  document.querySelectorAll('#phaseLine button').forEach(function (b) { b.classList.toggle('cur', b.dataset.phase === p); });
+}
+document.getElementById('phaseLine').addEventListener('click', function (e) {
+  const b = e.target.closest('button');
+  if (b && b.dataset.phase) gotoPhase(b.dataset.phase);
+});
+function gotoPhase(p) {
+  mainScene.playing = false;
+  document.getElementById('btnPlay').textContent = '播放';
+  mainScene.stepTo(p);
+  cmpClock.phase = p; cmpClock.t = 0;
+  cmpScenes.forEach(function (sc) { sc.particles.reset(); });
+  syncPhaseUI(p);
+}
+
+(function buildTable() {
+  const t = document.getElementById('table');
+  let html = '<thead><tr><th></th>';
+  TABLE_COLS.forEach(function (c) { html += '<th>' + c + '</th>'; });
+  html += '</tr></thead><tbody>';
+  ['单韵母', '复韵母', '鼻韵母'].forEach(function (row) {
+    html += '<tr><td class="rowlabel">' + row + '</td>';
+    TABLE_COLS.forEach(function (col) {
+      const keys = CELL_KEYS[row + '|' + col] || [];
+      html += '<td>';
+      keys.forEach(function (key) { html += '<button class="tbtn" data-key="' + key + '">' + labelOf(key) + '</button>'; });
+      html += '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  t.innerHTML = html;
+})();
+(function buildQuick() {
+  const box = document.getElementById('quickChips');
+  let html = '';
+  QUICK_ORDER.forEach(function (k) { html += '<button class="qbtn" data-key="' + k + '">' + labelOf(k) + '</button>'; });
+  box.innerHTML = html;
+})();
+function onBtnClick(e) {
+  const b = e.target.closest('button');
+  if (b && b.dataset.key) select(b.dataset.key, true);
+}
+document.getElementById('table').addEventListener('click', onBtnClick);
+document.getElementById('quickChips').addEventListener('click', onBtnClick);
+
+function diffText(a, b) {
+  const A = FINALS[a], B = FINALS[b];
+  const out = [];
+  out.push('<b>' + labelOf(a) + '</b> ' + A.kind + '·' + A.hu + '  ｜  <b>' + labelOf(b) + '</b> ' + B.kind + '·' + B.hu);
+  out.push((A.kind === B.kind ? '类别相同：' : '类别不同：') + A.kind + ' vs ' + B.kind);
+  out.push((A.hu === B.hu ? '四呼相同：' : '四呼不同：') + A.hu + ' vs ' + B.hu);
+  const aN = isNasalFinal(A), bN = isNasalFinal(B);
+  if (aN || bN) out.push((aN && bN) ? '都是鼻韵母（注意鼻音收尾）。' : '只有鼻韵母以鼻音收尾（注意软腭是否下垂）。');
+  else {
+    const m1 = VOWEL_META[A.path[0][0]], m2 = VOWEL_META[B.path[0][0]];
+    if (m1.h === m2.h && m1.f === m2.f && m1.round === m2.round) out.push('起始舌位相同：' + m1.h + m1.f + (m1.round ? '·圆' : '·不圆'));
+    else out.push('起始舌位不同：' + labelOf(a) + ' 为 ' + m1.h + m1.f + (m1.round ? '·圆' : '·不圆') + '，' + labelOf(b) + ' 为 ' + m2.h + m2.f + (m2.round ? '·圆' : '·不圆'));
+  }
+  return out.join('<br/>');
+}
+function updateCompare() {
+  cmpScenes[0].setSound(cmpA.value); cmpScenes[1].setSound(cmpB.value);
+  cmpClock.phase = 'A'; cmpClock.t = 0;
+  cmpScenes.forEach(function (sc) { sc.particles.reset(); });
+  document.getElementById('diffBox').innerHTML = diffText(cmpA.value, cmpB.value);
+}
+cmpA.addEventListener('change', updateCompare);
+cmpB.addEventListener('change', updateCompare);
+
+const CHART_W = 220, CHART_H = 170;
+function chartPos(path, p) {
+  const P = Math.max(0, Math.min(1, p));
+  for (let i = 0; i < path.length - 1; i++) {
+    const k1 = path[i][0], f1 = path[i][1], k2 = path[i + 1][0], f2 = path[i + 1][1];
+    if (P >= f1 && P <= f2) {
+      const t = (P - f1) / ((f2 - f1) || 1);
+      const a = VOWEL_META[k1].chart, b = VOWEL_META[k2].chart;
+      if (a && b) return [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
+    }
+  }
+  return VOWEL_META[path[path.length - 1][0]].chart || null;
+}
+function drawChart() {
+  const cv = document.getElementById('chartCv');
+  const ctx = cv.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = CHART_W * dpr; cv.height = CHART_H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, CHART_W, CHART_H);
+  const bg = ctx.createRadialGradient(110, 80, 10, 110, 80, 120);
+  bg.addColorStop(0, '#161322'); bg.addColorStop(1, '#0b0a10');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, CHART_W, CHART_H);
+  const TL = [32, 24], TR = [188, 24], BR = [158, 146], BL = [62, 146];
+  ctx.strokeStyle = 'rgba(139,124,178,.8)'; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(TL[0], TL[1]); ctx.lineTo(TR[0], TR[1]); ctx.lineTo(BR[0], BR[1]); ctx.lineTo(BL[0], BL[1]); ctx.closePath();
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(139,124,178,.12)'; ctx.fill();
+  ctx.font = '9px "Segoe UI","Charis SIL","Doulos SIL","PingFang SC",sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const labels = [
+    ['i', CLft(CP.closeFront)[0], CLft(CP.closeFront)[1]],
+    ['y', CRgt(CP.closeFront)[0], CRgt(CP.closeFront)[1]],
+    ['u', CRgt(CP.closeBack)[0], CRgt(CP.closeBack)[1]],
+    ['ɪ', CLft(CP.nearFront)[0], CLft(CP.nearFront)[1]],
+    ['ʊ', CRgt(CP.nearBack)[0], CRgt(CP.nearBack)[1]],
+    ['e', CLft(CP.midFront)[0], CLft(CP.midFront)[1]],
+    ['ɤ', CLft(CP.midBack)[0], CLft(CP.midBack)[1]],
+    ['o', CRgt(CP.midBack)[0], CRgt(CP.midBack)[1]],
+    ['ə', CP.mid[0], CP.mid[1]],
+    ['ɚ', CP.mid[0] + 14, CP.mid[1]],
+    ['ɛ', CLft(CP.openMidFront)[0], CLft(CP.openMidFront)[1]],
+    ['ɔ', CRgt(CP.openMidBack)[0], CRgt(CP.openMidBack)[1]],
+    ['a', CLft(CP.openFront)[0], CLft(CP.openFront)[1]],
+    ['A', CP.openCent[0], CP.openCent[1]],
+    ['ɑ', CLft(CP.openBack)[0], CLft(CP.openBack)[1]],
+    ['ɿ', 72, 16], ['ʅ', 118, 16]
+  ];
+  labels.forEach(function (L) { ctx.fillStyle = 'rgba(200,190,220,.95)'; ctx.fillText(L[0], L[1], L[2] - 8); });
+  const s = FINALS[cur];
+  if (!s) return;
+  ctx.strokeStyle = 'rgba(255,209,102,.45)'; ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  let started = false;
+  for (let t = 0; t <= 1.001; t += 0.02) {
+    const pos = chartPos(s.path, Math.min(1, t));
+    if (!pos) continue;
+    if (!started) { ctx.moveTo(pos[0], pos[1]); started = true; }
+    else ctx.lineTo(pos[0], pos[1]);
+  }
+  ctx.stroke();
+  const pos = chartPos(s.path, mainScene.pathU());
+  if (pos) {
+    const pulse = 0.7 + 0.3 * Math.sin(mainScene.time * 7);
+    const gg = ctx.createRadialGradient(pos[0], pos[1], 1, pos[0], pos[1], 12);
+    gg.addColorStop(0, 'rgba(255,209,102,' + (0.7 * pulse) + ')');
+    gg.addColorStop(1, 'rgba(255,209,102,0)');
+    ctx.fillStyle = gg;
+    ctx.beginPath(); ctx.arc(pos[0], pos[1], 12, 0, 6.283); ctx.fill();
+    ctx.fillStyle = '#ffd166';
+    ctx.beginPath(); ctx.arc(pos[0], pos[1], 3, 0, 6.283); ctx.fill();
+  }
+}
+function lipParams(path, p) {
+  const P = Math.max(0, Math.min(1, p));
+  const last = path[path.length - 1];
+  function get(k) { const m = VOWEL_META[k]; return [m.lipW || 30, m.lipH || 18, m.round || 0]; }
+  if (P <= path[0][1]) { const g = get(path[0][0]); return { w: g[0], h: g[1], round: g[2] }; }
+  if (P >= last[1]) { const g = get(last[0]); return { w: g[0], h: g[1], round: g[2] }; }
+  for (let i = 0; i < path.length - 1; i++) {
+    const k1 = path[i][0], f1 = path[i][1], k2 = path[i + 1][0], f2 = path[i + 1][1];
+    if (P >= f1 && P <= f2) {
+      const t = (P - f1) / ((f2 - f1) || 1);
+      const a = get(k1), b = get(k2);
+      return { w: lerp(a[0], b[0], t), h: lerp(a[1], b[1], t), round: lerp(a[2], b[2], t) };
+    }
+  }
+  const g = get(last[0]); return { w: g[0], h: g[1], round: g[2] };
+}
+const FRONT_W = 240, FRONT_H = 200, FMT_H = 200;
+function drawFront() {
+  const cv = document.getElementById('frontCv');
+  const ctx = cv.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = FRONT_W * dpr; cv.height = FRONT_H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const s = FINALS[cur];
+  if (!s) return;
+  const lp = lipParams(s.path, mainScene.pathU());
+  T.drawFrontView(ctx, FRONT_W, FRONT_H, lp, mainScene.poseU(), labelOf(cur), null, APP_LANG);
+}
+function drawFormant() {
+  const cv = document.getElementById('fmtCv');
+  if (!cv || !PinyinAudio || !T.drawFormantSchematic) return;
+  const s = FINALS[cur];
+  if (!s) return;
+  const cssW = Math.max(240, Math.round(cv.clientWidth || 420));
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = cssW * dpr; cv.height = FMT_H * dpr;
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const u = mainScene.pathU();
+  T.drawFormantSchematic(ctx, cssW, FMT_H, {
+    fm: PinyinAudio.formantAtPath(s.path, u),
+    formantAt: function (t) { return PinyinAudio.formantAtPath(s.path, t); },
+    u: u,
+    label: labelOf(cur),
+    f0: PinyinAudio.F0
+  });
+}
+
+function refreshVoiceNote() {
+  const info = PinyinAudio.refreshVoices();
+  const note = document.getElementById('voiceNote');
+  if (!note) return;
+  note.style.display = (info.voices.length > 0 && !info.zhVoice) ? 'block' : 'none';
+}
+document.getElementById('btnSpeak').addEventListener('click', function () { PinyinAudio.speak(FINALS[cur].word, 0.85); refreshVoiceNote(); });
+document.getElementById('btnFlat').addEventListener('click', function () { PinyinAudio.playFinal(FINALS[cur]); });
+refreshVoiceNote();
+
+document.getElementById('btnPlay').addEventListener('click', function () {
+  const playing = !mainScene.playing;
+  mainScene.playing = playing;
+  cmpScenes.forEach(function (sc) { sc.playing = playing; });
+  document.getElementById('btnPlay').textContent = playing ? '暂停' : '播放';
+});
+document.getElementById('btnStep').addEventListener('click', function () {
+  gotoPhase(PHASE_ORDER[(PHASE_ORDER.indexOf(mainScene.phase) + 1) % 4]);
+});
+document.getElementById('speed').addEventListener('input', function (e) {
+  const v = parseFloat(e.target.value);
+  mainScene.speed = v;
+  cmpScenes.forEach(function (sc) { sc.speed = v; });
+  document.getElementById('speedVal').textContent = v.toFixed(1) + '×';
+});
+document.getElementById('fontSize').addEventListener('input', function (e) {
+  const v = parseFloat(e.target.value);
+  ZOOM = v;
+  document.documentElement.style.setProperty('--zoom', v);
+  document.getElementById('fontSizeVal').textContent = v.toFixed(2) + '×';
+});
+T.bindHelp('helpOverlay', 'btnHelp', 'helpClose');
+
+document.addEventListener('keydown', function (e) {
+  const tag = (e.target && e.target.tagName) || '';
+  if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+    const i = QUICK_ORDER.indexOf(cur);
+    const n = e.key === 'ArrowRight' ? (i + 1) % QUICK_ORDER.length : (i - 1 + QUICK_ORDER.length) % QUICK_ORDER.length;
+    select(QUICK_ORDER[n], true);
+    e.preventDefault();
+  } else if (e.key === ' ' || e.code === 'Space') {
+    document.getElementById('btnPlay').click(); e.preventDefault();
+  } else if (e.key === '1' || e.key === '2' || e.key === '3' || e.key === '4') {
+    gotoPhase(PHASE_ORDER[parseInt(e.key, 10) - 1]); e.preventDefault();
+  }
+});
+
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  if (!document.hidden) {
+    if (mainScene.playing) {
+      cmpClock.t += dt * mainScene.speed;
+      const dmax = Math.max(cmpScenes[0].durations()[cmpClock.phase], cmpScenes[1].durations()[cmpClock.phase]);
+      if (cmpClock.t >= dmax) {
+        cmpClock.t = 0;
+        cmpClock.phase = PHASE_ORDER[(PHASE_ORDER.indexOf(cmpClock.phase) + 1) % 4];
+        if (cmpClock.phase === 'A') cmpScenes.forEach(function (sc) { sc.particles.reset(); });
+      }
+    }
+    mainScene.update(dt);
+    for (let i = 0; i < cmpScenes.length; i++) { cmpScenes[i].time += dt; cmpScenes[i].update(dt); }
+    mainScene.time += dt;
+    mainScene.draw();
+    for (let i = 0; i < cmpScenes.length; i++) cmpScenes[i].draw();
+    drawChart();
+    drawFront();
+    drawFormant();
+  }
+  requestAnimationFrame(loop);
+}
+
+window.SM = {
+  select: select,
+  compare: function (a, b) { cmpA.value = a; cmpB.value = b; updateCompare(); },
+  setSpeed: function (v) { const e = document.getElementById('speed'); e.value = v; e.dispatchEvent(new Event('input')); },
+  play: function () { mainScene.playing = true; document.getElementById('btnPlay').textContent = '暂停'; },
+  pause: function () { mainScene.playing = false; document.getElementById('btnPlay').textContent = '播放'; },
+  hold: function (k) { if (k) select(k); gotoPhase('B'); mainScene.phaseT = 0.3; },
+  get cur() { return cur; }
+};
+
+select('a', false);
+updateCompare();
+renderPhaseBar();
+requestAnimationFrame(loop);
+
+(function () {
+  const search = location.search || location.hash || '';
+  const q = new URLSearchParams(search.replace(/^[?#]/, ''));
+  const s = q.get('s');
+  if (s) { try { select(resolveKey(s), false); } catch (e) {} }
+  if (q.has('hold')) { try { SM.hold(); } catch (e) {} }
+})();
+
+/* ================= 中英文界面 ================= */
+const YM_UI={
+ zh:{title:'汉语韵母发音动态图',subtitle:'舌位与唇形 · 动程动画 ｜ 黄点为当前舌位 ｜ 点击分类总表中的韵母开始演示',size:'字号',stage:'发音器官剖面 · 动态演示',current:'当前韵母',labels:'显示器官标注',play:'播放',pause:'暂停',step:'单步',flat:'韵母示意',speak:'例词',auto:'选音自动播放韵母示意',audio:'韵母示意用嗓音合成，跟着舌位动程变化，不是汉字读音。',speed:'速度',table:'韵母分类总表',tableHint:'按「韵母类型 × 四呼」归类，点击字母查看动画',quick:'快速选音：',compare:'对比模式',compareHint:'并排对照两个韵母，重点观察动程、鼻音和唇形差异',help:'帮助',lang:'EN',aria:'切换到英文'},
+ en:{title:'Mandarin Finals · Articulation Animation',subtitle:'Tongue and lip posture · movement animation ｜ yellow dot = current tongue position ｜ click a final in the inventory to begin',size:'Text size',stage:'Vocal-tract profile · articulation',current:'Current final',labels:'Show anatomy labels',play:'Play',pause:'Pause',step:'Step',flat:'Final demo',speak:'Example',auto:'Auto-play final demo when selecting',audio:'The final demo synthesizes the tongue movement; it is not a Mandarin syllable recording.',speed:'Speed',table:'Mandarin final inventory',tableHint:'Grouped by final type × mouth group; click a letter to view its animation',quick:'Quick select:',compare:'Compare finals',compareHint:'Compare two finals: movement, nasality, and lip posture',help:'Help',lang:'中文',aria:'切换到中文'}
+};
+function ymSetLabel(el,text){if(el&&el.lastChild)el.lastChild.nodeValue=' '+text;}
+function ymEnglishData(s){const nasal=isNasalFinal(s);return {desc:(YM_KIND_EN[s.kind]||s.kind)+' in the '+(YM_HU_EN[s.hu]||s.hu)+'. The tongue and lips move along the illustrated path'+(nasal?', ending with airflow through the nose.':'.')+' Vocal folds vibrate throughout phonation.',tip:nasal?'Tip: watch the velum lower and the airflow move to the nasal cavity.':'Tip: follow the yellow tongue marker and the changing lip shape through the movement.'};}
+function ymApplyLanguage(){const t=YM_UI[APP_LANG];document.documentElement.lang=APP_LANG==='en'?'en':'zh-CN';document.title=APP_LANG==='en'?'Mandarin Finals · Articulation Animation':'汉语韵母发音动态图 · 韵母发音演示';document.querySelector('header h1').textContent=t.title;document.querySelector('header p').textContent=t.subtitle;document.querySelector('.fclabel').textContent=t.size;const ct=document.querySelectorAll('.card-title');if(ct[0])ct[0].firstChild.nodeValue=t.stage+' ';if(ct[1])ct[1].textContent=t.current;if(ct[2])ct[2].firstChild.nodeValue=t.table+' ';if(ct[3])ct[3].firstChild.nodeValue=t.compare+' ';ymSetLabel(document.querySelector('.canvas-tools label'),t.labels);ymSetLabel(document.querySelector('.ckrow label'),t.auto);document.getElementById('btnPlay').textContent=mainScene.playing?t.pause:t.play;document.getElementById('btnStep').textContent=t.step;document.getElementById('btnFlat').textContent=t.flat;document.getElementById('btnSpeak').textContent=t.speak;document.querySelector('.audio-note').textContent=t.audio;document.querySelector('.ctl label[for="speed"]').textContent=t.speed;const ql=document.querySelectorAll('.qlabel');if(ql[0])ql[0].textContent=t.quick;document.querySelectorAll('.card-title')[2].querySelector('.hint-inline').textContent=t.tableHint;document.querySelectorAll('.card-title')[3].querySelector('.hint-inline').textContent=t.compareHint;document.getElementById('btnHelp').textContent=t.help;document.getElementById('btnLang').textContent=t.lang;document.getElementById('btnLang').setAttribute('aria-label',t.aria);document.getElementById('helpTitle').textContent=APP_LANG==='en'?'Help':'使用说明';document.getElementById('helpZh').hidden=APP_LANG==='en';document.getElementById('helpEn').hidden=APP_LANG!=='en';const s=FINALS[cur];if(APP_LANG==='en'){const d=ymEnglishData(s);document.getElementById('desc').textContent=d.desc;document.getElementById('tip').textContent='Tip: '+d.tip;const chips=document.getElementById('chips');chips.innerHTML='';['Type: '+(YM_KIND_EN[s.kind]||s.kind),'Mouth group: '+(YM_HU_EN[s.hu]||s.hu),isNasalFinal(s)?'Nasal ending':'Oral ending'].forEach(x=>{const c=document.createElement('span');c.className='chip'+(x.indexOf('Nasal')>=0?' hot':'');c.textContent=x;chips.appendChild(c)});const names=phaseNames(s);document.getElementById('stageHint').textContent=[names.A,names.B,names.C,names.rest].join(' → ');const texts=phaseTexts(s);['pdA','pdB','pdC','pdRest'].forEach((id,i)=>document.getElementById(id).textContent=texts[i]);document.getElementById('diffBox').innerHTML=ymDiffEn(cmpA.value,cmpB.value);renderPhaseBar();const th=document.querySelectorAll('#table th');['Open','Spread','Rounded','Pursed'].forEach((x,i)=>{if(th[i+1])th[i+1].textContent=x});document.querySelectorAll('#table .rowlabel').forEach((e,i)=>e.textContent=['Monophthongs','Diphthongs/triphthongs','Nasal finals'][i]);[...cmpA.options,...cmpB.options].forEach(o=>{const x=FINALS[o.value];if(x)o.textContent=labelOf(o.value)+' · '+(YM_KIND_EN[x.kind]||x.kind)+' · '+(YM_HU_EN[x.hu]||x.hu)});}else{select(cur,false);updateCompare();renderPhaseBar();}}
+function ymDiffEn(a,b){const A=FINALS[a],B=FINALS[b];return '<b>'+labelOf(a)+'</b> '+(YM_KIND_EN[A.kind]||A.kind)+' · '+(YM_HU_EN[A.hu]||A.hu)+' ｜ <b>'+labelOf(b)+'</b> '+(YM_KIND_EN[B.kind]||B.kind)+' · '+(YM_HU_EN[B.hu]||B.hu)+'<br/>'+(A.kind===B.kind?'Same final type.':'Different final types.')+' '+(A.hu===B.hu?'Same mouth group.':'Different mouth groups.')+' '+((isNasalFinal(A)&&isNasalFinal(B))?'Both end nasally.':(isNasalFinal(A)||isNasalFinal(B)?'Only one ends nasally.':'Both are oral finals.'));}
+function ymApplyExtras(){
+  if(APP_LANG!=='en')return;
+  const p=document.querySelectorAll('.pane-title'); if(p[0])p[0].textContent='Lip shape · front view'; if(p[1])p[1].textContent='Formant schematic';
+  const h=FINALS[cur], hu=h.hudu||{}, hud=document.getElementById('huduro');
+  if(hud) hud.innerHTML='Reading: <b>'+(hu.py||h.wpy||'')+'</b>'+(hu.ch?' ('+hu.ch+')':'');
+  const note=document.querySelector('.note'); if(note)note.textContent='Nine monophthongs are shown on a conventional tongue-position chart; moving dots indicate the articulation path.';
+  const vf=document.getElementById('voiceNote'); if(vf)vf.textContent=YM_UI.en.voiceNote;
+  const legend=['Airflow particles','Tongue body','Vocal-fold vibration (all Mandarin vowels are voiced)','Tongue-position marker / trajectory'];
+  document.querySelectorAll('.legend span').forEach((e,i)=>{if(legend[i]){const n=e.lastChild;if(n)n.nodeValue=legend[i];}});
+  const flat=document.getElementById('btnFlat'); if(flat)flat.title='Synthesized vowel contour following the articulation path; not a Chinese word recording';
+  const close=document.getElementById('helpClose'); if(close)close.setAttribute('aria-label','Close help');
+  document.querySelectorAll('.tbtn,.qbtn').forEach(b=>{if(FINALS[b.dataset.key])b.textContent=labelOf(b.dataset.key);});
+  document.querySelectorAll('canvas').forEach(c=>c.setAttribute('aria-label','Mandarin final articulation diagram'));
+}
+function ymNormalizeHelp(){document.getElementById('helpTitle').textContent=APP_LANG==='en'?'Help':'帮助';document.getElementById('btnHelp').textContent=APP_LANG==='en'?'Help':'帮助';document.getElementById('helpClose').setAttribute('aria-label',APP_LANG==='en'?'Close help':'关闭帮助');}
+document.getElementById('btnLang').addEventListener('click',function(){APP_LANG=APP_LANG==='zh'?'en':'zh';ymApplyLanguage();ymApplyExtras();ymNormalizeHelp();});
+setInterval(function(){if(APP_LANG==='en'){ymApplyLanguage();ymApplyExtras();}},200);
+ymApplyLanguage();ymApplyExtras();ymNormalizeHelp();
+</script>
+</body>
+</html>
