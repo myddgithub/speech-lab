@@ -80,6 +80,9 @@ SS.setdefault("last_seq", -1)
 SS.setdefault("align_import_hash", None)
 SS.setdefault("import_hint", None)
 SS.setdefault("import_hint_text", None)
+SS.setdefault("comp_orig_hash", None)
+SS.setdefault("comp_edit_hash", None)
+SS.setdefault("comp_audio_epoch", None)
 
 # 从 .txt 导入的对齐文本：须在“对齐”输入框实例化之前写入（否则不能修改已实例化控件）
 if SS.get("align_input_pending") is not None:
@@ -185,6 +188,9 @@ def _set_audio(data: bytes, name: str) -> bool:
     SS["pitch_dirty"] = False
     SS["last_seq"] = -1
     SS["component_epoch"] = int(SS.get("component_epoch", 0)) + 1
+    SS["comp_orig_hash"] = None
+    SS["comp_edit_hash"] = None
+    SS["comp_audio_epoch"] = None
     SS["textgrid_notice"] = None
     # 若上传控件仍保留着 TextGrid，新音频应有机会明确地重新应用一次。
     SS["textgrid_seen_hash"] = None
@@ -311,6 +317,9 @@ with st.sidebar:
                 SS["audio_uploader_epoch"] += 1
                 SS["audio_input_epoch"] += 1
                 SS["component_epoch"] += 1
+                SS["comp_orig_hash"] = None
+                SS["comp_edit_hash"] = None
+                SS["comp_audio_epoch"] = None
                 if st.query_params.get("demo") == "1":
                     del st.query_params["demo"]
                 st.rerun()
@@ -564,8 +573,19 @@ if SS.get("pitch_dirty", False):
 else:
     edit_wav = orig_wav
 
-url_edit = core.to_data_url(edit_wav)
-url_orig = core.to_data_url(orig_wav)
+epoch = int(SS.get("component_epoch", 0))
+audio_payload = core.component_audio_payload(
+    orig_wav,
+    edit_wav,
+    prev_orig_hash=SS.get("comp_orig_hash"),
+    prev_edit_hash=SS.get("comp_edit_hash"),
+    remount=SS.get("comp_audio_epoch") != epoch,
+)
+SS["comp_orig_hash"] = audio_payload["orig_hash"]
+SS["comp_edit_hash"] = audio_payload["edit_hash"]
+SS["comp_audio_epoch"] = epoch
+url_edit = audio_payload["url_edit"]
+url_orig = audio_payload["url_orig"]
 
 # --- 音高编辑器（独占整宽；多层标注）置于工具行上方，曲线优先呈现 ---
 last_seq = SS.get("last_seq", -1)
@@ -588,6 +608,8 @@ result = pitch_editor(
     # 同一音频内保持组件身份稳定；切换音频时换代，隔离旧组件事件。
     key=f"pitch_editor_main_{SS['component_epoch']}",
 )
+if not audio_payload["embedded"]:
+    st.caption(tr("图表内播放已关闭（音频较大）。请使用下方「试听对比」。"))
 if result and result.get("event") != "none" and result.get("seq", -1) > last_seq:
     pts_changed = result.get("points") is not None and result.get("points") != SS["edit_points"]
     syl_changed = result.get("syllables") is not None and result.get("syllables") != SS.get("syllables", [])

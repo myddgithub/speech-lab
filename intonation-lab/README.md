@@ -38,10 +38,10 @@ python -m venv .venv
 # source .venv/bin/activate     # Linux / macOS
 
 pip install -r requirements.txt
-streamlit run app.py
+streamlit run app.py --server.port=8507
 ```
 
-浏览器自动打开 `http://localhost:8501`。
+浏览器打开 `http://localhost:8507`（与「一键启动」相同；省略 `--server.port` 时 Streamlit 默认是 8501）。
 
 ---
 
@@ -66,7 +66,7 @@ streamlit run app.py
    - 拖拽音节框**左右边缘**微调边界：相邻两框共享该边界，**同时联动**保持连续；
      拖拽**框体**整体移动（相邻框边界跟随）；**双击**框内任意处**一分为二**；
      在空白处拖拽新建音节框；
-   - 右侧输入框填音节文本（如 `liu4`，末尾数字 = 声调），**Delete** 删除选中音节；
+   - 右侧输入框填音节文本（如 `liu4`，末尾数字 = 声调）；**Delete** 删除当前选中的音节或层项（不必处于标注模式）；
 5. 使用左侧面板做整体处理：
    - **音高编辑操作**：**升/降 1 半音**、**平滑曲线**；
    - **🎯 特征点（仿 Praat Stylize）**：按音高变化趋势提取**特征点**（转折点/端点），
@@ -123,13 +123,18 @@ streamlit run app.py
 intonation-lab/
 ├── app.py                        # Streamlit 主应用
 ├── core.py                       # 音频加载 / 基频分析 / TD-PSOLA 重合成
+├── i18n.py                       # 中/英文案
 ├── requirements.txt
+├── 一键启动.bat                  # Windows：依赖检查 + 端口 8507
 ├── pitch_editor/
 │   ├── __init__.py               # 组件声明（st.components.v1）
 │   └── frontend/
 │       ├── index.html            # 组件外壳（工具栏 + 画布）
 │       └── component.js          # Canvas 音高曲线绘制 + 拖拽交互
-├── tests/test_core.py             # TextGrid / 音高核心回归测试
+├── tests/
+│   ├── test_core.py              # TextGrid / 音高 / 切分 / 声调回归
+│   └── test_app.py               # Streamlit 空页与 demo 冒烟
+├── docs/                         # 架构示意图
 └── README.md
 ```
 
@@ -140,7 +145,8 @@ python -m unittest discover -s tests -v
 ```
 
 测试覆盖 TextGrid 长/短格式、标准 `TextTier`、旧 `PointTier` 导入兼容、UTF-16、
-引号转义、时间不变量、半音插值、F0 裁剪、分块分析和特征点保留。
+引号转义、时间不变量、半音插值、F0 裁剪、分块分析、特征点保留、
+拼音/汉字切分、自动音节切分、声调特征点规则，以及组件音频内嵌策略。
 
 ## 已知限制
 
@@ -148,3 +154,4 @@ python -m unittest discover -s tests -v
 - TD-PSOLA 重合成对**极高/极低基频**（超出分析上下限）不适用；调整侧边栏“基频上下限”可覆盖更多情况。
 - 修改“分析参数”（基频上下限、帧移）会重新提取音高并**重置**当前编辑。
 - 超长音频（>4 分钟）重合成耗时与内存上升，请耐心等待或截取片段。
+- 图表内播放只嵌入较小 WAV（约 1.5MB / 约 47s·16kHz 单声道）；更大的音频请用主区「试听对比」。

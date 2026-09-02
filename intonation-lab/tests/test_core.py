@@ -167,6 +167,109 @@ class PitchTests(unittest.TestCase):
         self.assertNotIn(0.01, [point[0] for point in result])
         self.assertNotIn(0.02, [point[0] for point in result])
 
+    def test_split_syllable_text_pinyin_and_hanzi(self) -> None:
+        syls, fmt = core.split_syllable_text("wo3men0shi4yi1shi4ba0")
+        self.assertEqual(fmt, "拼音")
+        self.assertEqual(syls, ["wo3", "men0", "shi4", "yi1", "shi4", "ba0"])
+        syls, fmt = core.split_syllable_text("好3你0在吗")
+        self.assertEqual(fmt, "汉字")
+        self.assertEqual(syls, ["好3", "你0", "在", "吗"])
+
+    def test_tone_feature_rules_keep_canonical_points(self) -> None:
+        rising = [
+            [0.0, 100.0], [0.1, 90.0], [0.2, 110.0],
+            [0.3, 150.0], [0.4, 180.0], [0.5, 170.0],
+        ]
+        tone2 = core.extract_tone_feature_points(
+            rising, [{"t0": 0.0, "t1": 0.6, "text": "ma2"}], pad=0
+        )
+        self.assertEqual(tone2, [[0.1, 90.0], [0.4, 180.0]])
+
+        falling = [
+            [0.0, 180.0], [0.1, 200.0], [0.2, 150.0],
+            [0.3, 120.0], [0.4, 90.0], [0.5, 100.0],
+        ]
+        tone4 = core.extract_tone_feature_points(
+            falling, [{"t0": 0.0, "t1": 0.6, "text": "ma4"}], pad=0
+        )
+        self.assertEqual(tone4, [[0.1, 200.0], [0.4, 90.0]])
+
+        dip = [
+            [0.0, 160.0], [0.1, 140.0], [0.2, 90.0],
+            [0.3, 100.0], [0.4, 150.0],
+        ]
+        tone3 = core.extract_tone_feature_points(
+            dip, [{"t0": 0.0, "t1": 0.5, "text": "ma3"}], pad=0
+        )
+        self.assertEqual([p[0] for p in tone3], [0.0, 0.2, 0.4])
+
+        level = [[i * 0.1, 200.0] for i in range(5)]
+        tone1 = core.extract_tone_feature_points(
+            level, [{"t0": 0.0, "t1": 0.5, "text": "ma1"}], pad=0
+        )
+        self.assertEqual(tone1, [[0.0, 200.0], [0.4, 200.0]])
+
+    def test_contiguous_tone_pad_does_not_steal_next_syllable(self) -> None:
+        points = [
+            [0.10, 150.0],
+            [0.19, 150.0],
+            [0.21, 80.0],
+            [0.25, 100.0],
+            [0.35, 200.0],
+        ]
+        syllables = [
+            {"t0": 0.0, "t1": 0.2, "text": "a1"},
+            {"t0": 0.2, "t1": 0.4, "text": "b2"},
+        ]
+        result = core.extract_tone_feature_points(points, syllables, pad=0.02)
+        times = [p[0] for p in result]
+        self.assertIn(0.19, times)
+        self.assertIn(0.21, times)
+        self.assertNotIn(0.25, times)
+
+    def test_auto_segment_sample_covers_duration_contiguously(self) -> None:
+        data = core.generate_sample_audio()
+        samples, sr, _ = core.load_audio_bytes(data)
+        times, f0 = core.analyze_pitch(samples, sr)
+        boxes = core.auto_segment_syllables(samples, sr, times, f0)
+        self.assertGreaterEqual(len(boxes), 2)
+        duration = len(samples) / sr
+        self.assertEqual(boxes[0]["t0"], 0.0)
+        self.assertAlmostEqual(boxes[-1]["t1"], duration, places=3)
+        for left, right in zip(boxes, boxes[1:]):
+            self.assertEqual(left["t1"], right["t0"])
+            self.assertGreater(left["t1"], left["t0"])
+
+    def test_component_audio_payload_skips_resend_and_large_files(self) -> None:
+        small = core.wav_bytes(np.zeros(1000, dtype=np.float32), 8000)
+        first = core.component_audio_payload(small, small, remount=True)
+        self.assertTrue(first["embedded"])
+        self.assertTrue(first["url_orig"].startswith("data:"))
+        self.assertEqual(first["url_edit"], "same")
+        again = core.component_audio_payload(
+            small,
+            small,
+            prev_orig_hash=first["orig_hash"],
+            prev_edit_hash=first["edit_hash"],
+            remount=False,
+        )
+        self.assertIsNone(again["url_orig"])
+        self.assertIsNone(again["url_edit"])
+        edited = core.wav_bytes(np.full(1000, 0.1, dtype=np.float32), 8000)
+        changed = core.component_audio_payload(
+            small,
+            edited,
+            prev_orig_hash=first["orig_hash"],
+            prev_edit_hash=first["edit_hash"],
+            remount=False,
+        )
+        self.assertIsNone(changed["url_orig"])
+        self.assertTrue(changed["url_edit"].startswith("data:"))
+        huge = core.component_audio_payload(small, small, remount=True, max_bytes=10)
+        self.assertFalse(huge["embedded"])
+        self.assertEqual(huge["url_orig"], "")
+        self.assertEqual(huge["url_edit"], "")
+
 
 if __name__ == "__main__":
     unittest.main()

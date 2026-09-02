@@ -105,6 +105,7 @@ EN: dict[str, str] = {
 
     # ---- 主体 ----
     "导入或录制一段语音 → 自动提取音高曲线 → 用鼠标**拖拽**调节音高 → TD-PSOLA 重合成即时试听。": "Import or record speech → the F0 curve is extracted automatically → **drag** the handles to adjust pitch → TD-PSOLA resynthesis for instant preview.",
+    "图表内播放已关闭（音频较大）。请使用下方「试听对比」。": "In-chart playback is off (audio is large). Use “Compare” below.",
     "👈 请先在左侧选择音频来源：**导入文件**、**麦克风录音**或**示例音频**。\n\n示例音频是一段合成的哼鸣（降调→升调→降调），可以直接体验拖拽调音高。": "👈 First pick an audio source on the left: **Import file**, **Microphone** or **Sample audio**.\n\nThe sample is a synthetic hum (fall → rise → fall) so you can try pitch-dragging right away.",
     "❌ 音频解码失败：{0}": "❌ Audio decode failed: {0}",
     "⚠️ 音频较长（>4 分钟），重合成所需内存与时间会增加。": "⚠️ Audio is long (>4 min); resynthesis may need more memory and time.",

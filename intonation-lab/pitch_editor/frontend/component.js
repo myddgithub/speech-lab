@@ -927,15 +927,18 @@
       const touchL = isTouching(prev, s);
       const touchR = isTouching(s, next);
       if (sylDrag.mode === "move") {
-        // 连续铺满时移动框体：相邻框共享边界随之移动，保持无空隙
+        // 以按下时的 origin/宽度平移，避免一帧 dt 过大时 t0 先被卡在旧 t1 上把框拉长。
+        // cursorT 保持按下瞬间的时间，不逐帧改写。
+        const width = sylDrag.initT1 - sylDrag.initT0;
         const dt = t - sylDrag.cursorT;
         const lo = prev ? (touchL ? prev.t0 + 0.06 : prev.t1 + 0.05) : 0;
         const hi = next ? (touchR ? next.t1 - 0.06 : next.t0 - 0.05) : state.dur;
-        s.t0 = Math.round(clamp(s.t0 + dt, lo, Math.min(hi, s.t1)) * 1e4) / 1e4;
-        s.t1 = Math.round(clamp(s.t1 + dt, Math.max(lo, s.t0), hi) * 1e4) / 1e4;
+        const maxT0 = hi - width;
+        const t0 = Math.round(clamp(sylDrag.initT0 + dt, lo, maxT0) * 1e4) / 1e4;
+        s.t0 = t0;
+        s.t1 = Math.round((t0 + width) * 1e4) / 1e4;
         if (touchL) prev.t1 = s.t0;
         if (touchR) next.t0 = s.t1;
-        sylDrag.cursorT = t;
       } else if (sylDrag.mode === "resizeL") {
         // 调整左边界；若与左邻共享边界则联动（同时改左邻的右边界）
         const lo = touchL ? (prev ? prev.t0 + 0.06 : 0) : (prev ? prev.t1 + 0.05 : 0);
@@ -1131,12 +1134,13 @@
         const hi = d.idx < L.items.length - 1 ? L.items[d.idx + 1].t - 1e-9 : state.dur;
         it.t = Math.round(clamp(t, lo, hi) * 1e9) / 1e9;
       } else if (d.mode === "move") {
+        const width = d.initT1 - d.initT0;
         const dt = t - d.cursorT;
         const lo = d.idx > 0 ? L.items[d.idx - 1].t1 : 0;
         const hi = d.idx < L.items.length - 1 ? L.items[d.idx + 1].t0 : state.dur;
-        it.t0 = Math.round(clamp(it.t0 + dt, lo, Math.min(hi, it.t1)) * 1e4) / 1e4;
-        it.t1 = Math.round(clamp(it.t1 + dt, Math.max(lo, it.t0), hi) * 1e4) / 1e4;
-        d.cursorT = t;
+        const t0 = Math.round(clamp(d.initT0 + dt, lo, hi - width) * 1e4) / 1e4;
+        it.t0 = t0;
+        it.t1 = Math.round((t0 + width) * 1e4) / 1e4;
       } else if (d.mode === "resizeL") {
         const lo = d.idx > 0 ? L.items[d.idx - 1].t1 + 0.01 : 0;
         it.t0 = Math.round(clamp(t, lo, it.t1 - 0.02) * 1e4) / 1e4;
@@ -1267,9 +1271,9 @@
     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
     if (!state.editable) return;
 
-    // Delete/Backspace：优先删选中额外层项 / 音节（标注模式），否则删选中音高点
+    // Delete/Backspace：优先删选中额外层项 / 音节，否则删选中音高点
     if (e.key === "Delete" || e.key === "Backspace") {
-      if (annotateMode && extraSel) {
+      if (extraSel) {
         const L = extraLayer(extraSel.bi);
         if (L && L.items && L.items[extraSel.idx]) {
           L.items.splice(extraSel.idx, 1);
@@ -1281,7 +1285,7 @@
           return;
         }
       }
-      if (annotateMode && selectedSyl >= 0 && state.syllables[selectedSyl]) {
+      if (selectedSyl >= 0 && state.syllables[selectedSyl]) {
         state.syllables.splice(selectedSyl, 1);
         selectedSyl = -1;
         sylText.value = "";
@@ -1492,26 +1496,34 @@
     state.editable = args.editable !== false;
     state.orig = args.original || [];
     state.wave = args.waveform || [];
-    if (args.url_edit && args.url_edit !== state.urlEdit) {
-      state.urlEdit = args.url_edit;
-      if (playToken === "edit" && playing) {
-        const t = audio.currentTime;
-        audio.src = args.url_edit;
-        audio.currentTime = t;
+    // url_*: 非空字符串=设置；"same"（仅 edit）=与 orig 相同；""=清除；null/undefined=保持上次
+    function applyAudioUrl(kind, incoming) {
+      const isOrig = kind === "orig";
+      const prev = isOrig ? state.urlOrig : state.urlEdit;
+      const playKinds = isOrig ? ["orig", "selO"] : ["edit", "selE"];
+      let next = prev;
+      if (incoming === "") {
+        next = null;
+      } else if (incoming === "same" && !isOrig) {
+        next = state.urlOrig;
+      } else if (typeof incoming === "string" && incoming.length) {
+        next = incoming;
       }
-    } else if (!args.url_edit) {
-      state.urlEdit = null;
-    }
-    if (args.url_orig && args.url_orig !== state.urlOrig) {
-      state.urlOrig = args.url_orig;
-      if (playToken === "orig" && playing) {
-        const t = audio.currentTime;
-        audio.src = args.url_orig;
-        audio.currentTime = t;
+      if (isOrig) state.urlOrig = next;
+      else state.urlEdit = next;
+      if (next !== prev && playKinds.indexOf(playToken) >= 0) {
+        if (!next) {
+          audio.pause();
+          playToken = "none";
+        } else if (playing) {
+          const t = audio.currentTime;
+          audio.src = next;
+          audio.currentTime = t;
+        }
       }
-    } else if (!args.url_orig) {
-      state.urlOrig = null;
     }
+    applyAudioUrl("orig", args.url_orig);
+    applyAudioUrl("edit", args.url_edit);
 
     // 外部修改（Python 侧操作）→ 采纳新数据（规范化比较，避免无谓抖动）
     const incPts = canonPts(args.points || []);
@@ -1542,8 +1554,14 @@
       adoptLayers = false;
       adoptSyl = false;
       if (selectedSyl >= state.syllables.length) selectedSyl = state.syllables.length - 1;
-      extraSel = null;
-      selBoundary = null;
+      if (!(extraSel && mapped[extraSel.bi] && mapped[extraSel.bi].items
+            && extraSel.idx >= 0 && extraSel.idx < mapped[extraSel.bi].items.length)) {
+        extraSel = null;
+      }
+      if (selBoundary !== null) {
+        const still = pyBoundaries().some((bt) => Math.abs(bt - selBoundary) <= 0.005);
+        if (!still) selBoundary = null;
+      }
       hoverB = null;
     }
     const incSyl = canonSyl(args.syllables || []);

@@ -17,8 +17,9 @@
     waveform        [[t, amp], ...]  波形（抽稀）
     duration        float            音频时长（秒）
     min_f0 / max_f0 float            初始纵轴及允许编辑范围（Hz）
-    edited_audio_url str|None        编辑后音频 data URL（base64 wav）
-    original_audio_url str|None      解码后原始音频 data URL
+    edited_audio_url str|None        编辑后音频：data URL 写入；"same" 与 orig 相同；
+                                     "" 清除；None 保持组件内上次的值
+    original_audio_url str|None      解码后原始音频（同上，无 "same"）
     label           str              标题
     seq             int              最后一次被接受的用户操作序号（防回退）
 
@@ -71,8 +72,8 @@ def pitch_editor(
         duration=float(duration),
         min_f0=float(min_f0),
         max_f0=float(max_f0),
-        url_edit=edited_audio_url or None,
-        url_orig=original_audio_url or None,
+        url_edit=edited_audio_url,
+        url_orig=original_audio_url,
         label=label,
         editable=True,
         seq=int(seq),

@@ -104,6 +104,60 @@ def bytes_hash(data: bytes) -> str:
     return hashlib.sha1(data).hexdigest()[:16]
 
 
+# 画布 iframe 内嵌 WAV data URL 的上限（约 47s / 16 kHz / 16-bit 单声道）。
+# 更大的音频只在主页「试听对比」播放，避免 Streamlit postMessage 被撑爆。
+COMPONENT_AUDIO_MAX_BYTES = 1_500_000
+
+
+def component_audio_payload(
+    orig_wav: bytes,
+    edit_wav: bytes,
+    prev_orig_hash: str | None = None,
+    prev_edit_hash: str | None = None,
+    remount: bool = False,
+    max_bytes: int = COMPONENT_AUDIO_MAX_BYTES,
+) -> dict:
+    """决定本次渲染要传给音高组件的音频字段。
+
+    返回 dict：
+      url_orig / url_edit:
+        - data URL：写入组件
+        - \"same\"：edit 与 orig 相同（仅 url_edit）
+        - \"\"：清除组件内音频
+        - None：保持组件内上一次的值（避免重复发送数 MB 的 data URL）
+      orig_hash / edit_hash: 供会话记住上次已发送的内容
+      embedded: 是否在组件内提供播放
+    """
+    too_big = len(orig_wav) > max_bytes or len(edit_wav) > max_bytes
+    if too_big:
+        return {
+            "url_orig": "",
+            "url_edit": "",
+            "orig_hash": None,
+            "edit_hash": None,
+            "embedded": False,
+        }
+    orig_hash = bytes_hash(orig_wav)
+    edit_hash = bytes_hash(edit_wav)
+    url_orig: str | None
+    if remount or prev_orig_hash != orig_hash:
+        url_orig = to_data_url(orig_wav)
+    else:
+        url_orig = None
+    url_edit: str | None
+    if remount or prev_edit_hash != edit_hash:
+        url_edit = "same" if edit_hash == orig_hash else to_data_url(edit_wav)
+    else:
+        url_edit = None
+    return {
+        "url_orig": url_orig,
+        "url_edit": url_edit,
+        "orig_hash": orig_hash,
+        "edit_hash": edit_hash,
+        "embedded": True,
+    }
+
+
 # ---------------------------------------------------------------------------
 # 基频分析（归一化自相关法，分块 FFT 分帧实现）
 # ---------------------------------------------------------------------------
@@ -647,7 +701,7 @@ def extract_tone_feature_points(
 ) -> list[list[float]]:
     """按音节声调自动提取音高特征点。
 
-    每个编辑点按时间**归属到唯一一个音节框**（连续铺满时无重叠，避免
+    每个编辑点按时间**归属到唯一一个音节框**（连续铺满时 pad 为 0，避免
     相邻音节轮廓互相污染），在框内按声调保留端点 + 最高点 + 最低点，
     删除之间的平滑过渡点（框内跨清音间隔时按浊音段分别处理）；
     不属于任何框的点原样保留。返回按时间排序的去重点集。
@@ -662,15 +716,30 @@ def extract_tone_feature_points(
 
     boxes = sorted(syllables, key=lambda s: float(s.get("t0", 0.0)))
     margin = max(0.0, float(pad))
+    # 连续铺满时邻框共享边界，pad 必须为 0，否则后一音节开头的点会被前一框抢走。
+    # 有空隙时每侧最多吃到间隙的一半。
+    windows: list[tuple[float, float]] = []
+    for i, s in enumerate(boxes):
+        t0 = float(s.get("t0", 0.0))
+        t1 = float(s.get("t1", 0.0))
+        if i == 0:
+            lo = t0 - margin
+        else:
+            gap = t0 - float(boxes[i - 1].get("t1", t0))
+            lo = t0 - min(margin, max(0.0, gap / 2.0))
+        if i == len(boxes) - 1:
+            hi = t1 + margin
+        else:
+            gap = float(boxes[i + 1].get("t0", t1)) - t1
+            hi = t1 + min(margin, max(0.0, gap / 2.0))
+        windows.append((lo, hi))
 
     # ---- 归属：每个点至多属于一个音节框（按序取第一个包含它的框） ----
     owned: list[list[list[float]]] = [[] for _ in boxes]
     assigned = [False] * len(points)
     for point_index, p in enumerate(points):
-        for i, s in enumerate(boxes):
-            if (float(s.get("t0", 0.0)) - margin - 1e-9
-                    <= p[0]
-                    <= float(s.get("t1", 0.0)) + margin + 1e-9):
+        for i, (lo, hi) in enumerate(windows):
+            if lo - 1e-9 <= p[0] <= hi + 1e-9:
                 owned[i].append(p)
                 assigned[point_index] = True
                 break
@@ -1436,8 +1505,8 @@ def pack_results(
     base: str = "result",
     textgrid_legacy: str | None = None,
 ) -> bytes:
-    """一键打包全部结果：原始音频 + 编辑后音频 + 多层标注 TextGrid（长格式），
-    如提供 textgrid_legacy 则额外附带经典短格式变体 -> ZIP 字节。"""
+    """一键打包全部结果：原始音频 + 编辑后音频 + TextGrid 文本
+    （应用侧传入短格式；如提供 textgrid_legacy 则额外附带一份变体）-> ZIP 字节。"""
     import zipfile
 
     buf = io.BytesIO()
