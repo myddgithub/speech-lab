@@ -682,6 +682,14 @@ def synthesize_with_f0(
     wsum = np.zeros(n, dtype=np.float64)
 
     for t0, t1 in _voiced_segments(f0_new, times):
+        # 同一连续浊音段必须固定使用一种合成方式。逐周期按瞬时比率切换会在阈值
+        # 附近产生明显的音色/八度跳变（听起来像一个元音中途换了人）。
+        seg_mask = (times >= t0) & (times <= t1) & (f0_new > 0) & (detected_source > 0)
+        if seg_mask.any():
+            seg_semitones = 12.0 * np.log2(f0_new[seg_mask] / detected_source[seg_mask])
+            use_scaled_windows = abs(float(np.median(seg_semitones))) > 5.0
+        else:
+            use_scaled_windows = False
         marks = _find_pitch_marks(x, sr, t0, t1, f0_src, times)
         if not marks:
             continue
@@ -713,8 +721,7 @@ def synthesize_with_f0(
             if Tt <= 0:
                 break
             Ta = 1.0 / fa if fa > 0 else 0.01
-            ratio = ft / fa if fa > 0 else 1.0
-            if ratio < 2.0 ** (-1.0 / 12.0) or ratio > 2.0 ** (1.0 / 12.0):
+            if use_scaled_windows:
                 _ola_pitch_scaled_window(out, wsum, x, s, a, Ta, Tt, sr)
             else:
                 L = max(8, int(round(2.0 * Ta * sr)))

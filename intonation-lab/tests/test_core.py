@@ -150,6 +150,19 @@ class PitchTests(unittest.TestCase):
         p180 = float(spectrum[int(np.argmin(np.abs(freqs - 180.0)))])
         self.assertLess(p180, 0.35 * p90)
 
+    def test_moderate_shift_does_not_switch_synthesis_mid_segment(self) -> None:
+        sr = 16000
+        t = np.arange(sr, dtype=np.float64) / sr
+        samples = (0.3 * np.sin(2 * np.pi * 120.0 * t)).astype(np.float32)
+        times = np.arange(0.02, 0.99, 0.01)
+        f0_orig = np.full(len(times), 120.0, dtype=np.float64)
+        f0_new = np.linspace(145.0, 165.0, len(times))
+        output = core.synthesize_with_f0(samples, sr, f0_new, f0_orig, times)
+        out_times, out_f0 = core.analyze_pitch(output, sr)
+        middle = out_f0[(out_times >= 0.15) & (out_times <= 0.85) & (out_f0 > 0)]
+        jumps = np.abs(12.0 * np.diff(np.log2(middle)))
+        self.assertLess(float(np.max(jumps)), 5.0)
+
     def test_chunked_analysis_is_chunk_size_independent(self) -> None:
         sr = 16000
         t = np.arange(sr, dtype=np.float64) / sr
