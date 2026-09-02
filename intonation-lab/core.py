@@ -244,6 +244,7 @@ def analyze_pitch(
     frame_period: float = 10.0,
     win_len: float = 0.04,
     chunk_frames: int = 1024,
+    voicing_threshold: float = 0.35,
 ) -> tuple[np.ndarray, np.ndarray]:
     """归一化自相关基频提取 -> (times, f0)。f0 中 0 表示清音/无音高。
 
@@ -300,7 +301,7 @@ def analyze_pitch(
         corr = autocorr / np.maximum(autocorr[:, 0:1], 1e-12)
         rsub = corr[:, lo:hi + 1]
         rmax = rsub.max(axis=1)
-        chunk_voiced = (rmax > 0.35) & (energy > 1e-8)
+        chunk_voiced = (rmax > float(voicing_threshold)) & (energy > 1e-8)
 
         if rsub.shape[1] == 1:
             chosen = np.zeros(end - begin, dtype=int)
@@ -380,6 +381,24 @@ def make_edit_points(
     if len(pts) > max_points and step < 2.0:
         return make_edit_points(times, f0, step * (len(pts) / max_points) + 0.001, max_points)
     return pts
+
+
+def fallback_edit_points(
+    times: np.ndarray,
+    floor: float = 75.0,
+    ceiling: float = 500.0,
+    step: float = 0.05,
+) -> list[list[float]]:
+    """未检出 F0 时生成可编辑的基准线，而不是让界面无曲线可调。"""
+    if len(times) == 0:
+        return []
+    base = float(np.clip(150.0, float(floor), float(ceiling)))
+    frame_step = float(times[1] - times[0]) if len(times) > 1 else float(step)
+    stride = max(1, int(round(float(step) / max(frame_step, 1e-9))))
+    indices = list(range(0, len(times), stride))
+    if indices[-1] != len(times) - 1:
+        indices.append(len(times) - 1)
+    return [[round(float(times[i]), 4), round(base, 3)] for i in indices]
 
 
 def reference_curve(times: np.ndarray, f0: np.ndarray, step: float = 0.02) -> list[list[float]]:
@@ -600,8 +619,24 @@ def synthesize_with_f0(
     peak_in = float(np.max(np.abs(x))) if n else 0.0
     energy_floor = max(0.04 * peak_in, 1e-4)
 
-    # 原浊音处用原周期找标记；用户新覆盖的尾段用目标 F0 在波形上找峰。
-    f0_src = np.where(f0_orig > 0, f0_orig, f0_new)
+    # 原检测器没有给出脉冲时，不能把“目标 F0”同时当作源周期：那会让源窗和
+    # 合成窗按同一间距移动，许多升降比例听起来仍是原音高。用更宽频域、较低
+    # 门限再估一次源周期；它只服务于重合成，不改变界面上的保守分析结果。
+    missing_source = (f0_new > 0) & ~(f0_orig > 0)
+    f0_relaxed = np.zeros_like(f0_orig, dtype=np.float64)
+    if missing_source.any():
+        relaxed_ceiling = min(1200.0, sr / 2.1)
+        if relaxed_ceiling > 40.0:
+            relaxed_times, relaxed = analyze_pitch(
+                x, int(round(sr)), 40.0, relaxed_ceiling, frame_period,
+                voicing_threshold=0.12,
+            )
+            if len(relaxed_times) == len(times) and np.allclose(relaxed_times, times, atol=1e-9):
+                f0_relaxed = relaxed
+            elif len(relaxed_times):
+                f0_relaxed = np.interp(times, relaxed_times, relaxed, left=0.0, right=0.0)
+    detected_source = np.where(f0_orig > 0, f0_orig, f0_relaxed)
+    f0_src = np.where(detected_source > 0, detected_source, f0_new)
 
     out = np.zeros(n, dtype=np.float64)
     wsum = np.zeros(n, dtype=np.float64)
@@ -656,12 +691,14 @@ def synthesize_with_f0(
 
     inst = _instantaneous_f0(f0_new, times, n, sr)
     if painted.any() and peak_in > 1e-9:
-        rms_mix = _local_rms(mixed, sr)
-        still_empty = painted & (rms_mix < 0.03 * peak_in)
-        if still_empty.any():
-            fade = _smooth_mask(still_empty, sr, 0.006) * painted.astype(np.float64)
-            buzz = _unit_buzz(inst, sr)
-            mixed = mixed * (1.0 - fade) + (0.10 * peak_in * buzz) * fade
+        # painted 表示保守分析没有任何可靠脉冲。弱检测只用来改善 OLA 的源窗，
+        # 不能作为最终音高保证（尤其降八度时，窗内原主频仍可能占主导）。因此该
+        # 区域最终以目标 F0 激励替换，原信号的短时 RMS 仍用于保留响度轮廓。
+        fade = _smooth_mask(painted, sr, 0.006) * painted.astype(np.float64)
+        buzz = _unit_buzz(inst, sr)
+        source_rms = _local_rms(x, sr)
+        amp = np.maximum(np.sqrt(2.0) * source_rms, 0.10 * peak_in)
+        mixed = mixed * (1.0 - fade) + (amp * buzz) * fade
 
     synthesized = (new_s & psola_ok) | painted
     out = mixed

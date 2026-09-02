@@ -91,6 +91,14 @@ class TextGridTests(unittest.TestCase):
 
 
 class PitchTests(unittest.TestCase):
+    @staticmethod
+    def dominant_frequency(samples: np.ndarray, sr: int) -> float:
+        windowed = samples.astype(np.float64) * np.hanning(len(samples))
+        spectrum = np.abs(np.fft.rfft(windowed))
+        freqs = np.fft.rfftfreq(len(windowed), 1.0 / sr)
+        usable = np.where((freqs >= 50.0) & (freqs <= 700.0))[0]
+        return float(freqs[usable[int(np.argmax(spectrum[usable]))]])
+
     def test_audio_decode_does_not_normalize_amplitude(self) -> None:
         source = np.array([-0.25, 0.0, 0.25], dtype=np.float32)
         decoded, sr, _ = core.load_audio_bytes(core.wav_bytes(source, 8000))
@@ -106,6 +114,24 @@ class PitchTests(unittest.TestCase):
 
         interpolated = core.build_f0_tier([[0.0, 100.0], [1.0, 400.0]], times, voiced, 75, 500)
         self.assertAlmostEqual(float(interpolated[1]), 200.0, places=9)
+
+    def test_fallback_points_exist_when_no_pitch_was_detected(self) -> None:
+        times = np.arange(0.02, 0.5, 0.01)
+        points = core.fallback_edit_points(times, 75, 500)
+        self.assertGreaterEqual(len(points), 2)
+        self.assertEqual(points[0][1], 150.0)
+        self.assertAlmostEqual(points[-1][0], float(times[-1]), places=4)
+
+    def test_resynthesis_changes_pitch_when_original_pulses_are_missing(self) -> None:
+        sr = 16000
+        t = np.arange(sr, dtype=np.float64) / sr
+        samples = (0.3 * np.sin(2 * np.pi * 180.0 * t)).astype(np.float32)
+        times = np.arange(0.02, 0.99, 0.01)
+        f0_orig = np.zeros(len(times), dtype=np.float64)
+        f0_new = np.full(len(times), 90.0, dtype=np.float64)
+        output = core.synthesize_with_f0(samples, sr, f0_new, f0_orig, times)
+        middle = output[int(0.15 * sr):int(0.85 * sr)]
+        self.assertAlmostEqual(self.dominant_frequency(middle, sr), 90.0, delta=4.0)
 
     def test_chunked_analysis_is_chunk_size_independent(self) -> None:
         sr = 16000

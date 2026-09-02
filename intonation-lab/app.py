@@ -504,10 +504,9 @@ with st.spinner(tr("🔬 提取音高曲线中（自相关法）...")):
 voiced = f0 > 0
 if not voiced.any():
     st.warning(
-        tr("⚠️ 未检测到浊音（音高）。请检查音频是否为语音/哼唱，或调整“基频上下限”参数。"),
+        tr("⚠️ 未检测到可靠音高，已提供 150 Hz 基准线供手工编辑；重合成会自动尝试弱脉冲检测，仍可改变音高。"),
         icon="🤔",
     )
-    st.stop()
 
 # 分析参数变化 -> 重置编辑点为原始曲线
 analysis_key = (h, float(f0_floor), float(f0_ceil), float(frame_period))
@@ -516,7 +515,10 @@ if SS["analysis_key"] != analysis_key:
         # 不允许撤销到另一套分析网格上的旧控制点。
         SS["edit_history"] = []
         SS["redo_history"] = []
-    SS["edit_points"] = core.make_edit_points(times, f0)
+    SS["edit_points"] = (
+        core.make_edit_points(times, f0)
+        or core.fallback_edit_points(times, float(f0_floor), float(f0_ceil))
+    )
     SS["analysis_key"] = analysis_key
     SS["pitch_dirty"] = False
 
@@ -685,7 +687,10 @@ elif clicked_redo:
     SS["align_msg"] = None
 elif clicked_reset:
     _push_history()
-    SS["edit_points"] = core.make_edit_points(times, f0)
+    SS["edit_points"] = (
+        core.make_edit_points(times, f0)
+        or core.fallback_edit_points(times, float(f0_floor), float(f0_ceil))
+    )
     SS["analysis_key"] = analysis_key  # 避免重置后再次自动重建
     SS["pitch_dirty"] = False
     SS["align_msg"] = None
@@ -772,9 +777,9 @@ if imp_file is not None:
 
 # --- 指标 ---
 f0v = f0[voiced]
-mean_f0 = float(np.mean(f0v))
-min_f0d = float(np.min(f0v))
-max_f0d = float(np.max(f0v))
+mean_f0 = float(np.mean(f0v)) if len(f0v) else float("nan")
+min_f0d = float(np.min(f0v)) if len(f0v) else float("nan")
+max_f0d = float(np.max(f0v)) if len(f0v) else float("nan")
 if edit_points:
     edit_f0_frames = core.build_f0_tier(
         edit_points, times, f0, float(f0_floor), float(f0_ceil)
@@ -788,8 +793,8 @@ else:
 c1, c2, c3, c4, c5, c6 = st.columns(6)
 c1.metric(tr("时长"), f"{duration:.2f} s")
 c2.metric(tr("浊音占比"), f"{voiced.mean() * 100:.0f} %")
-c3.metric(tr("原始平均基频"), f"{mean_f0:.0f} Hz",
-          help=trf("原始范围 {0}–{1} Hz", min_f0d, max_f0d))
+c3.metric(tr("原始平均基频"), f"{mean_f0:.0f} Hz" if len(f0v) else "—",
+          help=trf("原始范围 {0}–{1} Hz", min_f0d, max_f0d) if len(f0v) else None)
 c4.metric(tr("当前平均基频"), f"{mean_edit:.0f} Hz",
           help=trf("编辑后范围 {0}–{1} Hz", min_edit, max_edit))
 c5.metric(tr("编辑点数"), f"{len(edit_points)}")

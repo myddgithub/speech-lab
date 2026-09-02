@@ -113,6 +113,7 @@ EN: dict[str, str] = {
     "⚠️ 音频较长（>4 分钟），重合成所需内存与时间会增加。": "⚠️ Audio is long (>4 min); resynthesis may need more memory and time.",
     "🔬 提取音高曲线中（自相关法）...": "🔬 Extracting pitch curve (autocorrelation)...",
     "⚠️ 未检测到浊音（音高）。请检查音频是否为语音/哼唱，或调整“基频上下限”参数。": "⚠️ No voicing (pitch) detected. Check that the audio is speech or humming, or adjust the “F0 floor / ceiling” parameters.",
+    "⚠️ 未检测到可靠音高，已提供 150 Hz 基准线供手工编辑；重合成会自动尝试弱脉冲检测，仍可改变音高。": "⚠️ No reliable pitch was detected. A 150 Hz baseline is available for manual editing; resynthesis will retry weak-pulse detection so pitch changes still take effect.",
     "⚠️ TextGrid 时长为 {0}s，音频时长为 {1}s；超出音频范围的标注已裁剪。请确认文件是否配套。": "⚠️ TextGrid duration is {0}s while the audio is {1}s; annotations outside the audio were clipped. Please confirm the files match.",
     "✅ 已从 TextGrid 载入 {0} 层标注：{1}（可撤销）": "✅ Loaded {0} tier(s) from TextGrid: {1} (undoable)",
     "TextGrid 载入失败：{0}": "TextGrid load failed: {0}",
