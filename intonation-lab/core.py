@@ -161,6 +161,94 @@ def component_audio_payload(
 # ---------------------------------------------------------------------------
 # 基频分析（归一化自相关法，分块 FFT 分帧实现）
 # ---------------------------------------------------------------------------
+def _extend_voicing(
+    f0: np.ndarray,
+    f0_cand: np.ndarray,
+    voiced: np.ndarray,
+    energy: np.ndarray,
+    rmax: np.ndarray,
+    max_run: int = 24,
+    min_rmax: float = 0.16,
+) -> np.ndarray:
+    """把浊音段向衰减尾部延伸，并填上很短的浊音空洞。
+
+    去声/儿化（如 shir4）末尾脉冲变弱、周期变乱，自相关峰值经常掉到
+    主阈值以下。只要能量还在、候选 F0 与邻帧不超过约 8 个半音，就继续
+    当作浊音，这样末尾才有可拖的编辑点。
+    """
+    n = len(f0)
+    voiced = voiced.copy()
+    f0 = f0.copy()
+
+    def accept(i: int, ref_f0: float, ref_e: float) -> bool:
+        if energy[i] < max(1e-7, 0.04 * ref_e):
+            return False
+        if rmax[i] < min_rmax:
+            return False
+        cand = float(f0_cand[i])
+        if not (cand > 0 and ref_f0 > 0):
+            return False
+        semis = abs(12.0 * np.log2(cand / ref_f0))
+        return bool(semis <= 8.0 or abs(semis - 12.0) <= 3.5)
+
+    i = 0
+    while i < n:
+        if voiced[i]:
+            i += 1
+            continue
+        j = i
+        while j < n and not voiced[j]:
+            j += 1
+        left, right = i - 1, j if j < n else -1
+        if left >= 0 and right >= 0 and (j - i) <= 4:
+            ref_f = float(f0[left])
+            ref_e = float(max(energy[left], energy[right]))
+            for k in range(i, j):
+                if accept(k, ref_f, ref_e):
+                    f0[k] = float(f0_cand[k])
+                else:
+                    w = (k - left) / max(right - left, 1)
+                    f0[k] = (1.0 - w) * f0[left] + w * f0[right]
+                voiced[k] = True
+        i = j
+
+    runs: list[tuple[int, int]] = []
+    i = 0
+    while i < n:
+        if not voiced[i]:
+            i += 1
+            continue
+        j = i
+        while j + 1 < n and voiced[j + 1]:
+            j += 1
+        runs.append((i, j))
+        i = j + 1
+    for a, b in runs:
+        ref_f, ref_e = float(f0[b]), float(energy[b])
+        k, steps = b + 1, 0
+        while k < n and not voiced[k] and steps < max_run:
+            if not accept(k, ref_f, ref_e):
+                break
+            f0[k] = float(f0_cand[k])
+            voiced[k] = True
+            ref_f = f0[k]
+            ref_e = max(ref_e * 0.85, float(energy[k]))
+            k += 1
+            steps += 1
+        ref_f, ref_e = float(f0[a]), float(energy[a])
+        k, steps = a - 1, 0
+        while k >= 0 and not voiced[k] and steps < max_run:
+            if not accept(k, ref_f, ref_e):
+                break
+            f0[k] = float(f0_cand[k])
+            voiced[k] = True
+            ref_f = f0[k]
+            ref_e = max(ref_e * 0.85, float(energy[k]))
+            k -= 1
+            steps += 1
+    return np.where(voiced, f0, 0.0)
+
+
 def analyze_pitch(
     samples: np.ndarray,
     sr: int,
@@ -205,6 +293,9 @@ def analyze_pitch(
         raise ValueError("分析窗过短，无法覆盖所选基频范围")
     lags = np.arange(lo, hi + 1, dtype=np.float64)
     voiced = np.zeros(n_frames, dtype=bool)
+    energy_all = np.zeros(n_frames, dtype=np.float64)
+    rmax_all = np.zeros(n_frames, dtype=np.float64)
+    f0_cand = np.zeros(n_frames, dtype=np.float64)
     padded = np.pad(x, (0, max(0, frame - n)))
     chunk_frames = max(1, int(chunk_frames))
 
@@ -247,21 +338,29 @@ def analyze_pitch(
         delta[ok] = 0.5 * (r_prev[ok] - r_next[ok]) / denom[ok]
         tau_f = tau + np.clip(delta, -1.0, 1.0)
 
+        cand = np.clip(sr / np.maximum(tau_f, 1e-9), floor, ceiling)
+        f0_cand[begin:end] = cand
+        energy_all[begin:end] = energy
+        rmax_all[begin:end] = rmax
         chunk_f0 = np.zeros(end - begin, dtype=np.float64)
-        chunk_f0[chunk_voiced] = np.clip(
-            sr / tau_f[chunk_voiced], floor, ceiling
-        )
+        chunk_f0[chunk_voiced] = cand[chunk_voiced]
         f0[begin:end] = chunk_f0
         voiced[begin:end] = chunk_voiced
 
-    # 时间域中值滤波（窗口 3）平滑毛刺（八度跳变等）
-    f0_med = np.median(
-        np.stack([np.roll(f0, 1), f0, np.roll(f0, -1)], axis=0), axis=0
-    )
-    f0_med[:1] = f0[:1]
-    f0_med[-1:] = f0[-1:]
+    # 时间域中值滤波（窗口 3）平滑毛刺；邻帧若是清音则不参与，避免去声尾被 0 拉垮。
+    f0_med = f0.copy()
+    if n_frames >= 3:
+        for i in range(1, n_frames - 1):
+            if not voiced[i]:
+                continue
+            vals = [f0[i]]
+            if voiced[i - 1]:
+                vals.append(f0[i - 1])
+            if voiced[i + 1]:
+                vals.append(f0[i + 1])
+            f0_med[i] = float(np.median(vals))
     f0 = np.where(voiced, f0_med, 0.0)
-
+    f0 = _extend_voicing(f0, f0_cand, voiced, energy_all, rmax_all)
     return times, f0
 
 
@@ -313,16 +412,15 @@ def build_f0_tier(
 ) -> np.ndarray:
     """把编辑点在半音域线性插值回分析帧网格。
 
-    清音帧（原 f0<=0）保持 0，重合成时保留原始清浊模式；
-    浊音帧取编辑曲线的插值，并夹在 [floor, ceiling] 内。
+    原始浊音帧始终覆盖；另外，用户折线所覆盖的时间（含把末点拖进
+    未检出浊音的尾段、或在空白处新加点）也会写入 F0，这样去声尾才听得到。
+    折线按 0.3s 间隙分段，避免把音节之间的停顿填成浊音。
     """
     f0_new = np.zeros(len(f0_orig), dtype=np.float64)
-    voiced = f0_orig > 0
-    if not voiced.any() or not edit_points:
+    if not edit_points:
         return f0_new
     ts = np.array([p[0] for p in edit_points], dtype=np.float64)
     fs = np.array([p[1] for p in edit_points], dtype=np.float64)
-    # 在半音（log2 Hz）域插值，与前端对数纵轴上的直线一致。
     order = np.argsort(ts, kind="stable")
     ts = ts[order]
     fs = fs[order]
@@ -330,12 +428,35 @@ def build_f0_tier(
     ts, fs = ts[valid], fs[valid]
     if len(ts) == 0:
         return f0_new
-    # 同一时刻只保留最后一个控制点，满足 np.interp 的严格有序前提。
     keep = np.r_[np.diff(ts) > 1e-12, True]
     ts, fs = ts[keep], fs[keep]
+    cover = f0_orig > 0
+    dt = float(times[1] - times[0]) if len(times) > 1 else 0.01
+    pad = max(dt / 2.0, 0.015)
+    for t in ts:
+        cover |= np.abs(times - t) <= pad
+    orig_segs = _voiced_segments(f0_orig, times, min_gap_frames=1)
+    for i, (_ta, tb) in enumerate(orig_segs):
+        tc = orig_segs[i + 1][0] if i + 1 < len(orig_segs) else float(times[-1]) + 1.0
+        later = ts[(ts > tb) & (ts < tc)]
+        if later.size:
+            cover |= (times >= tb - pad) & (times <= float(later.max()) + pad)
+        ta = orig_segs[i][0]
+        tp = orig_segs[i - 1][1] if i > 0 else float(times[0]) - 1.0
+        earlier = ts[(ts < ta) & (ts > tp)]
+        if earlier.size:
+            cover |= (times >= float(earlier.min()) - pad) & (times <= ta + pad)
+    pts = [[float(t), float(f)] for t, f in zip(ts, fs)]
+    for seg in _point_segments(pts, gap=0.3):
+        t0, t1 = float(seg[0][0]), float(seg[-1][0])
+        local = (times >= t0 - pad) & (times <= t1 + pad)
+        if local.any() and not np.any((f0_orig > 0) & local):
+            cover |= local
+    if not cover.any():
+        return f0_new
     log_fs = np.log2(np.clip(fs, float(floor), float(ceiling)))
-    f0_new[voiced] = np.exp2(np.interp(times[voiced], ts, log_fs))
-    f0_new[voiced] = np.clip(f0_new[voiced], float(floor), float(ceiling))
+    f0_new[cover] = np.exp2(np.interp(times[cover], ts, log_fs))
+    f0_new[cover] = np.clip(f0_new[cover], float(floor), float(ceiling))
     return f0_new
 
 
@@ -382,7 +503,9 @@ def _find_pitch_marks(x: np.ndarray, sr: float, t0: float, t1: float, f0_src: np
     while t < t1 and guard < max_marks:
         f = _interp_f0_at(f0_src, times, t)
         if not (f > 0):
-            break
+            t += 0.005
+            guard += 1
+            continue
         T = 1.0 / f
         half = max(2, int(round(0.5 * T * sr)))
         i0 = max(0, int(round(t * sr)) - half)
@@ -410,30 +533,30 @@ def synthesize_with_f0(
 ) -> np.ndarray:
     """TD-PSOLA：用编辑后的 F0 重合成音频。
 
-    时长与清浊结构保持原始不变；浊音段按新基频重排基音窗，
-    清音段直接使用原信号。若合成区出现过载，只衰减合成区而不改动清音。
+    时长保持不变。f0_new>0 的区间按新基频重排基音窗（含用户画进
+    原清音区的尾段）；其余直接使用原信号。过载时只衰减合成区。
     """
     x = np.asarray(samples, dtype=np.float64)
     n = len(x)
     sr = float(sr)
 
-    # 未编辑或无浊音：原样返回
-    if not f0_new.any() or not f0_orig.any():
+    if not f0_new.any():
         return x.astype(np.float32)
     if np.array_equal(f0_new, f0_orig):
         return x.astype(np.float32)
 
-    voiced_new = f0_new > 0
-    voiced_orig = f0_orig > 0
-    voiced_mask = voiced_new & voiced_orig
+    voiced_mask = f0_new > 0
     if not voiced_mask.any():
         return x.astype(np.float32)
+
+    # 原浊音处用原周期找标记；用户新覆盖的尾段用目标 F0 在波形上找峰。
+    f0_src = np.where(f0_orig > 0, f0_orig, f0_new)
 
     out = np.zeros(n, dtype=np.float64)
     wsum = np.zeros(n, dtype=np.float64)
 
     for t0, t1 in _voiced_segments(f0_new, times):
-        marks = _find_pitch_marks(x, sr, t0, t1, f0_orig, times)
+        marks = _find_pitch_marks(x, sr, t0, t1, f0_src, times)
         if not marks:
             continue
         s = marks[0]
@@ -444,7 +567,7 @@ def synthesize_with_f0(
             while j + 1 < len(marks) and abs(marks[j + 1] - s) < abs(marks[j] - s):
                 j += 1
             a = marks[j]
-            fa = _interp_f0_at(f0_orig, times, a)
+            fa = _interp_f0_at(f0_src, times, a)
             Ta = 1.0 / fa if fa > 0 else 0.01
             L = max(8, int(round(2.0 * Ta * sr)))
             if L % 2 == 1:

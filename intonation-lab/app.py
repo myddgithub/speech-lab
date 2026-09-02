@@ -355,10 +355,11 @@ with st.sidebar:
                 st.error(trf("TextGrid 解析失败：{0}", e))
 
     with st.expander(tr("🔬 分析参数"), expanded=False):
-        f0_floor = st.slider(tr("基频下限 (Hz)"), 50, 120, 75, help=tr("低于此频率视为清音"))
+        f0_floor = st.slider(tr("基频下限 (Hz)"), 40, 120, 75, help=tr("低于此频率视为清音；去声/嘎裂声可降到 40–60 Hz"))
         f0_ceil = st.slider(tr("基频上限 (Hz)"), 300, 1000, 500, step=50, help=tr("高于此频率视为清音"))
         frame_period = st.select_slider(tr("分析帧移 (ms)"), options=[1, 2, 3, 5, 10, 15, 20], value=10)
         st.caption(tr("修改分析参数将重置音高编辑（重新提取曲线）"))
+        st.caption(tr("去声/儿化尾段若没有曲线：把最后一个点拖到更晚，或在空白处双击加点。"))
 
     if SS["audio_bytes"] is not None:
         with st.expander(tr("🎬 音节自动切分"), expanded=False):
@@ -910,7 +911,7 @@ _HELP_KEYS = {
     "zh": """| 键 / 操作 | 作用 |
 |---|---|
 | **A / Insert** | 在鼠标位置插入音高控制点 |
-| **双击曲线** | 在鼠标处加点 |
+| **双击曲线** | 在鼠标处加点（无曲线的清音/尾段也可以） |
 | **Delete / Backspace** | 删除选中点 / 音节 / 层项 |
 | **Shift + 点击圆点** | 删除该控制点 |
 | **↑ / ↓** | 选中点 ±1 半音 |
@@ -924,7 +925,7 @@ _HELP_KEYS = {
     "en": """| Key / action | Effect |
 |---|---|
 | **A / Insert** | insert a pitch point at the mouse |
-| **double-click curve** | add a point at the mouse |
+| **double-click curve** | add a point at the mouse (also in unvoiced gaps / tails) |
 | **Delete / Backspace** | delete the selected point / syllable / tier item |
 | **Shift + click handle** | delete that point |
 | **↑ / ↓** | selected point ±1 semitone |

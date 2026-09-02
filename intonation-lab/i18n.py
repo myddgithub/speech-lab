@@ -56,6 +56,8 @@ EN: dict[str, str] = {
     "🔬 分析参数": "🔬 Analysis",
     "基频下限 (Hz)": "F0 floor (Hz)",
     "低于此频率视为清音": "frames below this are treated as unvoiced",
+    "低于此频率视为清音；去声/嘎裂声可降到 40–60 Hz": "frames below this are treated as unvoiced; for falling/creaky tails try 40–60 Hz",
+    "去声/儿化尾段若没有曲线：把最后一个点拖到更晚，或在空白处双击加点。": "If a falling/erhua tail has no curve: drag the last point later, or double-click in the blank to add a point.",
     "基频上限 (Hz)": "F0 ceiling (Hz)",
     "高于此频率视为清音": "frames above this are treated as unvoiced",
     "分析帧移 (ms)": "Frame period (ms)",

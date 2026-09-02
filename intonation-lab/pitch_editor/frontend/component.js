@@ -50,7 +50,7 @@
       pause: "⏸ 暂停", pauseSel: "⏸ 暂停选中",
       annotate: "📝 标注音节", chk: "显示原始", textLbl: "标注:",
       ph: "如 liu4（数字=声调）", fit: "重置缩放",
-      hint: "拖拽调音高 · 双击或按 A 加点 · Delete 删点 · ↑↓ 半音微调 · 滚轮缩放时间 · Shift+滚轮前后平移 · Ctrl+滚轮调音高刻度 · 点选 PY 边界按 B：区间层加边界 / 点层加点",
+      hint: "拖拽调音高 · 空白处也可双击/A 加点（去声尾无曲线时把末点拖晚或在此加点） · Delete 删点 · ↑↓ 半音微调 · 滚轮缩放时间 · Shift+滚轮平移 · Ctrl+滚轮调音高刻度 · PY 边界+B 同步到下层",
       tPlay: "播放编辑后的音频", tPlayOrig: "播放原始音频",
       tSel: "播放选中段（编辑后音频）", tSelO: "播放选中段（解码后原始音频）",
       tAnnotate: "在下方音节轨拖拽创建/调整音节，Delete 删除", tFit: "重置视图缩放",
@@ -62,7 +62,7 @@
       pause: "⏸ Pause", pauseSel: "⏸ Pause selection",
       annotate: "📝 Mark syllables", chk: "Show original", textLbl: "Text:",
       ph: "e.g. liu4 (digit = tone)", fit: "Reset zoom",
-      hint: "drag to edit pitch · A / double-click adds a point · Delete removes · ↑↓ ±1 st · wheel zooms time · Shift+wheel pans · Ctrl+wheel scales pitch · click a PY boundary + B: boundary into interval tiers / point into point tiers",
+      hint: "drag pitch · A / double-click adds a point even in unvoiced gaps (tone-4 tails: drag the last point later or click to add) · Delete removes · ↑↓ ±1 st · wheel zooms time · Shift+wheel pans · Ctrl+wheel scales pitch · PY boundary+B syncs lower tiers",
       tPlay: "Play edited audio", tPlayOrig: "Play decoded original audio",
       tSel: "Play selected segment (edited audio)", tSelO: "Play selected segment (decoded original audio)",
       tAnnotate: "Drag to create/adjust syllables in the track below; Delete removes", tFit: "Reset view zoom",
@@ -794,8 +794,7 @@
     lastMouse = { x: cx, y: cy };
     const t = tOf(cx);
     if (t < 0 || t > state.dur) return;
-    const f = interpF0(t);
-    if (f === null) return;
+    // 未检出浊音的空隙/尾段也可以加点，用鼠标高度作为目标音高。
     insertPointAt(t, f0Clamp(fOf(cy)));
     draw();
     sendUpdate("add");
@@ -1312,8 +1311,6 @@
       if (lastMouse.x < 0) return;
       const t = tOf(lastMouse.x);
       if (t < 0 || t > state.dur) return;
-      const f = interpF0(t);
-      if (f === null) return;
       insertPointAt(t, f0Clamp(fOf(lastMouse.y)));
       draw();
       sendUpdate("add");

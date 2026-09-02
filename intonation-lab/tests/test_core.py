@@ -130,6 +130,33 @@ class PitchTests(unittest.TestCase):
         self.assertTrue(np.isfinite(output).all())
         self.assertLessEqual(float(tier.max()), 500.0)
 
+    def test_tier_follows_edit_points_into_unvoiced_tail(self) -> None:
+        times = np.array([0.0, 0.1, 0.2, 0.3, 0.4])
+        orig = np.array([150.0, 140.0, 0.0, 0.0, 0.0])
+        points = [[0.0, 150.0], [0.4, 90.0]]
+        tier = core.build_f0_tier(points, times, orig, 75, 500)
+        self.assertGreater(float(tier[0]), 0.0)
+        self.assertGreater(float(tier[2]), 0.0)
+        self.assertGreater(float(tier[-1]), 0.0)
+        self.assertLess(float(tier[-1]), float(tier[0]))
+
+    def test_resynthesis_applies_pitch_in_originally_unvoiced_tail(self) -> None:
+        sr = 16000
+        n = int(0.4 * sr)
+        t = np.arange(n, dtype=np.float64) / sr
+        env = np.linspace(0.35, 0.05, n)
+        samples = (env * np.sin(2 * np.pi * 180.0 * t)).astype(np.float32)
+        times = np.arange(0.02, 0.38, 0.01)
+        f0_orig = np.where(times < 0.18, 180.0, 0.0)
+        points = [[0.02, 180.0], [0.35, 90.0]]
+        tier = core.build_f0_tier(points, times, f0_orig, 75, 500)
+        self.assertTrue(bool((tier[times >= 0.22] > 0).any()))
+        output = core.synthesize_with_f0(samples, sr, tier, f0_orig, times)
+        self.assertEqual(len(output), len(samples))
+        self.assertTrue(np.isfinite(output).all())
+        tail = slice(int(0.22 * sr), int(0.34 * sr))
+        self.assertFalse(np.allclose(output[tail], samples[tail], atol=1e-3))
+
     def test_resynthesis_does_not_rescale_unvoiced_samples(self) -> None:
         sr = 16000
         t = np.arange(sr * 2, dtype=np.float64) / sr
