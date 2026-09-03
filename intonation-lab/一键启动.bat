@@ -44,10 +44,10 @@ echo [3/4] Checking port 8507...
 set "PORT_PID="
 for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":8507" ^| findstr "LISTENING"') do if not defined PORT_PID set "PORT_PID=%%a"
 if defined PORT_PID (
-    echo [ERROR] Port 8507 is already used by PID %PORT_PID%.
-    echo Close that program or server first; it will not be terminated automatically.
-    pause
-    exit /b 1
+    echo Port 8507 is occupied by PID %PORT_PID% - stopping it to start fresh...
+    taskkill /F /PID %PORT_PID% >nul 2>nul
+    timeout /t 2 /nobreak >nul
+    set "PORT_PID="
 )
 
 rem ============ 4. start server and open browser ============
