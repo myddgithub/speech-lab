@@ -20,14 +20,21 @@
 
 ### 方式一：一键启动（推荐）
 
-双击项目根目录下的 **`一键启动.bat`** 即可：
+| 系统 | 做法 |
+|---|---|
+| **Windows** | 双击 **`一键启动.bat`** |
+| **Mac** | 双击 **`一键启动.command`** |
 
-- 自动定位并实际验证 Python 3.10+（支持项目 `.venv`、`python` 和 Windows `py -3`；失效的虚拟环境会被跳过）
-- 首次运行自动安装依赖（`requirements.txt`）
-- 检查 8507 端口；若被占用则报告 PID，不会误杀其他程序
+两者都会：
+
+- 自动定位并验证 Python 3.10+（项目 `.venv`、Homebrew / python.org / `python3`；失效或从 Windows 拷来的虚拟环境会被跳过并重建）
+- 首次运行自动安装依赖（`requirements.txt`）；Mac 一律装进项目 `.venv`，避免 Homebrew 的「externally-managed-environment」
+- 检查 8507 端口；若被占用则结束该进程再启动
 - 启动服务并自动打开浏览器 `http://localhost:8507`
 
-> 若页面仍是旧版本：先关闭占用 8507 端口的旧服务，再重新启动并按 `Ctrl+F5`。
+Mac 若提示「无法打开，因为无法验证开发者」：在访达中 **右键 → 打开**。若双击变成用文本编辑打开：在终端执行 `chmod +x 一键启动.command` 后再双击。
+
+> 若页面仍是旧版本：先关闭占用 8507 端口的旧服务，再重新启动并强制刷新（Mac：`Cmd+Shift+R`）。
 
 ### 方式二：命令行
 
@@ -126,6 +133,7 @@ intonation-lab/
 ├── i18n.py                       # 中/英文案
 ├── requirements.txt
 ├── 一键启动.bat                  # Windows：依赖检查 + 端口 8507
+├── 一键启动.command              # macOS：同上（双击，自动建 .venv）
 ├── pitch_editor/
 │   ├── __init__.py               # 组件声明（st.components.v1）
 │   └── frontend/

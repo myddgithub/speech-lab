@@ -21,6 +21,6 @@ python -m http.server 8000
 
 Open `/yunmu-anim/`, `/shengmu-anim/`, or `/vocal-fold-sim/`.
 
-`intonation-lab` is a Streamlit app (port **8507**), not a static page. See `intonation-lab/README.md`.
+`intonation-lab` is a Streamlit app (port **8507**), not a static page. Double-click `intonation-lab/一键启动.bat` (Windows) or `intonation-lab/一键启动.command` (macOS). See `intonation-lab/README.md`.
 
 Each animation provides Chinese and English interface modes through the language button.
