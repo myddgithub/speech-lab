@@ -99,6 +99,19 @@ class PitchTests(unittest.TestCase):
         usable = np.where((freqs >= 50.0) & (freqs <= 700.0))[0]
         return float(freqs[usable[int(np.argmax(spectrum[usable]))]])
 
+    def test_waveform_envelope_keeps_min_and_max(self) -> None:
+        sr = 8000
+        t = np.arange(sr, dtype=np.float64) / sr
+        samples = (0.4 * np.sin(2 * np.pi * 80.0 * t)).astype(np.float32)
+        wave = core.decimate_waveform(samples, sr, n_bins=200)
+        self.assertGreaterEqual(len(wave), 50)
+        self.assertEqual(len(wave[0]), 3)
+        lo = min(p[1] for p in wave)
+        hi = max(p[2] for p in wave)
+        self.assertLess(lo, -0.2)
+        self.assertGreater(hi, 0.2)
+        self.assertTrue(all(p[1] <= p[2] for p in wave))
+
     def test_audio_decode_does_not_normalize_amplitude(self) -> None:
         source = np.array([-0.25, 0.0, 0.25], dtype=np.float32)
         decoded, sr, _ = core.load_audio_bytes(core.wav_bytes(source, 8000))

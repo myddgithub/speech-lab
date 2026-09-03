@@ -216,7 +216,8 @@
   // ---------------- 绘制（主画布） ----------------
   const COLOR = {
     text: "#31333f", bg: "#ffffff", grid: "rgba(128,128,128,0.18)",
-    wave: "rgba(96,120,255,0.35)", waveFill: "rgba(96,120,255,0.08)",
+    wave: "rgba(64,108,230,0.95)", waveFill: "rgba(64,108,230,0.32)",
+    waveZero: "rgba(64,108,230,0.22)",
     orig: "rgba(255,176,0,0.95)", curve: "#ff4b4b", handle: "#ff4b4b",
     handleBorder: "#ffffff", playhead: "rgba(0,180,120,0.9)",
     syl: "rgba(96,130,255,0.75)", sylFill: "rgba(96,130,255,0.12)",
@@ -303,34 +304,56 @@
   }
 
   function drawWaveform() {
-    // 波形独立显示在上 1/4 区域；幅度按数据自动归一化：
-    // 全波形最大能量恰好扩展到显示高度的 ~90%（其余幅度按比例变细）
+    // 波形独立显示在上 1/4 区域；按 min/max 包络画实心带（兼容旧的 [t, amp]）。
     if (!state.wave.length) return;
     const y0 = 4, y1 = pitchY0() - 5;
     if (y1 <= y0) return;
     const mid = (y0 + y1) / 2;
     let peak = 0;
-    for (const [, a] of state.wave) {
-      const v = Math.abs(a);
+    for (const p of state.wave) {
+      const lo = p[1], hi = p.length > 2 ? p[2] : p[1];
+      const v = Math.max(Math.abs(lo), Math.abs(hi));
       if (v > peak) peak = v;
     }
     if (!(peak > 0)) return;
-    const amp = ((y1 - y0) * 0.5 * 0.9) / peak; // 峰值 → 带高 90%
-    ctx.beginPath();
-    ctx.moveTo(xOf(state.wave[0][0]), mid);
-    for (const [t, a] of state.wave) {
-      ctx.lineTo(xOf(t), mid - a * amp);
+    const amp = ((y1 - y0) * 0.5 * 0.92) / peak;
+    const tLo = view.t0 - (view.t1 - view.t0) * 0.02;
+    const tHi = view.t1 + (view.t1 - view.t0) * 0.02;
+    const pts = [];
+    for (const p of state.wave) {
+      const t = p[0];
+      if (t < tLo || t > tHi) continue;
+      pts.push([t, p[1], p.length > 2 ? p[2] : p[1]]);
     }
-    ctx.strokeStyle = COLOR.wave;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    ctx.lineTo(xOf(state.wave[state.wave.length - 1][0]), mid);
-    ctx.lineTo(xOf(state.wave[0][0]), mid);
+    if (!pts.length) return;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(pad.L, y0, W - pad.L - pad.R, y1 - y0);
+    ctx.clip();
+
+    ctx.beginPath();
+    ctx.moveTo(xOf(pts[0][0]), mid - pts[0][2] * amp);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(xOf(pts[i][0]), mid - pts[i][2] * amp);
+    for (let i = pts.length - 1; i >= 0; i--) ctx.lineTo(xOf(pts[i][0]), mid - pts[i][1] * amp);
     ctx.closePath();
     ctx.fillStyle = COLOR.waveFill;
     ctx.fill();
-    // 波形/音高分隔线
+    ctx.strokeStyle = COLOR.wave;
+    ctx.lineWidth = 1.15;
+    ctx.lineJoin = "round";
+    ctx.stroke();
+
+    ctx.strokeStyle = COLOR.waveZero;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad.L, mid);
+    ctx.lineTo(W - pad.R, mid);
+    ctx.stroke();
+    ctx.restore();
+
     ctx.strokeStyle = "rgba(128,128,128,0.28)";
+    ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(pad.L, y1 + 4);
     ctx.lineTo(W - pad.R, y1 + 4);

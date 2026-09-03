@@ -14,7 +14,7 @@
     points          [[t, f0], ...]   当前可编辑音高点（秒, Hz）
     syllables       [{id,text,t0,t1}] 音节标注列表
     original        [[t, f0], ...]   原始提取曲线（参考显示）
-    waveform        [[t, amp], ...]  波形（抽稀）
+    waveform        [[t, lo, hi], ...]  波形包络（抽稀；lo/hi 为箱内最小/最大）
     duration        float            音频时长（秒）
     min_f0 / max_f0 float            初始纵轴及允许编辑范围（Hz）
     edited_audio_url str|None        编辑后音频：data URL 写入；"same" 与 orig 相同；

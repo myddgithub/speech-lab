@@ -1530,20 +1530,33 @@ def stylize_points(
 # ---------------------------------------------------------------------------
 # 波形显示
 # ---------------------------------------------------------------------------
-def decimate_waveform(samples: np.ndarray, sr: int, n_bins: int = 900) -> list[list[float]]:
-    """按包络峰值抽稀波形 -> [[t, amp], ...]（amp 带符号，-1..1）。"""
-    if len(samples) == 0:
+def decimate_waveform(samples: np.ndarray, sr: int, n_bins: int | None = None) -> list[list[float]]:
+    """抽稀为显示用包络 -> [[t, lo, hi], ...]。
+
+    每个时间箱同时保留最小/最大样点，前端画成实心波形带。
+    短音频自动用更密的箱（约每秒 500 箱，上限 12000），避免看起来像折线。
+    """
+    x = np.asarray(samples, dtype=np.float32).reshape(-1)
+    n = int(x.size)
+    if n == 0 or sr <= 0:
         return []
-    edges = np.unique(np.linspace(0, len(samples), n_bins + 1).astype(int))
-    out: list[list[float]] = []
-    dur = len(samples) / sr
-    for i in range(len(edges) - 1):
-        seg = samples[edges[i]:edges[i + 1]]
-        if len(seg) == 0:
-            continue
-        k = int(np.argmax(np.abs(seg)))
-        out.append([round(((edges[i] + k) / len(samples)) * dur, 4), round(float(seg[k]), 5)])
-    return out
+    dur = n / float(sr)
+    if n_bins is None:
+        n_bins = int(np.clip(round(dur * 500.0), 2400, 12000))
+    n_bins = int(max(2, min(int(n_bins), n)))
+    edges = np.unique(np.linspace(0, n, n_bins + 1).astype(np.int64))
+    if len(edges) < 2:
+        v = float(x[0])
+        return [[0.0, v, v]]
+    starts = edges[:-1]
+    lo = np.minimum.reduceat(x, starts)
+    hi = np.maximum.reduceat(x, starts)
+    centers = 0.5 * (starts.astype(np.float64) + edges[1:])
+    ts = centers * (dur / n)
+    return [
+        [round(float(t), 5), round(float(a), 5), round(float(b), 5)]
+        for t, a, b in zip(ts, lo, hi)
+    ]
 
 
 # ---------------------------------------------------------------------------
