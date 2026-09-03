@@ -58,7 +58,7 @@ st.markdown(
 )
 
 SS = st.session_state
-PITCH_EDITOR_BUILD = "20260903r7"
+PITCH_EDITOR_BUILD = "20260903r8"
 SS.setdefault("audio_bytes", None)
 SS.setdefault("audio_name", "")
 SS.setdefault("edit_points", [])

@@ -111,6 +111,7 @@
     editable: true,
     durFactors: [],   // 逐音节时长因子（与 syllables 对齐，0.5–2.0）
     componentEpoch: 0,
+    durDirty: false,  // 本地拖动后，等待 Python 回传确认
   };
   let lastSentPointsJson = null;  // 最近一次发送给 Python 的点集 JSON（识别外部修改）
   let lastSentSylJson = null;     // 最近一次发送给 Python 的音节 JSON
@@ -539,6 +540,7 @@
       syncDurLen();
       durDrag = { idx: idx };
       state.durFactors[idx] = Math.round(factorFromY(cy) * 20) / 20;
+      state.durDirty = true;
       cvDur.setPointerCapture(e.pointerId);
     }
     drawDur();
@@ -550,6 +552,7 @@
     const i = durDrag.idx;
     if (state.syllables[i]) {
       state.durFactors[i] = Math.round(factorFromY(cy) * 20) / 20;
+      state.durDirty = true;
     }
     drawDur();
   }
@@ -1728,9 +1731,17 @@
     state.editable = args.editable !== false;
     state.orig = args.original || [];
     state.wave = args.waveform || [];
-    state.componentEpoch = Number(args.component_epoch) || 0;
+    const incomingEpoch = Number(args.component_epoch) || 0;
+    const epochChanged = incomingEpoch !== state.componentEpoch;
+    state.componentEpoch = incomingEpoch;
     if (Array.isArray(args.dur_factors)) {
-      state.durFactors = args.dur_factors.map((v) => Number(v) || 1.0);
+      const incomingFactors = args.dur_factors.map((v) => Number(v) || 1.0);
+      // 组件发出拖动事件后，Python 的下一次 render 可能仍带着旧倍率。
+      // 在同一代组件内保留本地未确认值，避免它被旧的 1× 覆盖。
+      if (!state.durDirty || epochChanged) state.durFactors = incomingFactors;
+      if (JSON.stringify(state.durFactors) === JSON.stringify(incomingFactors)) {
+        state.durDirty = false;
+      }
     }
     // url_*: 非空字符串=设置；"same"（仅 edit）=与 orig 相同；""=清除；null/undefined=保持上次
     function applyAudioUrl(kind, incoming) {

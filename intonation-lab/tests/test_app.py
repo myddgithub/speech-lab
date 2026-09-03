@@ -20,6 +20,7 @@ class AppSmokeTests(unittest.TestCase):
         self.assertIn('const wasPlaying = playing;', js)
         self.assertIn('audio.src = next;', js)
         self.assertIn('component_epoch: state.componentEpoch', js)
+        self.assertIn('if (!state.durDirty || epochChanged)', js)
 
         app_source = APP_PATH.read_text(encoding="utf-8")
         self.assertIn('component_mount_id = (epoch, PITCH_EDITOR_BUILD)', app_source)
