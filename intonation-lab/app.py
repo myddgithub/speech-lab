@@ -52,10 +52,26 @@ st.markdown(
     div[data-testid="stVerticalBlock"] > div {
         gap: 0.35rem !important;
     }
-    /* 侧栏按钮：图标+文字左对齐（一级操作钮与折叠项观感一致） */
-    section[data-testid="stSidebar"] .stButton > button {
+    /* 侧栏按钮：图标+文字左对齐（覆盖 Streamlit 默认居中） */
+    section[data-testid="stSidebar"] .stButton button,
+    section[data-testid="stSidebar"] [data-testid^="stBaseButton"] {
+        display: flex !important;
         justify-content: flex-start !important;
+        align-items: center !important;
         text-align: left !important;
+    }
+    section[data-testid="stSidebar"] .stButton button *,
+    section[data-testid="stSidebar"] [data-testid^="stBaseButton"] * {
+        text-align: left !important;
+        justify-content: flex-start !important;
+    }
+    /* 工具行按钮允许换行，避免“重置”单行、旁边两钮折行 */
+    .block-container [data-testid="stHorizontalBlock"] .stButton button,
+    .block-container [data-testid="stHorizontalBlock"] [data-testid^="stBaseButton"] {
+        white-space: normal !important;
+        height: auto !important;
+        min-height: 2.4rem !important;
+        line-height: 1.25 !important;
     }
     </style>
     """,
@@ -855,22 +871,25 @@ if result and _result_is_current and result.get("event") != "none" and result.ge
 # --- 工具行（单行）：撤销 / 恢复 / 重置 + 音节文本输入 + 📄 导入 + 对齐 ---
 # 不用 form：文本输入框失焦/回车即提交，按钮点击读到的是最新值；且“导入”
 # 上传控件放在行内，选中文件即可立即自动填入（若在 form 内需先提交才生效）。
-tb = st.columns([1.0, 1.0, 1.9, 4.6, 1.15, 2.3, 1.2], vertical_alignment="center", gap="small")
+tb = st.columns([1.0, 1.0, 1.0, 4.6, 1.15, 2.3, 1.2], vertical_alignment="center", gap="small")
 with tb[0]:
     clicked_undo = st.button(
         "↩️ " + tr("撤销"), type="secondary",
+        use_container_width=True,
         disabled=not SS["edit_history"],
         help=tr("撤销上一步操作（拖拽/加点/音节/升降调/提取特征点等），可多次点击逐级撤销"),
     )
 with tb[1]:
     clicked_redo = st.button(
         "↪️ " + tr("恢复"), type="secondary",
+        use_container_width=True,
         disabled=not SS["redo_history"],
         help=tr("恢复被撤销的操作，可多次点击逐级恢复"),
     )
 with tb[2]:
     clicked_reset = st.button(
         "🔄 " + tr("重置"), type="secondary",
+        use_container_width=True,
         help=tr("恢复由音频直接提取的原始音高曲线（可撤销）"),
     )
 with tb[3]:
