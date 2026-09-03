@@ -56,6 +56,7 @@ def pitch_editor(
     annotate=False,
     draft="",
     dur_factors=None,
+    component_epoch=0,
     lang="zh",
     key=None,
 ):
@@ -81,6 +82,7 @@ def pitch_editor(
         annotate=bool(annotate),
         draft=str(draft or ""),
         dur_factors=[float(v) if v is not None else 1.0 for v in (dur_factors or [])],
+        component_epoch=int(component_epoch),
         lang=lang,
         key=key,
         default={
@@ -88,6 +90,7 @@ def pitch_editor(
             "syllables": syllables,
             "layers": layers,
             "dur_factors": [1.0] * len(syllables),
+            "component_epoch": int(component_epoch),
             "event": "none",
             "seq": -1,
             "annotate": False,

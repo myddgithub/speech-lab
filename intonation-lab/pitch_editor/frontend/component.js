@@ -110,6 +110,7 @@
     label: "音高曲线",
     editable: true,
     durFactors: [],   // 逐音节时长因子（与 syllables 对齐，0.5–2.0）
+    componentEpoch: 0,
   };
   let lastSentPointsJson = null;  // 最近一次发送给 Python 的点集 JSON（识别外部修改）
   let lastSentSylJson = null;     // 最近一次发送给 Python 的音节 JSON
@@ -876,6 +877,7 @@
       syllables: layers[0] && layers[0].items ? layers[0].items : [],
       layers: layers,
       dur_factors: state.durFactors.map((v) => Math.round(v * 100) / 100),
+      component_epoch: state.componentEpoch,
       event: event,
       seq: seq,
       annotate: annotateMode,      // 标注模式状态（持久化，防重跑后重置）
@@ -1726,6 +1728,7 @@
     state.editable = args.editable !== false;
     state.orig = args.original || [];
     state.wave = args.waveform || [];
+    state.componentEpoch = Number(args.component_epoch) || 0;
     if (Array.isArray(args.dur_factors)) {
       state.durFactors = args.dur_factors.map((v) => Number(v) || 1.0);
     }

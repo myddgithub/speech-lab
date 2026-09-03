@@ -58,7 +58,7 @@ st.markdown(
 )
 
 SS = st.session_state
-PITCH_EDITOR_BUILD = "20260903r6"
+PITCH_EDITOR_BUILD = "20260903r7"
 SS.setdefault("audio_bytes", None)
 SS.setdefault("audio_name", "")
 SS.setdefault("edit_points", [])
@@ -752,13 +752,16 @@ result = pitch_editor(
     annotate=SS.get("annotate_mode", False),
     draft=SS.get("syl_draft", ""),
     dur_factors=SS.get("dur_factors", []),
+    component_epoch=int(SS.get("component_epoch", 0)),
     lang=st.session_state["ui_lang"],
     # 同一音频内保持组件身份稳定；切换音频时换代，隔离旧组件事件。
     key=f"pitch_editor_main_{PITCH_EDITOR_BUILD}_{SS['component_epoch']}",
 )
 if not audio_payload["embedded"]:
     st.caption(tr("图表内播放已关闭（音频较大）。请使用下方「试听对比」。"))
-if result and result.get("event") != "none" and result.get("seq", -1) > last_seq:
+_result_epoch = result.get("component_epoch") if result else None
+_result_is_current = _result_epoch is not None and int(_result_epoch) == int(SS.get("component_epoch", 0))
+if result and _result_is_current and result.get("event") != "none" and result.get("seq", -1) > last_seq:
     pts_changed = result.get("points") is not None and result.get("points") != SS["edit_points"]
     syl_changed = result.get("syllables") is not None and result.get("syllables") != SS.get("syllables", [])
     layers_changed = result.get("layers") is not None and result.get("layers") != SS.get("layers", [])

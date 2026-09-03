@@ -19,10 +19,12 @@ class AppSmokeTests(unittest.TestCase):
         self.assertIn('audioLoadedUrl = next;', js)
         self.assertIn('const wasPlaying = playing;', js)
         self.assertIn('audio.src = next;', js)
+        self.assertIn('component_epoch: state.componentEpoch', js)
 
         app_source = APP_PATH.read_text(encoding="utf-8")
         self.assertIn('component_mount_id = (epoch, PITCH_EDITOR_BUILD)', app_source)
         self.assertIn('key=f"pitch_editor_main_{PITCH_EDITOR_BUILD}_', app_source)
+        self.assertIn('_result_is_current', app_source)
 
     def test_empty_and_demo_views_render_without_exceptions(self) -> None:
         empty = AppTest.from_file(APP_PATH)
