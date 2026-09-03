@@ -41,6 +41,7 @@
   button:hover{border-color:var(--accent); color:#fff;}
   button.on{background:linear-gradient(135deg,#b3416b,#7d2f55); border-color:var(--accent); color:#fff;}
   .vowel-btn{min-width:44px; font-size:calc(17px * 1.06 * var(--zoom)); font-weight:700; padding:4px 6px;}
+  #btnRhotic.active{border-color:#ffd166; color:#ffd166; background:rgba(255,209,102,.12);}
   .mixbar{display:flex; height:12px; border-radius:999px; overflow:hidden; border:1px solid var(--line); margin:10px 0 2px;}
   .mixbar i{display:block; height:100%; transition:width .12s linear;}
   .mixlab{display:flex; gap:14px; font-size:calc(12px * 1.06 * var(--zoom)); color:var(--muted);}
@@ -147,6 +148,7 @@
         <button class="vowel-btn" data-v="i" style="color:#7fd8ff">i</button>
         <button class="vowel-btn" data-v="u" style="color:#ff7aa8">u</button>
         <button class="vowel-btn" data-v="a" style="color:#ffb86b">a</button>
+        <button id="btnRhotic" aria-pressed="false">卷舌：关</button>
         <span style="flex:1"></span>
         <button id="btnDemo" class="on">⏸ 示范</button>
         <button id="btnVoice">🔊 发声</button>
@@ -316,7 +318,7 @@ const AREA = {
 };
 
 let ZOOM = 1;
-let state = { x: VTX.a.x, y: VTX.a.y, demo: true, voice: false, labels: true, t: 0, dirty: true };
+let state = { x: VTX.a.x, y: VTX.a.y, demo: true, voice: false, rhotic: false, labels: true, t: 0, dirty: true };
 let lastInfoKey = '';
 let lastInfoTime = 0;
 
@@ -376,6 +378,11 @@ function currentMix() {
       lerp3(SURF.i[i][1], SURF.u[i][1], SURF.a[i][1], w.wi, w.wu, w.wa)
     ]);
   }
+  if (state.rhotic) {
+    /* 卷舌：抬高舌尖并让前舌向后卷，直接改变舌体轮廓。 */
+    const curl = [82, 58, 26, 8, 0, 0];
+    for (let i = 0; i < surf.length; i++) surf[i][1] -= curl[i];
+  }
   const g = lerp3(LIP.i.g, LIP.u.g, LIP.a.g, w.wi, w.wu, w.wa);
   const round = lerp3(LIP.i.round, LIP.u.round, LIP.a.round, w.wi, w.wu, w.wa);
   const fm = {
@@ -383,14 +390,16 @@ function currentMix() {
     f2: lerp3(FMTS.i.f2, FMTS.u.f2, FMTS.a.f2, w.wi, w.wu, w.wa),
     f3: lerp3(FMTS.i.f3, FMTS.u.f3, FMTS.a.f3, w.wi, w.wu, w.wa)
   };
+  if (state.rhotic) { fm.f1 += 25; fm.f2 -= 110; fm.f3 = Math.max(1700, fm.f3 - 520); }
   const area = [];
   for (let i = 0; i < AREA.i.length; i++) {
     area.push(lerp3(AREA.i[i], AREA.u[i], AREA.a[i], w.wi, w.wu, w.wa));
   }
+  if (state.rhotic) for (let i = 17; i <= 21; i++) area[i] *= 0.68;
   return {
     wi: w.wi, wu: w.wu, wa: w.wa, surf: surf,
     lip: { g: g, round: round, w: lerp3(LIP.i.w, LIP.u.w, LIP.a.w, w.wi, w.wu, w.wa), h: lerp3(LIP.i.h, LIP.u.h, LIP.a.h, w.wi, w.wu, w.wa) },
-    fm: fm, area: area
+    fm: fm, area: area, rhotic: state.rhotic
   };
 }
 
@@ -891,7 +900,7 @@ function openWord(g) {
 }
 
 function updateInfo(mix, force) {
-  const key = [mix.wi, mix.wu, mix.wa].map(x => Math.round(x * 100)).join(',');
+  const key = [mix.wi, mix.wu, mix.wa, mix.rhotic ? 1 : 0].map(x => Math.round(x * 100)).join(',');
   const now = performance.now();
   if (!force && key === lastInfoKey && now - lastInfoTime < 250) return;
   lastInfoKey = key;
@@ -914,6 +923,7 @@ function updateInfo(mix, force) {
   tags.push((APP_LANG === 'en' ? 'tongue ' : '舌位') + frontWord(mix));
   tags.push(roundWord(mix));
   tags.push(openWord(mix.lip.g));
+  if (mix.rhotic) tags.push(APP_LANG === 'en' ? 'rhotic' : '卷舌');
   tags.forEach(function (t) {
     const c = document.createElement('span');
     c.className = 'chip' + (/dominant|主导/.test(t) ? ' hot' : '');
@@ -933,13 +943,14 @@ function updateInfo(mix, force) {
   const en = APP_LANG === 'en';
   const d = document.getElementById('desc');
   const hi = heightWord(mix), fr = frontWord(mix), rw = roundWord(mix), ow = openWord(mix);
+  const rh = mix.rhotic ? (en ? ' The tongue tip is curled back, lowering F3 and reshaping the front cavity.' : ' 当前为卷舌：舌尖抬起后卷，F3 降低，前腔形状随之改变。') : '';
   d.innerHTML = en
-    ? 'Now speaking a vowel between <b>i/u/a</b> with the tongue <b>' + hi + ' · ' + fr + '</b>, lips <b>' + rw + '</b>, mouth <b>' + ow + '</b>. The two cavities share the space: <b>back cavity</b> mostly sets F1 (' + Math.round(f.f1) + ' Hz), <b>front cavity + lip shape</b> sets F2 (' + Math.round(f.f2) + ' Hz).'
-    : '当前发出介于 <b>i / u / a</b> 之间的元音：舌位<b>' + hi + '·' + fr + '</b>，唇形<b>' + rw + '</b>，<b>' + ow + '</b>。两个共振腔在「抢」声道空间：<b>后腔</b>主要定 F1（' + Math.round(f.f1) + ' Hz），<b>前腔与唇形</b>定 F2（' + Math.round(f.f2) + ' Hz）。';
+    ? 'Now speaking a vowel between <b>i/u/a</b> with the tongue <b>' + hi + ' · ' + fr + '</b>, lips <b>' + rw + '</b>, mouth <b>' + ow + '</b>. The two cavities share the space: <b>back cavity</b> mostly sets F1 (' + Math.round(f.f1) + ' Hz), <b>front cavity + lip shape</b> sets F2 (' + Math.round(f.f2) + ' Hz).' + rh
+    : '当前发出介于 <b>i / u / a</b> 之间的元音：舌位<b>' + hi + '·' + fr + '</b>，唇形<b>' + rw + '</b>，<b>' + ow + '</b>。两个共振腔在「抢」声道空间：<b>后腔</b>主要定 F1（' + Math.round(f.f1) + ' Hz），<b>前腔与唇形</b>定 F2（' + Math.round(f.f2) + ' Hz）。' + rh;
   const tip = document.getElementById('tip');
   tip.textContent = en
     ? 'Rule of thumb — F1 ↓ when the tongue rises & mouth closes (i, u); F1 ↑ when the mouth opens (a). F2 ↑ when the tongue moves forward & lips spread (i); F2 ↓ when the tongue retracts & lips round (u).'
-    : '口诀 —— 舌位越高、口越闭 → F1 越低（i、u）；口张得越大 → F1 越高（a）。舌位越前、唇越展 → F2 越高（i）；舌位越后、唇越圆 → F2 越低（u）。';
+    : '口诀 —— 舌位越高、口越闭 → F1 越低（i、u）；口张得越大 → F1 越高（a）。舌位越前、唇越展 → F2 越高（i）；舌位越后、唇越圆 → F2 越低（u）。' + (mix.rhotic ? ' 卷舌会抬高舌尖并使 F3 明显降低。' : '');
   document.getElementById('hearTip').textContent = en
     ? 'The current formants F1–F3 (' + Math.round(f.f1) + '/' + Math.round(f.f2) + '/' + Math.round(f.f3) + ' Hz) all fall inside the speech band and the ear\u2019s most sensitive region \u2014 the auditory reason this exact mouth shape is so clearly perceived.'
     : '当前共振峰 F1–F3（' + Math.round(f.f1) + '/' + Math.round(f.f2) + '/' + Math.round(f.f3) + ' Hz）全部落在语音频带与听觉最敏感区之内 —— 这正是这种口腔形状能被我们清楚感知的听觉基础。';
@@ -1060,6 +1071,11 @@ document.querySelectorAll('.vowel-btn').forEach(function (b) {
 document.getElementById('btnDemo').addEventListener('click', function () {
   state.demo = !state.demo;
   demoBtnSync();
+});
+document.getElementById('btnRhotic').addEventListener('click', function () {
+  state.rhotic = !state.rhotic;
+  state.dirty = true;
+  updateInfo(currentMix(), true);
 });
 document.getElementById('btnVoice').addEventListener('click', function () {
   const ok = setVoice(!state.voice);
@@ -1183,6 +1199,10 @@ function applyLanguage() {
   const bd = document.getElementById('btnDemo');
   bd.textContent = state.demo ? (en ? '⏸ Demo' : '⏸ 示范') : (en ? '▶ Demo' : '▶ 示范');
   const bv = document.getElementById('btnVoice');
+  const rb = document.getElementById('btnRhotic');
+  rb.textContent = state.rhotic ? (en ? '↩ Rhotic: on' : '↩ 卷舌：开') : (en ? '↩ Rhotic: off' : '↩ 卷舌：关');
+  rb.classList.toggle('active', state.rhotic);
+  rb.setAttribute('aria-pressed', state.rhotic ? 'true' : 'false');
   if (!bv.disabled) bv.textContent = state.voice ? (en ? '🔇 Mute' : '🔇 静音') : (en ? '🔊 Voice' : '🔊 发声');
   state.dirty = true;
 }
