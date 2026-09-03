@@ -58,7 +58,7 @@ st.markdown(
 )
 
 SS = st.session_state
-PITCH_EDITOR_BUILD = "20260903r5"
+PITCH_EDITOR_BUILD = "20260903r6"
 SS.setdefault("audio_bytes", None)
 SS.setdefault("audio_name", "")
 SS.setdefault("edit_points", [])
@@ -84,6 +84,8 @@ SS.setdefault("import_hint_text", None)
 SS.setdefault("comp_orig_hash", None)
 SS.setdefault("comp_edit_hash", None)
 SS.setdefault("comp_audio_epoch", None)
+SS.setdefault("dur_factors", [])
+SS.setdefault("dur_apply_msg", None)
 
 # 从 .txt 导入的对齐文本：须在“对齐”输入框实例化之前写入（否则不能修改已实例化控件）
 if SS.get("align_input_pending") is not None:
@@ -92,10 +94,11 @@ if SS.get("align_input_pending") is not None:
 
 
 def _snapshot() -> dict:
-    """深拷贝当前（编辑点 + 全部标注层）作为历史快照。"""
+    """深拷贝当前编辑点、标注层与逐音节时长因子作为历史快照。"""
     return {
         "points": [list(p) for p in SS["edit_points"]],
         "layers": _layers_deep(),
+        "dur_factors": list(SS.get("dur_factors", [])),
         "pitch_dirty": bool(SS.get("pitch_dirty", False)),
     }
 
@@ -131,6 +134,22 @@ def _set_syl(items) -> None:
         SS["layers"][0]["items"] = items
 
 
+def _sync_dur_factors() -> None:
+    """让 dur_factors 与当前音节数对齐（不足补 1，多余截断）。"""
+    n = len(SS.get("syllables", []))
+    cur = [float(v) if v is not None else 1.0 for v in (SS.get("dur_factors") or [])]
+    cur = [v if np.isfinite(v) else 1.0 for v in cur]
+    cur = [max(0.5, min(2.0, v)) for v in cur]
+    if len(cur) < n:
+        cur += [1.0] * (n - len(cur))
+    SS["dur_factors"] = cur[:n]
+
+
+def _reset_dur_factors() -> None:
+    """把时长因子全部重置为 1×（并保持与音节数一致）。"""
+    SS["dur_factors"] = [1.0] * len(SS.get("syllables", []))
+
+
 def _push_history() -> None:
     """把当前状态压入撤销栈，并清空恢复栈（新操作使恢复失效）。"""
     SS.setdefault("edit_history", []).append(_snapshot())
@@ -149,8 +168,10 @@ def _undo() -> None:
     entry = SS["edit_history"].pop()
     SS["edit_points"] = entry.get("points", [])
     SS["layers"] = entry.get("layers", [])
+    SS["dur_factors"] = list(entry.get("dur_factors", []))
     SS["pitch_dirty"] = bool(entry.get("pitch_dirty", False))
     _sync_layers()
+    _sync_dur_factors()
 
 
 def _redo() -> None:
@@ -163,8 +184,10 @@ def _redo() -> None:
     entry = SS["redo_history"].pop()
     SS["edit_points"] = entry.get("points", [])
     SS["layers"] = entry.get("layers", [])
+    SS["dur_factors"] = list(entry.get("dur_factors", []))
     SS["pitch_dirty"] = bool(entry.get("pitch_dirty", False))
     _sync_layers()
+    _sync_dur_factors()
 
 
 def _set_audio(data: bytes, name: str) -> bool:
@@ -179,6 +202,7 @@ def _set_audio(data: bytes, name: str) -> bool:
     SS["edit_points"] = []
     SS["syllables"] = []
     SS["layers"] = []
+    SS["dur_factors"] = []
     SS["edit_history"] = []
     SS["redo_history"] = []
     SS["analysis_key"] = None
@@ -191,6 +215,7 @@ def _set_audio(data: bytes, name: str) -> bool:
     SS["component_epoch"] = int(SS.get("component_epoch", 0)) + 1
     SS["comp_orig_hash"] = None
     SS["comp_edit_hash"] = None
+    SS["dur_apply_msg"] = None
     SS["comp_audio_epoch"] = None
     SS["textgrid_notice"] = None
     # 若上传控件仍保留着 TextGrid，新音频应有机会明确地重新应用一次。
@@ -303,6 +328,7 @@ with st.sidebar:
                 SS["edit_points"] = []
                 SS["syllables"] = []
                 SS["layers"] = []
+                SS["dur_factors"] = []
                 SS["edit_history"] = []
                 SS["redo_history"] = []
                 SS["analysis_key"] = None
@@ -321,6 +347,7 @@ with st.sidebar:
                 SS["comp_orig_hash"] = None
                 SS["comp_edit_hash"] = None
                 SS["comp_audio_epoch"] = None
+                SS["dur_apply_msg"] = None
                 if st.query_params.get("demo") == "1":
                     del st.query_params["demo"]
                 st.rerun()
@@ -373,6 +400,7 @@ with st.sidebar:
                 _s, _sr, _fmt = _load_only(hh, SS["audio_bytes"])
                 _t, _f = _analyze(hh, SS["audio_bytes"], float(f0_floor), float(f0_ceil), float(frame_period))
                 _set_syl(core.auto_segment_syllables(_s, _sr, _t, _f))
+                _reset_dur_factors()
             st.caption(tr("写入第 0 层「PY」（拼音）；切分后可在图上微调边界、填入拼音（如 liu4 / 好3）。"))
         with st.expander(tr("📚 标注层（多层，仿 Praat）"), expanded=False):
             _sync_layers()
@@ -471,6 +499,103 @@ with st.sidebar:
             else:
                 st.caption(tr("先在图上开启“📝 标注音节”或自动切分（文本如 liu4 / 好3 / 我）。"))
 
+        with st.expander(tr("⏱ 时长调节（仿 Praat manipulation）"), expanded=False):
+            _n_syl = len(SS.get("syllables", []))
+            _cur_f = (SS.get("dur_factors") or [1.0] * _n_syl)
+            _cur_f = [float(v) if v is not None else 1.0 for v in _cur_f]
+            _cur_f = _cur_f + [1.0] * (_n_syl - len(_cur_f))
+            _changed = any(abs(_cur_f[i] - 1.0) > 1e-9 for i in range(_n_syl))
+            st.caption(tr("在图下方「时长带」上下拖动各音节调音长（0.5×–2×），"
+                          "应用后按时长因子重合成（保持音高），生成的新音频自动载入、标注按时间映射迁移。"))
+            if SS.get("dur_apply_msg"):
+                st.success(SS["dur_apply_msg"])
+            _dc1, _dc2 = st.columns(2)
+            with _dc1:
+                if st.button(
+                    tr("🕐 应用时长（重合成）"), width="stretch",
+                    disabled=(_n_syl == 0 or not _changed),
+                    help=tr("按各音节时长因子重合成：总时长按因子变化、音高保持；"
+                            "结果作为新音频载入当前画布（原标注自动映射到新时间轴）。"),
+                ):
+                    _hh = core.bytes_hash(SS["audio_bytes"])
+                    _s, _sr, _fmt = _load_only(_hh, SS["audio_bytes"])
+                    _t, _f = _analyze(_hh, SS["audio_bytes"], float(f0_floor), float(f0_ceil), float(frame_period))
+                    _syls = SS.get("syllables", [])
+                    _fac = SS.get("dur_factors") or []
+                    _fac = _fac + [1.0] * (len(_syls) - len(_fac))
+                    _dur0 = len(_s) / _sr
+                    _B, _F = core.build_duration_warp(_syls, _fac, _dur0)
+                    _new = core.resynthesize_with_durations(
+                        _s, _sr, _B, _F, _f, _t,
+                        float(f0_floor), float(f0_ceil), float(frame_period),
+                    )
+                    _wav = core.wav_bytes(_new, _sr)
+                    # 时间映射（旧时间 → 新时间）
+                    _nb = [0.0]
+                    for _k in range(len(_B) - 1):
+                        _nb.append(_nb[-1] + (_B[_k + 1] - _B[_k]) * _F[_k])
+                    _new_layers: list[dict] = []
+                    for _l in SS.get("layers", []):
+                        _items: list[dict] = []
+                        for _it in _l.get("items", []):
+                            if _l.get("kind") == "point":
+                                _tt = float(np.interp(max(0.0, float(_it.get("t", 0))), _B, _nb))
+                                _items.append({"t": round(float(_tt), 9), "text": str(_it.get("text", ""))})
+                            else:
+                                _a = float(np.interp(max(0.0, float(_it.get("t0", 0))), _B, _nb))
+                                _b2 = float(np.interp(float(_it.get("t1", _it.get("t0", 0))), _B, _nb))
+                                if _b2 > _a:
+                                    _items.append({"t0": round(_a, 9), "t1": round(_b2, 9),
+                                                  "text": str(_it.get("text", ""))})
+                        _new_layers.append({"name": str(_l.get("name", "")),
+                                            "kind": _l.get("kind", "interval"),
+                                            "def": str(_l.get("def", "")), "items": _items})
+                    _new_name = (SS.get("audio_name") or "audio") + tr("（时长调整）")
+                    _nh = core.bytes_hash(_wav)
+                    SS["audio_bytes"] = _wav
+                    SS["audio_name"] = _new_name
+                    SS["audio_hash"] = _nh
+                    SS["edit_points"] = []
+                    SS["edit_history"] = []
+                    SS["redo_history"] = []
+                    SS["analysis_key"] = None
+                    SS["annotate_mode"] = False
+                    SS["syl_draft"] = ""
+                    SS["align_applied"] = None
+                    SS["align_msg"] = None
+                    SS["textgrid_pending"] = None
+                    SS["textgrid_seen_hash"] = None
+                    SS["textgrid_notice"] = None
+                    SS["pitch_dirty"] = False
+                    SS["last_seq"] = -1
+                    SS["component_epoch"] = int(SS.get("component_epoch", 0)) + 1
+                    SS["comp_orig_hash"] = None
+                    SS["comp_edit_hash"] = None
+                    SS["comp_audio_epoch"] = None
+                    SS["layers"] = _new_layers
+                    _sync_layers()
+                    _reset_dur_factors()
+                    SS["dur_apply_msg"] = trf(
+                        "✅ 已应用时长：新音频 {0} s（标注已按时间映射迁移，撤销已重置）",
+                        round(len(_new) / _sr, 2),
+                    )
+                    st.rerun()
+            with _dc2:
+                if st.button(
+                    tr("因子重置 1×"), width="stretch",
+                    disabled=_n_syl == 0,
+                    help=tr("把时长带中各音节因子恢复为 1×（不变速）"),
+                ):
+                    if _changed:
+                        _push_history()
+                    _reset_dur_factors()
+                    st.rerun()
+            if _n_syl:
+                _summary = "，".join(
+                    f"{i + 1}:{_cur_f[i]:.2f}×" for i in range(_n_syl)
+                )
+                st.caption(_summary)
+
         # 编辑后的音频与多层 TextGrid 统一在主区“💾 保存结果”下载（见下）
 
 # ---------------------------------------------------------------------------
@@ -554,6 +679,7 @@ if SS.get("textgrid_pending") is not None:
                                    "kind": kind, "def": "", "items": items})
             SS["layers"] = new_layers
             _sync_layers()
+            _reset_dur_factors()
             names = "、".join(l.get("name", "?") for l in new_layers) or "?"
             st.success(trf("✅ 已从 TextGrid 载入 {0} 层标注：{1}（可撤销）", len(new_layers), names))
     except ValueError as e:
@@ -609,6 +735,7 @@ result = pitch_editor(
     seq=int(last_seq),
     annotate=SS.get("annotate_mode", False),
     draft=SS.get("syl_draft", ""),
+    dur_factors=SS.get("dur_factors", []),
     lang=st.session_state["ui_lang"],
     # 同一音频内保持组件身份稳定；切换音频时换代，隔离旧组件事件。
     key=f"pitch_editor_main_{PITCH_EDITOR_BUILD}_{SS['component_epoch']}",
@@ -619,7 +746,9 @@ if result and result.get("event") != "none" and result.get("seq", -1) > last_seq
     pts_changed = result.get("points") is not None and result.get("points") != SS["edit_points"]
     syl_changed = result.get("syllables") is not None and result.get("syllables") != SS.get("syllables", [])
     layers_changed = result.get("layers") is not None and result.get("layers") != SS.get("layers", [])
-    if pts_changed or syl_changed or layers_changed:
+    _df = result.get("dur_factors")
+    dur_changed = _df is not None and list(_df) != list(SS.get("dur_factors", []))
+    if pts_changed or syl_changed or layers_changed or dur_changed:
         _push_history()  # 组件编辑入撤销栈，使“撤销”回退到上一次真实操作
     if pts_changed:
         SS["edit_points"] = result.get("points") or []
@@ -630,6 +759,11 @@ if result and result.get("event") != "none" and result.get("seq", -1) > last_seq
     elif syl_changed:
         _sync_layers()
         _set_syl(result.get("syllables") or [])
+    # 时长因子（逐音节）：先让长度与音节一致再存
+    if _df is not None:
+        _sync_dur_factors()
+        SS["dur_factors"] = [round(float(v), 2) if v is not None else 1.0 for v in _df]
+        _sync_dur_factors()
     SS["annotate_mode"] = bool(result.get("annotate", SS.get("annotate_mode", False)))
     SS["syl_draft"] = str(result.get("draft", "") or "")
     SS["last_seq"] = int(result.get("seq", last_seq))
@@ -864,9 +998,12 @@ _HELP_HOW = {
 - 对齐文本可**从 .txt 文件导入**（工具行内“📄 导入”），UTF-8 / GBK 均可，
   换行 / 空格 / 标点自动忽略，导入后点 **🔤 对齐** 一次填入；
 - 第 2..n 层以 PY 为参照：**点选 PY 层一条边界**（红色虚线）→ 按 **B**，区间层同步加边界、点层（TextTier）同步加点；
-- **播放选中**：点选某个区间段（PY 音节框，或“词/字”等区间层）后，点工具栏 **▶ 播放选中·编辑后 / ·原始** 只听该段；
+- **播放选中**：点选某个区间段（PY 音节框，或“词/字”等区间层）后，点工具栏 **▶ 播放选中·编辑后 / ·原始** 只听该段，
+  到段尾**精确停止**，不会连播后面的内容；
+- **任意段试听**：在顶部**波形图**上按住左右**拖拽框选**任意时间范围（出现蓝色选区），再点
+  **▶ 播放选中·编辑后 / ·原始** 只播这一段；点选音节/区间段或重新框选会切换播放范围；
 - 想逐字对齐：先**双击**音节框把它一分为二，再填文本；
-- 界面语言：侧边栏顶部 **中文 / English** 随时切换；帮助内容随语言切换。""",
+- 界面语言：页面右上角 **中文 | English** 随时切换；帮助内容随语言切换。""",
     "en": """**5 steps to start**
 1. **Import / Record / Sample** (🎛️ Audio input on the left) → F0 curve is extracted automatically;
 2. **Segment syllables**: click “🧩 Auto-segment” to fill the **PY** tier (layer 0) with syllable boxes, or enable **📝 Annotate** to draw boxes by hand;
@@ -878,9 +1015,10 @@ _HELP_HOW = {
 - **Undo / Redo** sit at the left of the toolbar above the chart; every drag, syllable or align action can be stepped back;
 - Alignment text can be **imported from a .txt file** (“📄 Import” in the toolbar); UTF-8 / GBK both work, line breaks / spaces / punctuation are ignored, then click **🔤 Align** to fill at once;
 - For tiers 2..n use PY as a reference: **click a PY boundary** (red dashed line) → press **B** — interval tiers get a boundary, point tiers (TextTier) get a point at that instant;
-- **Play selection**: click any interval segment (a PY box or a tier like “word”) then use **▶ Play selection (edited / original)** to audition just that span;
+- **Play selection**: click any interval segment (a PY box or a tier like “word”) then use **▶ Play selection (edited / original)** to audition just that span — playback stops exactly at the segment end;
+- **Play an arbitrary range**: **drag horizontally on the waveform** at the top to select any time range (blue overlay), then use **▶ Play selection (edited / original)**; clicking a syllable/segment or re-dragging switches the range;
 - To align word by word: **double-click** a syllable box to split it first;
-- Language: switch **中文 / English** at the top of the sidebar at any time.""",
+- Language: switch **中文 | English** at the top-right of the page at any time.""",
 }
 _HELP_KNOW = {
     "zh": """**音高 F0 与声调**

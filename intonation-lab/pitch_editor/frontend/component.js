@@ -28,6 +28,8 @@
   // ---------------- DOM ----------------
   const canvas = document.getElementById("cv");
   const ctx = canvas.getContext("2d");
+  const cvDur = document.getElementById("cvDur");
+  const dctx = cvDur.getContext("2d");
   const cvSyl = document.getElementById("cvSyl");
   const sctx = cvSyl.getContext("2d");
   const wrap = document.getElementById("wrap");
@@ -50,11 +52,12 @@
       pause: "⏸ 暂停", pauseSel: "⏸ 暂停选中",
       annotate: "📝 标注音节", chk: "显示原始", textLbl: "标注:",
       ph: "如 liu4（数字=声调）", fit: "重置缩放",
-      hint: "拖拽调音高 · 空白处也可双击/A 加点（去声尾无曲线时把末点拖晚或在此加点） · Delete 删点 · ↑↓ 半音微调 · 滚轮缩放时间 · Shift+滚轮平移 · Ctrl+滚轮调音高刻度 · PY 边界+B 同步到下层",
+      hint: "拖拽调音高 · 空白处也可双击/A 加点（去声尾无曲线时把末点拖晚或在此加点） · Delete 删点 · ↑↓ 半音微调 · 滚轮缩放时间 · Shift+滚轮平移 · Ctrl+滚轮调音高刻度 · PY 边界+B 同步到下层 · 波形上拖拽可框选任意段播放",
       tPlay: "播放编辑后的音频", tPlayOrig: "播放原始音频",
       tSel: "播放选中段（编辑后音频）", tSelO: "播放选中段（解码后原始音频）",
       tAnnotate: "在下方音节轨拖拽创建/调整音节，Delete 删除", tFit: "重置视图缩放",
       dSt: "半音",
+      durHint: "先切分音节（PY），再在时长带上下拖动调节各音节音长（0.5×–2×）",
     },
     en: {
       play: "▶ Play edited", playOrig: "▶ Play original",
@@ -62,11 +65,12 @@
       pause: "⏸ Pause", pauseSel: "⏸ Pause selection",
       annotate: "📝 Mark syllables", chk: "Show original", textLbl: "Text:",
       ph: "e.g. liu4 (digit = tone)", fit: "Reset zoom",
-      hint: "drag pitch · A / double-click adds a point even in unvoiced gaps (tone-4 tails: drag the last point later or click to add) · Delete removes · ↑↓ ±1 st · wheel zooms time · Shift+wheel pans · Ctrl+wheel scales pitch · PY boundary+B syncs lower tiers",
+      hint: "drag pitch · A / double-click adds a point even in unvoiced gaps (tone-4 tails: drag the last point later or click to add) · Delete removes · ↑↓ ±1 st · wheel zooms time · Shift+wheel pans · Ctrl+wheel scales pitch · PY boundary+B syncs lower tiers · drag on the waveform to select any range & play",
       tPlay: "Play edited audio", tPlayOrig: "Play decoded original audio",
       tSel: "Play selected segment (edited audio)", tSelO: "Play selected segment (decoded original audio)",
       tAnnotate: "Drag to create/adjust syllables in the track below; Delete removes", tFit: "Reset view zoom",
       dSt: "st",
+      durHint: "Segment syllables (PY) first, then drag in the duration strip to adjust each syllable's length (0.5×–2×)",
     },
   };
   let lang = "zh";
@@ -105,10 +109,12 @@
     urlOrig: null,
     label: "音高曲线",
     editable: true,
+    durFactors: [],   // 逐音节时长因子（与 syllables 对齐，0.5–2.0）
   };
   let lastSentPointsJson = null;  // 最近一次发送给 Python 的点集 JSON（识别外部修改）
   let lastSentSylJson = null;     // 最近一次发送给 Python 的音节 JSON
   let lastSentLayersJson = null;  // 最近一次发送给 Python 的多层标注 JSON
+  let lastSentDurJson = null;     // 最近一次发送给 Python 的时长因子 JSON
   let adoptPoints = true;         // 首次渲染时采用 Python 数据
   let adoptSyl = true;
   let adoptLayers = true;
@@ -120,6 +126,7 @@
 
   const dpr = Math.max(1, window.devicePixelRatio || 1);
   let W = 0, H = 360, SYL_H = 48;   // 音节层（第 0 层）带高
+  const DUR_H = 44;                 // 时长带高
   const EXT_B = 34;                 // 额外标注层带高
   let SYL_TOTAL = 48;               // 音节轨总高（随层数变化）
 
@@ -128,6 +135,10 @@
   let dragging = false;
   let drag = null;
   let lastMouse = { x: -1, y: -1 };   // 主画布内最近鼠标位置（供 A 键加点）
+  let waveSel = null;   // {t0, t1} 波形拖拽选中的时间区间
+  let waveDrag = null;  // {t0, t1} 波形拖拽进行中
+  let durSel = -1;      // 时长带选中音节索引
+  let durDrag = null;   // {idx} 时长带拖拽中
 
   // 交互（音节轨）
   let annotateMode = false;
@@ -177,8 +188,13 @@
     cvSyl.height = Math.round(SYL_TOTAL * dpr);
     cvSyl.style.width = w + "px";
     cvSyl.style.height = SYL_TOTAL + "px";
+    cvDur.width = Math.round(w * dpr);
+    cvDur.height = Math.round(DUR_H * dpr);
+    cvDur.style.width = w + "px";
+    cvDur.style.height = DUR_H + "px";
     draw();
     drawSyl();
+    drawDur();
     SCL.setFrameHeight(document.body.scrollHeight);
   }
 
@@ -191,6 +207,7 @@
     if (view.hiLog - view.loLog < 0.5) view.hiLog = view.loLog + 0.5;
     draw();
     drawSyl();
+    drawDur();
   }
 
   // ---------------- 绘制（主画布） ----------------
@@ -231,10 +248,29 @@
     drawWaveform();
     drawGrid();
     drawSylBoundaries();  // 音节边界竖线（把波形分段）
+    drawWaveSel();        // 波形拖拽框选的选区（贯穿两图）
     if (chkOrig.checked && state.orig.length > 1) drawPolyline(state.orig, COLOR.orig, 1.2, [5, 4]);
     drawSegments();
     if (state.editable) drawHandles();
     drawPlayhead();
+    drawDur();
+  }
+
+  function drawWaveSel() {
+    // 高亮当前框选区间（波形拖拽产生；含进行中的拖拽预览）
+    const sel = waveDrag ? { t0: Math.min(waveDrag.t0, waveDrag.t1), t1: Math.max(waveDrag.t0, waveDrag.t1) }
+      : (waveSel && waveSel.t1 > waveSel.t0 ? waveSel : null);
+    if (!sel) return;
+    const x0 = Math.max(2, xOf(sel.t0)), x1 = Math.min(W - pad.R, xOf(sel.t1));
+    if (x1 <= x0) return;
+    ctx.fillStyle = "rgba(96,130,255,0.13)";
+    ctx.fillRect(x0, 2, x1 - x0, H - pad.B - 2);
+    ctx.strokeStyle = "rgba(96,130,255,0.85)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x0, 2); ctx.lineTo(x0, H - pad.B);
+    ctx.moveTo(x1, 2); ctx.lineTo(x1, H - pad.B);
+    ctx.stroke();
   }
 
   function drawSylBoundaries() {
@@ -393,6 +429,137 @@
     ctx.stroke();
   }
 
+  // ---------------- 绘制（时长带：逐音节时长因子 0.5×–2×） ----------------
+  const DUR_MIN = 0.5, DUR_MAX = 2.0, DUR_PADT = 5, DUR_PADB = 9;
+  function durY(f) {
+    const h = DUR_H - DUR_PADT - DUR_PADB;
+    const t = (clamp(f, DUR_MIN, DUR_MAX) - DUR_MIN) / (DUR_MAX - DUR_MIN);
+    return DUR_PADT + (1 - t) * h; // 因子越大越靠上
+  }
+  function syncDurLen() {
+    const n = state.syllables.length;
+    const arr = Array.isArray(state.durFactors) ? state.durFactors.slice() : [];
+    while (arr.length < n) arr.push(1.0);
+    arr.length = n;
+    state.durFactors = arr.map((v) => {
+      const x = Number(v);
+      return isFinite(x) && x > 0 ? clamp(x, DUR_MIN, DUR_MAX) : 1.0;
+    });
+  }
+  function drawDur() {
+    if (!W) return;
+    dctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    dctx.clearRect(0, 0, W, DUR_H);
+    dctx.fillStyle = COLOR.bg;
+    dctx.fillRect(0, 0, W, DUR_H);
+    const yBase = DUR_H - DUR_PADB;
+    // 刻度小字
+    dctx.font = "9px " + (cssVar("--font", "sans-serif"));
+    dctx.fillStyle = "rgba(128,128,128,0.85)";
+    dctx.textAlign = "left"; dctx.textBaseline = "middle";
+    dctx.fillText("2×", pad.L - 30, durY(2.0));
+    dctx.fillText("1×", pad.L - 30, durY(1.0));
+    dctx.fillText("0.5×", pad.L - 38, yBase);
+    // 1× 基线
+    const y1 = durY(1.0);
+    dctx.setLineDash([4, 3]);
+    dctx.strokeStyle = "rgba(128,128,128,0.35)";
+    dctx.beginPath(); dctx.moveTo(pad.L, y1); dctx.lineTo(W - pad.R, y1); dctx.stroke();
+    dctx.setLineDash([]);
+    syncDurLen();
+    if (!state.syllables.length) {
+      dctx.fillStyle = "rgba(128,128,128,0.75)";
+      dctx.font = "11px " + (cssVar("--font", "sans-serif"));
+      dctx.textAlign = "center"; dctx.textBaseline = "middle";
+      dctx.fillText(ui().durHint, W / 2, DUR_H / 2);
+      return;
+    }
+    // 音节边界细线
+    const bs = [];
+    for (const s of state.syllables) {
+      if (s.t0 > 0.005 && s.t0 < state.dur - 0.005) bs.push(s.t0);
+      if (s.t1 > 0.005 && s.t1 < state.dur - 0.005) bs.push(s.t1);
+    }
+    bs.sort((a, b) => a - b);
+    let prev = -1;
+    dctx.strokeStyle = "rgba(128,128,128,0.3)";
+    dctx.lineWidth = 1;
+    for (const t of bs) {
+      if (t - prev <= 0.005) continue;
+      prev = t;
+      const x = xOf(t);
+      dctx.beginPath(); dctx.moveTo(x, 2); dctx.lineTo(x, DUR_H - 2); dctx.stroke();
+    }
+    for (let i = 0; i < state.syllables.length; i++) {
+      const s = state.syllables[i];
+      const x0 = Math.max(pad.L, xOf(s.t0)), x1 = Math.min(W - pad.R, xOf(s.t1));
+      if (x1 <= x0) continue;
+      const f = Number(state.durFactors[i]) || 1.0;
+      const active = i === durSel || (durDrag && durDrag.idx === i);
+      const top = Math.max(2, durY(f));
+      if (top < yBase - 1) {
+        dctx.fillStyle = active ? "rgba(96,130,255,0.5)" : "rgba(96,130,255,0.8)";
+        dctx.fillRect(x0 + 2, top, Math.max(2, x1 - x0 - 4), yBase - top);
+      }
+      dctx.strokeStyle = active ? COLOR.curve : "rgba(96,130,255,0.95)";
+      dctx.lineWidth = active ? 1.6 : 1;
+      dctx.strokeRect(x0 + 1, 2, Math.max(2, x1 - x0 - 2), DUR_H - DUR_PADB - 3);
+      const lbl = f.toFixed(2).replace(/0+$/, "").replace(/\.$/, "") + "×";
+      if (x1 - x0 > 30) {
+        dctx.fillStyle = COLOR.text;
+        dctx.font = "bold 10px " + (cssVar("--font", "sans-serif"));
+        dctx.textAlign = "center"; dctx.textBaseline = "alphabetic";
+        dctx.fillText(lbl, (x0 + x1) / 2, Math.max(10, top - 2));
+      }
+    }
+  }
+
+  function durHitIdx(cx) {
+    const t = tOf(cx);
+    if (!(t >= 0 && t <= state.dur)) return -1;
+    for (let i = state.syllables.length - 1; i >= 0; i--) {
+      const s = state.syllables[i];
+      if (s && t >= s.t0 - 1e-6 && t <= s.t1 + 1e-6) return i;
+    }
+    return -1;
+  }
+  function factorFromY(cy) {
+    const h = DUR_H - DUR_PADT - DUR_PADB;
+    const t = clamp((DUR_PADT + h - cy) / h, 0, 1);
+    return DUR_MIN + t * (DUR_MAX - DUR_MIN);
+  }
+  function onDurDown(e) {
+    if (!state.editable) return;
+    const rect = cvDur.getBoundingClientRect();
+    const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+    const idx = durHitIdx(cx);
+    durSel = idx;
+    if (idx >= 0 && state.syllables[idx]) {
+      syncDurLen();
+      durDrag = { idx: idx };
+      state.durFactors[idx] = Math.round(factorFromY(cy) * 20) / 20;
+      cvDur.setPointerCapture(e.pointerId);
+    }
+    drawDur();
+  }
+  function onDurMove(e) {
+    if (!durDrag) return;
+    const rect = cvDur.getBoundingClientRect();
+    const cy = e.clientY - rect.top;
+    const i = durDrag.idx;
+    if (state.syllables[i]) {
+      state.durFactors[i] = Math.round(factorFromY(cy) * 20) / 20;
+    }
+    drawDur();
+  }
+  function onDurUp(e) {
+    if (!durDrag) return;
+    durDrag = null;
+    sendUpdate("dur_set");
+    drawDur();
+    try { cvDur.releasePointerCapture(e.pointerId); } catch (err) { /* noop */ }
+  }
+
   // ---------------- 绘制（音节轨 · 多层） ----------------
   const LAYER_COLORS = [
     "rgba(96,130,255,0.85)", "rgba(0,180,150,0.9)", "rgba(190,110,220,0.9)",
@@ -433,21 +600,26 @@
       sctx.fillText(String(L.name || "层" + bi), 2, top + EXT_B / 2);
       const cX = pad.L; // 内容区起点
       if (L.kind === "point") {
-        // 点标记（竖直菱形）
+        // 点标记：小菱形（短小、贴顶）+ 下方更大的文本
         for (let i = 0; i < L.items.length; i++) {
           const it = L.items[i];
           const x = xOf(it.t);
           if (x < cX - 4 || x > W - pad.R + 4) continue;
           const sel = extraSel && extraSel.bi === bi && extraSel.idx === i;
           sctx.fillStyle = sel ? COLOR.curve : layerColor(bi);
+          const cyP = top + 6; // 小菱形中心
           sctx.beginPath();
-          sctx.moveTo(x, top + 6);
-          sctx.lineTo(x + 5, top + EXT_B / 2);
-          sctx.lineTo(x, top + EXT_B - 6);
-          sctx.lineTo(x - 5, top + EXT_B / 2);
+          sctx.moveTo(x, cyP - 3);
+          sctx.lineTo(x + 3, cyP);
+          sctx.lineTo(x, cyP + 3);
+          sctx.lineTo(x - 3, cyP);
           sctx.closePath();
           sctx.fill();
-          if (it.text) clipText(x, top + EXT_B - 6, it.text, 60, "10px " + (cssVar("--font", "sans-serif")));
+          if (it.text) {
+            // 文本更大、上下更舒展（粗体 13px）
+            clipText(x, top + EXT_B - 7, it.text, 60,
+                     "bold 13px " + (cssVar("--font", "sans-serif")));
+          }
         }
       } else {
         for (let i = 0; i < L.items.length; i++) {
@@ -600,6 +772,7 @@
       }
     }
     updateSelButtons(); // 选中项变化时同步“播放选中”按钮可用状态
+    drawDur();
   }
 
   // ---------------- 交互（主画布） ----------------
@@ -681,10 +854,14 @@
   function sendUpdate(event) {
     const pts = canonPts(state.points);
     const ljs = canonLayers(state.layers);
-    if (event === "drag" && pts === lastSentPointsJson && ljs === lastSentLayersJson) return; // 无变化不发
+    syncDurLen();
+    const djs = JSON.stringify(state.durFactors);
+    if (event === "drag" && pts === lastSentPointsJson && ljs === lastSentLayersJson
+        && djs === lastSentDurJson) return; // 无变化不发
     lastSentPointsJson = pts;
     lastSentLayersJson = ljs;
     lastSentSylJson = canonSyl(state.layers[0] && state.layers[0].items ? state.layers[0].items : []);
+    lastSentDurJson = djs;
     seq += 1;
     const layers = (state.layers || []).map((L) => ({
       name: L.name || "", kind: L.kind || "interval", def: L.def || "",
@@ -698,6 +875,7 @@
       points: (state.points || []).map((p) => [Math.round(p[0] * 1e4) / 1e4, Math.round(p[1] * 1e3) / 1e3]),
       syllables: layers[0] && layers[0].items ? layers[0].items : [],
       layers: layers,
+      dur_factors: state.durFactors.map((v) => Math.round(v * 100) / 100),
       event: event,
       seq: seq,
       annotate: annotateMode,      // 标注模式状态（持久化，防重跑后重置）
@@ -726,10 +904,22 @@
   }
 
   function onPointerDown(e) {
-    if (!state.editable || state.points.length === 0) return;
+    if (!state.editable) return;
     const rect = canvas.getBoundingClientRect();
     const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
     lastMouse = { x: cx, y: cy };
+    // 波形区（上 1/4）：按住拖拽 → 框选任意时间段
+    if (cy < pitchY0() - 2) {
+      selected = -1;
+      hideTooltip();
+      const t = clamp(tOf(cx), 0, state.dur);
+      waveSel = null;
+      waveDrag = { t0: t, t1: t };
+      canvas.setPointerCapture(e.pointerId);
+      draw();
+      return;
+    }
+    if (state.points.length === 0) return;
     const idx = hitTest(cx, cy);
     if (e.shiftKey && idx >= 0) {
       state.points.splice(idx, 1);
@@ -765,6 +955,12 @@
     const rect = canvas.getBoundingClientRect();
     const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
     lastMouse = { x: cx, y: cy };
+    if (waveDrag) {
+      const t = clamp(tOf(cx), 0, state.dur);
+      waveDrag.t1 = t;
+      draw();
+      return;
+    }
     if (!dragging || !drag) return;
     const p = state.points[drag.idx];
     const lo = drag.idx > 0 ? state.points[drag.idx - 1][0] + 0.02 : 0;
@@ -780,6 +976,18 @@
   }
 
   function onPointerUp(e) {
+    if (waveDrag) {
+      const d = waveDrag;
+      waveDrag = null;
+      const t0 = Math.min(d.t0, d.t1), t1 = Math.max(d.t0, d.t1);
+      if (t1 - t0 >= 0.02) {
+        waveSel = { t0: Math.round(t0 * 1e4) / 1e4, t1: Math.round(t1 * 1e4) / 1e4 };
+        updateSelButtons();
+      }
+      draw();
+      try { canvas.releasePointerCapture(e.pointerId); } catch (err) { /* noop */ }
+      return;
+    }
     if (!dragging) return;
     dragging = false;
     drag = null;
@@ -879,6 +1087,7 @@
     const t = tOf(cx);
     // 点选 PY 层边界（供 B 键复制到下方区间层）；点框体/空白/其他带则清除
     hoverB = null;
+    waveSel = null; // 改为按标注项播放，波形框选让位
     selBoundary = nearestBoundary(cx);
     selectedSyl = -1;
     extraSel = null;
@@ -981,9 +1190,12 @@
       id: "syl-" + Date.now() + "-r" + Math.floor(Math.random() * 1e4),
       text: s.text, t0: tR, t1: s.t1,
     };
+    syncDurLen();
     state.syllables.splice(hit.idx, 1, left, right);
     selectedSyl = hit.idx; // 选中左段
     selBoundary = null;    // 分裂产生新边界，旧选择失效
+    // 时长因子：分裂出的两半都继承原因子
+    state.durFactors.splice(hit.idx + 1, 0, Number(state.durFactors[hit.idx]) || 1);
     renumberDefaultLabels(); // 默认编号(音N)自动顺延
     sendUpdate("syl_split");
     draw();
@@ -1015,9 +1227,10 @@
           t0: Math.round(t0 * 1e4) / 1e4,
           t1: Math.round(t1 * 1e4) / 1e4,
         };
-        state.syllables.push(syl);
-        state.syllables.sort((a, b) => a.t0 - b.t0);
-        selectedSyl = state.syllables.findIndex((s) => s.id === syl.id);
+        syncDurLen();
+        state.syllables.splice(ins, 0, syl);
+        state.durFactors.splice(ins, 0, 1.0);
+        selectedSyl = ins;
         selBoundary = null;
         renumberDefaultLabels(); // 默认编号(音N)自动顺延
         sendUpdate("syl_add");
@@ -1071,6 +1284,7 @@
     const L = extraLayer(bi);
     const hit = extraHit(cx, bi);
     extraSel = hit ? { bi: bi, idx: hit.idx } : null;
+    waveSel = null; // 点选下方标注项后按标注项播放
     if (hit) {
       sylText.value = L.items[hit.idx].text || "";
     }
@@ -1287,6 +1501,7 @@
       }
       if (selectedSyl >= 0 && state.syllables[selectedSyl]) {
         state.syllables.splice(selectedSyl, 1);
+        if (selectedSyl < state.durFactors.length) state.durFactors.splice(selectedSyl, 1);
         selectedSyl = -1;
         sylText.value = "";
         selBoundary = null;
@@ -1418,8 +1633,11 @@
     });
   }
 
-  // ---------------- 选中段播放（IntervalTier 项 / PY 音节框） ----------------
+  // ---------------- 选中段播放（波形框选区间 / IntervalTier 项 / PY 音节框） ----------------
   function currentSegment() {
+    if (waveSel && waveSel.t1 > waveSel.t0) {
+      return { t0: waveSel.t0, t1: waveSel.t1 };
+    }
     if (extraSel && extraSel.bi > 0) {
       const L = extraLayer(extraSel.bi);
       if (L && L.kind === "interval" && L.items && L.items[extraSel.idx]) {
@@ -1479,6 +1697,14 @@
   }
   function loop() {
     if (!playing) { onAudioState(); return; }
+    // 选中段播放：逐帧判停，只在选区内播放、不越过后面的内容
+    if ((playToken === "selE" || playToken === "selO") && selPlay && selPlay.t1 > selPlay.t0) {
+      if (audio.currentTime >= selPlay.t1 - 0.002) {
+        audio.pause();
+        audio.currentTime = selPlay.t1; // 停在段末
+        return; // pause 事件会触发 onAudioState 收尾
+      }
+    }
     draw();
     drawSyl();
     rafId = requestAnimationFrame(loop);
@@ -1500,6 +1726,9 @@
     state.editable = args.editable !== false;
     state.orig = args.original || [];
     state.wave = args.waveform || [];
+    if (Array.isArray(args.dur_factors)) {
+      state.durFactors = args.dur_factors.map((v) => Number(v) || 1.0);
+    }
     // url_*: 非空字符串=设置；"same"（仅 edit）=与 orig 相同；""=清除；null/undefined=保持上次
     function applyAudioUrl(kind, incoming) {
       const isOrig = kind === "orig";
@@ -1568,6 +1797,8 @@
       adoptLayers = false;
       adoptSyl = false;
       if (selectedSyl >= state.syllables.length) selectedSyl = state.syllables.length - 1;
+      durSel = -1;
+      syncDurLen();
       if (!(extraSel && mapped[extraSel.bi] && mapped[extraSel.bi].items
             && extraSel.idx >= 0 && extraSel.idx < mapped[extraSel.bi].items.length)) {
         extraSel = null;
@@ -1585,6 +1816,8 @@
       lastSentSylJson = incSyl;
       adoptSyl = false;
       if (selectedSyl >= state.syllables.length) selectedSyl = state.syllables.length - 1;
+      durSel = -1;
+      syncDurLen();
     }
     // 保证下一次用户操作的 seq 大于 Python 已接受的最后序号
     const pySeq = Number(args.seq) || 0;
@@ -1646,6 +1879,10 @@
   cvSyl.addEventListener("pointerup", onSylPointerUp);
   cvSyl.addEventListener("pointercancel", onSylPointerUp);
   cvSyl.addEventListener("dblclick", onSylDblClick);
+  cvDur.addEventListener("pointerdown", onDurDown);
+  cvDur.addEventListener("pointermove", onDurMove);
+  cvDur.addEventListener("pointerup", onDurUp);
+  cvDur.addEventListener("pointercancel", onDurUp);
   window.addEventListener("keydown", onKeyDown);
   chkOrig.addEventListener("change", () => { draw(); drawSyl(); });
   btnFit.addEventListener("click", fitView);

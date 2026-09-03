@@ -105,6 +105,42 @@ class PitchTests(unittest.TestCase):
         self.assertEqual(sr, 8000)
         self.assertAlmostEqual(float(np.max(np.abs(decoded))), 0.25, places=3)
 
+    def test_duration_warp_keeps_factors_attached_to_unsorted_syllables(self) -> None:
+        syllables = [
+            {"t0": 0.5, "t1": 1.0, "text": "second"},
+            {"t0": 0.0, "t1": 0.5, "text": "first"},
+        ]
+        boundaries, factors = core.build_duration_warp(syllables, [2.0, 0.5], 1.0)
+        self.assertEqual(boundaries, [0.0, 0.5, 1.0])
+        self.assertEqual(factors, [0.5, 2.0])
+
+    def test_balanced_local_duration_edits_are_not_skipped(self) -> None:
+        sr = 1000
+        samples = np.concatenate([
+            np.zeros(sr // 2, dtype=np.float32),
+            np.ones(sr // 2, dtype=np.float32),
+        ])
+        output = core.resynthesize_with_durations(
+            samples, sr, [0.0, 0.5, 1.0], [1.5, 0.5]
+        )
+        self.assertEqual(len(output), len(samples))
+        self.assertFalse(np.array_equal(output, samples))
+        # 第一段的新终点应从 0.5 s 移到 0.75 s。
+        self.assertLess(float(output[int(0.70 * sr)]), 0.1)
+        self.assertGreater(float(output[int(0.80 * sr)]), 0.9)
+
+    def test_duration_stretch_changes_length_and_preserves_pitch(self) -> None:
+        sr = 16000
+        sample_times = np.arange(sr, dtype=np.float64) / sr
+        samples = (0.3 * np.sin(2 * np.pi * 180.0 * sample_times)).astype(np.float32)
+        times, f0 = core.analyze_pitch(samples, sr)
+        output = core.resynthesize_with_durations(
+            samples, sr, [0.0, 1.0], [1.5], f0, times
+        )
+        self.assertEqual(len(output), int(1.5 * sr))
+        middle = output[int(0.2 * sr):int(1.3 * sr)]
+        self.assertAlmostEqual(self.dominant_frequency(middle, sr), 180.0, delta=4.0)
+
     def test_tier_is_clipped_and_interpolated_in_semitones(self) -> None:
         times = np.array([0.0, 0.5, 1.0])
         voiced = np.array([100.0, 100.0, 100.0])

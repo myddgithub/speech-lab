@@ -142,6 +142,14 @@ EN: dict[str, str] = {
     "无法识别文本编码，请使用 UTF-8 或 GBK。": "Could not detect the text encoding — please use UTF-8 or GBK.",
     "📄 已导入 {0} 个音节（{1}），与音节框一致，可直接点“🔤 对齐”。": "📄 Imported {0} syllable(s) ({1}) — matches the boxes, click “🔤 Align”.",
     "📄 已导入 {0} 个音节（{1}），音节框 {2} 个 —— ⚠️ 数量不一致，无法对齐。": "📄 Imported {0} syllable(s) ({1}) but there are {2} box(es) — ⚠️ counts differ, cannot align.",
+    "⏱ 时长调节（仿 Praat manipulation）": "⏱ Duration (Praat-manipulation-like)",
+    "在图下方「时长带」上下拖动各音节调音长（0.5×–2×），应用后按时长因子重合成（保持音高），生成的新音频自动载入、标注按时间映射迁移。": "Drag each syllable up/down in the “duration strip” below the chart (0.5×–2×); on apply, audio is resynthesized with those duration factors (pitch kept) and loaded as the current audio, with annotations mapped to the new timeline.",
+    "🕐 应用时长（重合成）": "🕐 Apply durations (resynth.)",
+    "按各音节时长因子重合成：总时长按因子变化、音高保持；结果作为新音频载入当前画布（原标注自动映射到新时间轴）。": "Resynthesize using each syllable's duration factor: total length changes accordingly while pitch is preserved; the result is loaded as the current audio (existing annotations are mapped onto the new timeline).",
+    "因子重置 1×": "Reset factors to 1×",
+    "把时长带中各音节因子恢复为 1×（不变速）": "Reset every syllable's duration factor in the strip back to 1× (no time change)",
+    "（时长调整）": " (duration-adjusted)",
+    "✅ 已应用时长：新音频 {0} s（标注已按时间映射迁移，撤销已重置）": "✅ Durations applied: new audio {0} s (annotations were mapped to the new timeline; undo history was reset)",
 
     # ---- 合成 / 指标 / 试听 ----
     "🎶 重合成编辑后音频中...": "🎶 Resynthesizing edited audio...",

@@ -33,6 +33,7 @@
     #wrap { position: relative; }
     canvas { display: block; width: 100%; touch-action: none; }
     #cv { height: 360px; cursor: crosshair; }
+    #cvDur { height: 44px; cursor: ns-resize; }
     #cvSyl { height: 48px; cursor: pointer; }
 
     #tooltip {
@@ -55,13 +56,14 @@
     <span id="sylLabel">标注:</span>
     <input id="sylText" type="text" placeholder="如 liu4（数字=声调）" spellcheck="false" />
     <button class="btn" id="btnFit" title="重置视图缩放">重置缩放</button>
-    <span id="hint">拖拽调音高 · 双击或按 A 加点 · Delete 删点 · ↑↓ 半音微调 · 滚轮缩放时间 · Shift+滚轮前后平移 · Ctrl+滚轮调音高刻度 · 点选 PY 边界按 B：区间层加边界 / 点层加点</span>
+    <span id="hint">拖拽调音高 · 双击或按 A 加点 · Delete 删点 · ↑↓ 半音微调 · 滚轮缩放时间 · Shift+滚轮前后平移 · Ctrl+滚轮调音高刻度 · 点选 PY 边界按 B：区间层加边界 / 点层加点 · 波形上拖拽可框选任意段播放</span>
   </div>
   <div id="wrap">
     <canvas id="cv"></canvas>
+    <canvas id="cvDur"></canvas>
     <canvas id="cvSyl"></canvas>
     <div id="tooltip"></div>
   </div>
-  <script src="component.js?v=20260903r5"></script>
+  <script src="component.js?v=20260903r6"></script>
 </body>
 </html>

@@ -762,6 +762,140 @@ def synthesize_with_f0(
     return out.astype(np.float32)
 
 
+def build_duration_warp(
+    syllables: list[dict], factors: list[float], duration: float
+) -> tuple[list[float], list[float]]:
+    """由音节框与逐音节时长因子构造分段时间映射。
+
+    返回 (boundaries, seg_factors)：
+      boundaries 覆盖 [0, duration]（含首尾），相邻边界构成一段；
+      seg_factors 与段一一对应：落在某音节框内的段取该框因子，
+      音节之间的空隙（无框覆盖）恒为 1。
+    """
+    raw_factors: list[float] = []
+    for value in factors or []:
+        try:
+            factor = float(value) if value is not None else 1.0
+        except (TypeError, ValueError):
+            factor = 1.0
+        raw_factors.append(factor if np.isfinite(factor) else 1.0)
+    # 因子必须与音节作为一个整体排序；只排序音节会把第 i 个因子施加到别的音节。
+    items = sorted(
+        (
+            (s, raw_factors[i] if i < len(raw_factors) else 1.0)
+            for i, s in enumerate(syllables or [])
+            if float(s.get("t1", 0)) > float(s.get("t0", 0))
+        ),
+        key=lambda pair: float(pair[0]["t0"]),
+    )
+    dur = max(0.0, float(duration))
+    if not items or dur <= 0:
+        return [0.0, dur], [1.0]
+    bounds = [0.0]
+    for s, _factor in items:
+        t0 = float(np.clip(s["t0"], 0.0, dur))
+        t1 = float(np.clip(s["t1"], 0.0, dur))
+        if t0 > 0.005 and t0 < dur - 0.005:
+            bounds.append(t0)
+        if t1 > 0.005 and t1 < dur - 0.005:
+            bounds.append(t1)
+    bounds.append(dur)
+    bounds = sorted(set(round(b, 9) for b in bounds))
+    if len(bounds) < 2:
+        return [0.0, dur], [1.0]
+    seg_factors: list[float] = []
+    for k in range(len(bounds) - 1):
+        mid = (bounds[k] + bounds[k + 1]) / 2.0
+        fac = 1.0
+        for s, factor in items:
+            if float(s["t0"]) - 1e-6 <= mid <= float(s["t1"]) + 1e-6:
+                fac = factor
+                break
+        seg_factors.append(float(np.clip(fac, 0.5, 2.0)))
+    return bounds, seg_factors
+
+
+def resynthesize_with_durations(
+    samples: np.ndarray,
+    sr: int,
+    boundaries: list[float],
+    seg_factors: list[float],
+    f0_orig: np.ndarray | None = None,
+    times: np.ndarray | None = None,
+    floor: float = 75.0,
+    ceiling: float = 500.0,
+    frame_period: float = 10.0,
+) -> np.ndarray:
+    """变速重合成：把时间轴按段因子拉伸/压缩，同时尽量保持音高。
+
+    两步法：
+      1. 按分段线性时间映射重采样原音频（时长变为新时长）；
+      2. 在重采样结果上重新分析基频，并把源时刻的原始 F0 作为目标音高做
+         TD-PSOLA 音高还原（重采样会把音高缩放 1/段因子）。
+
+    boundaries 覆盖 [0, dur]（含首尾）；seg_factors 与相邻段一一对应。
+    所有因子 ≈ 1 时原样返回。
+    """
+    x = np.asarray(samples, dtype=np.float64)
+    n = len(x)
+    sr = float(sr)
+    if n < 2 or sr <= 0:
+        return x.astype(np.float32)
+    try:
+        B = np.asarray([float(b) for b in boundaries], dtype=np.float64)
+        F = np.asarray([float(f) for f in seg_factors], dtype=np.float64)
+    except (TypeError, ValueError):
+        return x.astype(np.float32)
+    if not np.all(np.isfinite(B)):
+        return x.astype(np.float32)
+    F = np.where(np.isfinite(F), F, 1.0)
+    F = np.clip(F, 0.5, 2.0)
+    if len(B) < 2 or len(F) < len(B) - 1:
+        return x.astype(np.float32)
+    F = F[:len(B) - 1]
+    if np.any(np.diff(B) <= 1e-9):
+        return x.astype(np.float32)
+    newB = np.zeros(len(B), dtype=np.float64)
+    newB[0] = 0.0
+    for k in range(len(B) - 1):
+        newB[k + 1] = newB[k] + (B[k + 1] - B[k]) * F[k]
+    dur_in = float(B[-1])
+    dur_out = float(newB[-1])
+    if dur_out <= 0:
+        return x.astype(np.float32)
+    # 只能在每一段都为 1× 时原样返回。局部拉长/压缩可能恰好抵消成相同总
+    # 时长，但内部边界仍应移动，绝不能按“总时长相同”跳过。
+    if np.allclose(F, 1.0, rtol=0.0, atol=1e-9):
+        return x.astype(np.float32)
+    n2 = max(2, int(round(dur_out * sr)))
+    t_out = (np.arange(n2, dtype=np.float64) + 0.5) / sr
+    idx = np.searchsorted(newB, t_out, side="right") - 1
+    idx = np.clip(idx, 0, len(B) - 2)
+    src_t = B[idx] + (t_out - newB[idx]) / F[idx]
+    src_t = np.clip(src_t, 0.0, max(0.0, dur_in - 1.0 / sr))
+    xr = np.interp(src_t * sr, np.arange(n, dtype=np.float64), x)
+
+    # 音高还原
+    if f0_orig is not None and times is not None and len(times) > 1 and np.any(f0_orig > 0):
+        try:
+            t2, f0r = analyze_pitch(xr, int(round(sr)), floor, ceiling, frame_period)
+        except Exception:
+            t2, f0r = None, None
+        if t2 is not None and len(t2) > 1 and np.any(f0r > 0):
+            idx2 = np.searchsorted(newB, t2, side="right") - 1
+            idx2 = np.clip(idx2, 0, len(B) - 2)
+            # 输出时刻 t2 → 源时刻（逆映射）
+            src_t2 = B[idx2] + (t2 - newB[idx2]) / F[idx2]
+            src_t2 = np.clip(src_t2, 0.0, dur_in)
+            fs = np.interp(src_t2, times, f0_orig, left=0.0, right=0.0)
+            # 重采样已把音高缩放为 1/段因子；把原 F0 还原回去即可（无需再乘因子）
+            voiced_ok = (f0r > 0) & (fs > 0)
+            tier = np.where(voiced_ok, np.clip(fs, float(floor), float(ceiling)), 0.0)
+            if np.any(tier > 0):
+                xr = synthesize_with_f0(xr, sr, tier, f0r, t2, float(frame_period))
+    return np.asarray(xr, dtype=np.float32)
+
+
 def _sample_voiced_mask(f0: np.ndarray, times: np.ndarray, n: int, sr: float) -> np.ndarray:
     """帧级浊音 -> 样本掩码（不额外外扩，避免原声在段缘漏进来）。"""
     mask = np.zeros(n, dtype=bool)
