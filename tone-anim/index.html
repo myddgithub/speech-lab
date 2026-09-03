@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="dark" />
+<title>纯音与复音动态图 · 谐波、音色与基频</title>
+<style>
+  :root{
+    --bg:#0a0f18; --panel:#0f1a2c; --panel2:#162338; --line:#26344f;
+    --text:#e6eefb; --muted:#8fa3c4; --amber:#ffcf6e; --cyan:#62d7ff;
+    --green:#7be0a0; --red:#ff8b7a; --magenta:#ff9ce0; --violet:#b18cff;
+    --warm:#ffb45e;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scrollbar-gutter:stable;}
+  body{
+    background:radial-gradient(1300px 700px at 50% -12%, #12233f 0%, var(--bg) 58%);
+    color:var(--text);
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    min-height:100vh; padding:64px 16px 46px; line-height:1.6;
+  }
+  .wrap{max-width:1260px; margin:0 auto;}
+  header{text-align:center; margin-bottom:20px;}
+  header h1{font-size:27px; font-weight:700; letter-spacing:1px;}
+  header p{color:var(--muted); font-size:13.5px; margin-top:8px; max-width:960px; margin-left:auto; margin-right:auto;}
+  header p b{color:var(--amber); font-weight:600;}
+  .topbtns{position:fixed; top:14px; right:16px; z-index:50; display:flex; gap:8px;}
+  .topbtn{padding:7px 15px; border-radius:999px; font-size:13px;}
+  #btnLang{font-size:12px;}
+
+  .card{
+    background:linear-gradient(180deg,var(--panel2),var(--panel));
+    border:1px solid var(--line); border-radius:16px; padding:16px;
+    box-shadow:0 16px 44px rgba(0,0,0,.42); margin-bottom:18px;
+  }
+  .card-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:11px;}
+  .card-title{font-size:17px; font-weight:700; letter-spacing:.5px;}
+  .card-tag{font-size:12.5px; color:var(--cyan); opacity:.92;}
+  .cv{width:100%; border-radius:12px; overflow:hidden; border:1px solid var(--line); background:#070b12;}
+  canvas{display:block; width:100%; height:auto;}
+  .legend{display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; font-size:12.5px; color:var(--muted); align-items:center;}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .dot{width:11px; height:11px; border-radius:50%; flex:none;}
+  .bars{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px; row-gap:8px;}
+  .bars label{font-size:12.5px; color:var(--muted); flex:none;}
+  .bars input[type=range]{width:140px; accent-color:var(--amber);}
+  .bars input[type=range].wide{width:190px;}
+  .bars .val{font-size:13px; color:var(--cyan); min-width:58px; font-variant-numeric:tabular-nums; font-weight:600;}
+  .btn{
+    background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:9px;
+    padding:6px 13px; font-size:13px; cursor:pointer; transition:all .15s; font-family:inherit; line-height:1.3;
+  }
+  .btn:hover{border-color:var(--cyan); color:#fff;}
+  .btn.on{background:linear-gradient(135deg,#1e3a5f,#12243d); border-color:var(--cyan); color:#fff;}
+  .btn.warn.on{background:linear-gradient(135deg,#5f3112,#3d210d); border-color:var(--amber);}
+  ul.bullets{margin-top:12px; padding-left:18px; color:#cfd9ea; font-size:13.5px;}
+  ul.bullets li{margin:5px 0;}
+  ul.bullets b{color:var(--warm);}
+  .note{margin-top:8px; font-size:12px; color:var(--muted); border-left:3px solid var(--line); padding-left:10px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  .grid3{display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:18px;}
+  .take{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:10px; margin-top:14px;}
+  .take div{background:rgba(255,255,255,.025); border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-size:12.8px; color:#c7d2e4;}
+  .take b{color:var(--amber);}
+  table{width:100%; border-collapse:collapse; margin-top:10px; font-size:13px;}
+  th{font-size:12.5px; color:var(--muted); font-weight:600; text-align:left; padding:8px 10px; border-bottom:1px solid var(--line);}
+  td{padding:8px 10px; border-bottom:1px solid rgba(38,52,79,.5); vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  footer{text-align:center; color:var(--muted); font-size:12px; margin-top:8px;}
+  .hidden{display:none;}
+  #scrim{position:fixed; inset:0; background:rgba(5,8,14,.62); z-index:60; opacity:0; pointer-events:none; transition:opacity .22s;}
+  #scrim.show{opacity:1; pointer-events:auto;}
+  #helpPanel{
+    position:fixed; top:0; right:0; height:100%; width:min(470px,95vw); z-index:61;
+    background:linear-gradient(180deg,#1b2c48,#101a2c); border-left:1px solid var(--line);
+    transform:translateX(105%); transition:transform .25s ease; display:flex; flex-direction:column;
+    box-shadow:-16px 0 40px rgba(0,0,0,.5);
+  }
+  #helpPanel.show{transform:none;}
+  .hHead{display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); font-weight:700;}
+  .hHead button{background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; line-height:1;}
+  .hHead button:hover{color:#fff;}
+  .hBody{overflow-y:auto; padding:14px 20px 32px; font-size:13px; color:#d5deee;}
+  .hBody h3{font-size:14.5px; margin:16px 0 6px; color:var(--cyan);}
+  .hBody h3:first-child{margin-top:0;}
+  .hBody p{margin:6px 0;}
+  .hBody table{font-size:12px;}
+  .hBody code{background:#0d1626; border:1px solid var(--line); padding:1px 5px; border-radius:5px; font-size:12px; color:var(--amber);}
+  .kbd{display:inline-block; background:#0d1626; border:1px solid var(--line); border-bottom-width:2px; border-radius:4px; padding:0 6px; font-size:11.5px; color:var(--amber);}
+  .pads{display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:stretch;}
+  .pad{display:flex; flex-direction:column; gap:10px; min-width:0;}
+  .presets{display:flex; gap:6px; flex-wrap:wrap;}
+  .presets .btn{padding:5px 11px; font-size:12.5px;}
+  @media(max-width:860px){
+    body{padding-top:62px;}
+    .topbtn{padding:6px 11px;}
+    .grid2,.pads{grid-template-columns:1fr;}
+    .bars input[type=range]{width:112px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 data-i18n="pageTitle">🎼 纯音与复音动态图 · 谐波 / 音色 / 基频</h1>
+    <p data-i18n="sub">演示：<b>纯音如何叠加成复音</b>、<b>各种纯音与复音可试听</b>、<b>音质取决于频率×能量的组合</b>、<b>基频由谐波差决定</b>。</p>
+  </header>
+
+  <div class="topbtns">
+    <button class="topbtn btn" id="btnLang" type="button">EN</button>
+    <button class="topbtn btn" id="btnHelp" type="button" data-i18n="btnHelp">📖 帮助</button>
+  </div>
+
+  <!-- ① 纯音 → 复音：加法叠加主演示 -->
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title"><span data-i18n="c1Title">① 纯音叠加 → 复音（主演示）</span></div>
+      <div class="card-tag" data-i18n="c1Tag">加法合成 · 谐波分解 · 同一时间轴上逐点相加</div>
+    </div>
+    <div class="cv"><canvas id="cvAdd" width="1240" height="790" role="img" aria-label="纯音叠加为复音动画"></canvas></div>
+    <div class="legend">
+      <span><i class="dot" style="background:#ffcf6e"></i><span data-i18n="legRow">每一行 = 一个纯音（正弦·谐波）</span></span>
+      <span><i class="dot" style="background:#62d7ff"></i><span data-i18n="legSum">亮色粗曲线 = 复音（各行同刻相加）</span></span>
+      <span><i class="dot" style="background:#7be0a0"></i><span data-i18n="legSpec">柱状图 = 频谱（频率 × 能量）</span></span>
+    </div>
+    <div class="bars">
+      <button class="btn" id="pauseBtn" type="button" data-i18n="pauseLbl">⏸ 暂停</button>
+      <label data-i18n="spdLbl">播放速度</label>
+      <input type="range" id="spdS" min="0.2" max="3" step="0.1" value="1" />
+      <span class="val" id="spdV">1.0×</span>
+      <label data-i18n="f0Lbl">基频 f₀</label>
+      <input type="range" class="wide" id="f0S" min="55" max="660" step="1" value="220" />
+      <span class="val" id="f0V">220 Hz · A3</span>
+      <label data-i18n="hLbl">谐波个数 H</label>
+      <input type="range" id="hS" min="1" max="10" step="1" value="5" />
+      <span class="val" id="hV">5</span>
+      <label data-i18n="rollLbl">能量滚降 p</label>
+      <input type="range" id="pS" min="0" max="2" step="0.05" value="1" />
+      <span class="val" id="pV">1.00</span>
+      <button class="btn" id="oddBtn" type="button" data-i18n="oddOff">奇次(方波)：关</button>
+      <button class="btn" id="annotBtn" type="button" data-i18n="annotOn">🏷 标注：开</button>
+    </div>
+    <div class="bars">
+      <button class="btn warn" id="toneBtn" type="button"><span data-i18n="toneLbl">🔊 播放复音</span></button>
+      <button class="btn" id="pureBtn" type="button"><span data-i18n="pureLbl">🎵 单听基频纯音</span></button>
+      <span style="font-size:12px;color:var(--muted)" data-i18n="soloHint">（点主图中任意一行可单独试听该纯音，点粗曲线听复音）</span>
+    </div>
+    <div class="note" id="demoNote"></div>
+    <ul class="bullets">
+      <li><b data-i18n="c1L1">① 纯音 = 单一频率的正弦波：</b><span data-i18n="c1B1">像音叉、测试音；只有 f₀ 一个频率成分，频谱是一根线。图上方每一行就是一个纯音，第 n 行的频率是 n·f₀。</span></li>
+      <li><b data-i18n="c1L2">② 复音 = 若干纯音的叠加：</b><span data-i18n="c1B2">所有行共用同一时间轴，任意时刻把各行数值<b>逐点相加</b>，得到下方亮色“复音”曲线——这是线性叠加原理。</span></li>
+      <li><b data-i18n="c1L3">③ 谐波与周期：</b><span data-i18n="c1B3">若各分量频率是 f₀ 的整数倍（f₀, 2f₀, 3f₀…），叠加结果仍是周期波，周期 = 1/f₀，所以<b>听感音高 = 基频 f₀</b>，与“加了多少谐波”无关。</span></li>
+      <li><b data-i18n="c1L4">④ 频率×能量的组合决定音质：</b><span data-i18n="c1B4">改变谐波个数 H、能量滚降 p（振幅按 1/nᵖ 衰减）或只留奇次谐波（≈方波），波形形状随之改变 → 听感（音色）改变，但音高不变。</span></li>
+      <li><b data-i18n="c1L5">⑤ 试着：</b><span data-i18n="c1B5">H=1 只有纯音；逐渐增加 H 并听，声音越来越“丰富/厚实”；再比较 p=0 与 p=2、方波开/关的差别。</span></li>
+    </ul>
+  </section>
+
+  <!-- ② 音色对比台：同基频、不同频率×能量 -->
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title"><span data-i18n="c2Title">② 音色对比台：同基频，不同“频率 × 能量”</span></div>
+      <div class="card-tag" data-i18n="c2Tag">同音高 · 不同波形 / 频谱 → 不同音色 · 可分别试听</div>
+    </div>
+    <div class="bars" style="margin-top:0">
+      <label data-i18n="f0Lbl">基频 f₀（全页共用）</label>
+      <span class="val" id="f0V2" style="min-width:120px">220 Hz · A3</span>
+      <button class="btn warn" id="abBtn" type="button"><span data-i18n="abLbl">🔁 A→B 交替对比</span></button>
+      <span style="font-size:12px;color:var(--muted)" data-i18n="c2Hint">两栏音高完全相同，差异全部来自谐波的频率组合与能量分布。</span>
+    </div>
+    <div class="pads" style="margin-top:12px">
+      <div class="pad" id="padA">
+        <div class="presets" id="preA" aria-label="A preset"></div>
+        <div class="cv"><canvas id="cvA" width="640" height="330" role="img" aria-label="A 音色频谱与波形"></canvas></div>
+        <div><button class="btn warn" id="playA" type="button"><span data-i18n="playALbl">🔊 播放 A</span></button></div>
+      </div>
+      <div class="pad" id="padB">
+        <div class="presets" id="preB" aria-label="B preset"></div>
+        <div class="cv"><canvas id="cvB" width="640" height="330" role="img" aria-label="B 音色频谱与波形"></canvas></div>
+        <div><button class="btn warn" id="playB" type="button"><span data-i18n="playBLbl">🔊 播放 B</span></button></div>
+      </div>
+    </div>
+    <ul class="bullets">
+      <li><b data-i18n="c2L1">① 音高由基频 f₀ 决定：</b><span data-i18n="c2B1">两栏 f₀ 相同 → 音高相同（如都是 A3）。把音量调近后闭眼听，能区分它们靠的不是高低，而是“音色/音质”。</span></li>
+      <li><b data-i18n="c2L2">② 音色 = 频率组合 × 能量分布：</b><span data-i18n="c2B2">波形曲线由“包含哪些谐波（频率）”和“每个谐波多强（能量）”共同决定：纯音只有一根线；方波=奇次谐波 1/n；锯齿=全部 1/n；拨弦/长笛等各有不同的能量分布。</span></li>
+      <li><b data-i18n="c2L3">③ 频谱读出音色：</b><span data-i18n="c2B3">下图左侧是该音的频谱（横轴频率，柱高=能量/振幅），右侧是两三个周期内的波形。谱线越少越“空、干净”，越高频的柱越高声音越“亮、噪”。</span></li>
+      <li><b data-i18n="c2L4">④ 乐器与嗓音同理：</b><span data-i18n="c2B4">长笛≈纯音加少量弱谐波，双簧管/单簧管谐波较强且分布不同；元音 /a//i/ 的区别也是共振峰造成的能量分布差异——这正是后文“语音”动画的基础。</span></li>
+    </ul>
+  </section>
+
+  <!-- ③ 基频 = 谐波差 / 缺失基频 -->
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title"><span data-i18n="c3Title">③ 基频由谐波差决定（缺失基频实验）</span></div>
+      <div class="card-tag" data-i18n="c3Tag">等间距谐波谱 · 相邻差 = f₀ · 去掉 f₀ 音高仍在</div>
+    </div>
+    <div class="cv"><canvas id="cvMiss" width="1240" height="430" role="img" aria-label="谐波差与缺失基频动画"></canvas></div>
+    <div class="bars">
+      <button class="btn" id="playFull" type="button"><span data-i18n="playFullLbl">🔊 播放“含基频”</span></button>
+      <button class="btn" id="playMiss" type="button"><span data-i18n="playMissLbl">🔊 播放“缺基频”</span></button>
+      <button class="btn" id="f0Toggle" type="button"><span data-i18n="f0Hide">👻 隐藏基频谱线</span></button>
+      <label data-i18n="missF0">把基频调低再对比试听（如 100–200 Hz 效果最明显）</label>
+    </div>
+    <ul class="bullets">
+      <li><b data-i18n="c3L1">① 谐波谱等间距：</b><span data-i18n="c3B1">周期性复音的各分量频率为 k·f₀（k=1,2,3…），频谱上相邻两根谱线的差恒等于 f₀ —— <b>基频 = 相邻谐波之差</b>。图上标出的 Δ 双箭头就是 f₀。</span></li>
+      <li><b data-i18n="c3L2">② 缺失基频现象：</b><span data-i18n="c3B2">把最低的 f₀ 谱线“藏起来”（只剩 2f₀, 3f₀, 4f₀…），谱线间距仍是 f₀、波形周期仍是 1/f₀，所以听者仍然“听到” f₀ 的音高——耳与脑根据谐波差重建了基频（虚拟基频 / 残响基频）。</span></li>
+      <li><b data-i18n="c3L3">③ 纯音为何特殊：</b><span data-i18n="c3B3">纯音只有一根谱线、没有“谐波差”可依，它的音高就是频率本身；复音则优先由基频/谐波差给出音高。</span></li>
+      <li><b data-i18n="c3L4">④ 语音分析中的用处：</b><span data-i18n="c3B4">测量说话嗓音的基频（F0）时，常通过频谱/倒谱里谐波的等间距（或相邻差）来确定——与本节“基频由谐波差决定”是同一个原理。</span></li>
+    </ul>
+  </section>
+
+  <!-- 对比总表 -->
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title">📋 <span data-i18n="tblTitle">纯音 vs 复音 · 快速对比</span></div>
+    </div>
+    <table>
+      <thead><tr>
+        <th data-i18n="th1">项目</th>
+        <th data-i18n="thPure">纯音</th>
+        <th data-i18n="thComplex">复音（复合音）</th>
+      </tr></thead>
+      <tbody>
+        <tr><td data-i18n="td1">频率成分</td><td data-i18n="t1a">单一频率 f₀（一根谱线）</td><td data-i18n="t1b">基频 f₀ + 谐波（多根谱线）</td></tr>
+        <tr><td data-i18n="td2">波形</td><td data-i18n="t2a">标准正弦</td><td data-i18n="t2b">正弦按能量叠成的周期复杂波形</td></tr>
+        <tr><td data-i18n="td3">音高听感</td><td data-i18n="t3a">= 自身频率</td><td data-i18n="t3b">= 基频 f₀（缺失基频时由谐波差重建）</td></tr>
+        <tr><td data-i18n="td4">音色 / 音质</td><td data-i18n="t4a">单调、纯净（几乎无泛音）</td><td data-i18n="t4b">取决于谐波频率与能量分布，丰富多样</td></tr>
+        <tr><td data-i18n="td5">实例</td><td data-i18n="t5a">音叉、测听纯音、正弦振荡器</td><td data-i18n="t5b">大多数乐器、人声元音/嗓音</td></tr>
+      </tbody>
+    </table>
+    <div class="take">
+      <div><b data-i18n="tk1">🔑 叠加：</b><span data-i18n="tkb1">复音 = 多个纯音同刻相加；只要频率成整数比，和仍为周期波。</span></div>
+      <div><b data-i18n="tk2">🔑 音色：</b><span data-i18n="tkb2">音质取决于频率 × 能量的组合（频谱形状），与音高（f₀）无关。</span></div>
+      <div><b data-i18n="tk3">🔑 基频：</b><span data-i18n="tkb3">周期性复音的基频 = 相邻谐波差；去掉基频分量音高仍能被感知。</span></div>
+    </div>
+  </section>
+
+  <footer data-i18n="foot">教学示意动画：波形为慢放示意；实际振动每秒数百次。声音用 WebAudio 按页面谐波实时合成。</footer>
+</div>
+
+<!-- 帮助抽屉 -->
+<div id="scrim"></div>
+<aside id="helpPanel" role="dialog" aria-modal="true" aria-label="帮助">
+  <div class="hHead"><span id="helpTitle">📖 怎么读这张图</span><button id="helpClose" type="button" aria-label="close">✕</button></div>
+  <div class="hBody">
+    <div id="helpZh">
+      <h3>① 主演示（上）：纯音 → 复音</h3>
+      <p>画面上方每一行是一个<b>纯音</b>（正弦波）：第 1 行频率 f₀，第 2 行 2f₀，第 n 行 n·f₀。它们共用一条时间轴向右移动。<b>复音（下方亮色粗曲线）是同一时刻把所有行逐点相加</b>得到的——想验证就把注意力放到任意一条竖线上：上下曲线的“高低”按相加关系对应。黄白竖虚线是“此刻”标记。</p>
+      <p><b>谐波个数 H</b>：决定叠加几个纯音（H=1 时就是纯音本身）。<b>能量滚降 p</b>：第 n 个谐波振幅按 1/nᵖ 缩放，p 越大高次谐波越弱、波形越“光滑”。<b>奇次（方波）</b>只保留奇次谐波，得到近似方波。三者都只改音色，不改音高。</p>
+      <p><b>频谱柱</b>（图下方绿柱）：横轴=谐波频率 n·f₀，柱高=能量/振幅——这就是“音质取决于频率和能量的组合”的图示。</p>
+      <p>点击任意一行可<b>单独试听该纯音</b>；点击粗曲线听复音；再按 🔊 播放复音 / 🎵 纯音按钮可以边看边听对比。</p>
+      <h3>② 音色对比台</h3>
+      <p>A、B 两栏音高完全相同（同一 f₀），可分别选不同“预设”并播放：纯音（正弦）、方波、锯齿、三角、长笛、单簧管、双簧管、拨弦。每个小图左侧画<b>频谱柱</b>，右侧画<b>波形</b>。先按“🔊 播放 A”，再按“🔊 播放 B”，或用 “🔁 A→B 交替对比”——音高一样，但波形与听感（音色）不同。</p>
+      <h3>③ 基频 = 谐波差 / 缺失基频</h3>
+      <p>谱线等距排列，任意相邻两根的差都是 f₀（双箭头 Δ）。点“👻 隐藏基频谱线”把 f₀ 那根藏起来，再比较“含基频/缺基频”两种播放：<b>少了 f₀ 分量，音高听起来基本不变</b>——大脑根据谐波差重建基频。建议把 f₀ 调到 100–200 Hz 试。</p>
+      <h3>键盘与提示</h3>
+      <p><span class="kbd">空格</span> 暂停/继续；<span class="kbd">Esc</span> 关闭帮助。声音需在浏览器里先点一次按钮才能播放（自动播放策略）。若声音很小/无，请调大音量或点“播放复音”重试。</p>
+    </div>
+    <div id="helpEn" class="hidden">
+      <h3>① Main demo (top): pure → complex tone</h3>
+      <p>Each row is a <b>pure tone</b> (sine): row 1 = f₀, row 2 = 2f₀, row n = n·f₀. All share one time axis and drift. The <b>complex tone (bright bold curve below) is the point-by-point sum of all rows at the same instant</b> — pick any vertical line and the heights add up. The pale vertical line marks “now”.</p>
+      <p><b>Harmonics H</b>: how many pure tones are added (H=1 → a pure tone). <b>Roll-off p</b>: the n-th harmonic is scaled by 1/nᵖ; larger p removes high harmonics and smooths the wave. <b>Odd-only (square)</b> keeps odd harmonics, approximating a square wave. All change timbre, never pitch.</p>
+      <p><b>Spectrum bars</b> (green, bottom): horizontal axis = harmonic frequency n·f₀, bar height = energy/amplitude — a picture of “timbre = frequency × energy”.</p>
+      <p>Click any row to <b>solo-listen that pure tone</b>; click the bold curve for the complex tone; or use the 🔊/🎵 buttons to listen while watching.</p>
+      <h3>② Timbre compare</h3>
+      <p>Channels A and B share the same f₀ (same pitch). Pick a preset in each (sine, square, saw, triangle, flute, clarinet, oboe, pluck) and play them. Each mini-panel shows the <b>spectrum</b> (left) and the <b>waveform</b> (right). Use “🔁 A→B alternate” to hear: pitch identical, yet waveform and timbre differ.</p>
+      <h3>③ Fundamental = harmonic spacing / missing fundamental</h3>
+      <p>Lines are equally spaced; the gap between neighbours is always f₀ (Δ arrows). Press “👻 hide fundamental” to remove the f₀ line, then A/B the two playback modes: <b>without the f₀ component the pitch barely changes</b> — the brain rebuilds the fundamental from the harmonic spacing. Try f₀ ≈ 100–200 Hz.</p>
+      <h3>Keys & tips</h3>
+      <p><span class="kbd">Space</span> pause/resume; <span class="kbd">Esc</span> close help. Browsers need one click before sound starts (autoplay policy). If too quiet/loud, adjust volume or click “Play complex” again.</p>
+    </div>
+  </div>
+</aside>
+
+<script>
+"use strict";
+window.__errs = [];
+window.onerror = function (m, s, l, c) { window.__errs.push(String(m) + " @" + l + ":" + c); };
+window.__boot = false;
+window.__frames = 0;
+
+/* ================= 双语字典 ================= */
+const I18N = {
+  zh: {
+    pageTitle: "🎼 纯音与复音动态图 · 谐波 / 音色 / 基频",
+    sub: "演示：<b>纯音如何叠加成复音</b>、<b>各种纯音与复音可试听</b>、<b>音质取决于频率×能量的组合</b>、<b>基频由谐波差决定</b>。",
+    btnHelp: "📖 帮助", helpTitle: "📖 怎么读这张图",
+    c1Title: "① 纯音叠加 → 复音（主演示）", c1Tag: "加法合成 · 谐波分解 · 同一时间轴上逐点相加",
+    legRow: "每一行 = 一个纯音（正弦·谐波）", legSum: "亮色粗曲线 = 复音（各行同刻相加）", legSpec: "柱状图 = 频谱（频率 × 能量）",
+    pauseLbl: "⏸ 暂停", resumeLbl: "▶ 播放", spdLbl: "播放速度", f0Lbl: "基频 f₀", hLbl: "谐波个数 H",
+    rollLbl: "能量滚降 p", oddOn: "奇次(方波)：开", oddOff: "奇次(方波)：关",
+    annotOn: "🏷 标注：开", annotOff: "🏷 标注：关",
+    toneLbl: "🔊 播放复音", toneOffLbl: "🔇 停止复音", pureLbl: "🎵 单听基频纯音", pureOffLbl: "🔇 停纯音",
+    soloHint: "（点主图中任意一行可单独试听该纯音，点粗曲线听复音）",
+    c1L1: "① 纯音 = 单一频率的正弦波：", c1L2: "② 复音 = 若干纯音的叠加：", c1L3: "③ 谐波与周期：",
+    c1L4: "④ 频率×能量的组合决定音质：", c1L5: "⑤ 试着：",
+    c1B1: "像音叉、测试音；只有 f₀ 一个频率成分，频谱是一根线。图上方每一行就是一个纯音，第 n 行的频率是 n·f₀。",
+    c1B2: "所有行共用同一时间轴，任意时刻把各行数值<b>逐点相加</b>，得到下方亮色“复音”曲线——这是线性叠加原理。",
+    c1B3: "若各分量频率是 f₀ 的整数倍（f₀, 2f₀, 3f₀…），叠加结果仍是周期波，周期 = 1/f₀，所以<b>听感音高 = 基频 f₀</b>，与“加了多少谐波”无关。",
+    c1B4: "改变谐波个数 H、能量滚降 p（振幅按 1/nᵖ 衰减）或只留奇次谐波（≈方波），波形形状随之改变 → 听感（音色）改变，但音高不变。",
+    c1B5: "H=1 只有纯音；逐渐增加 H 并听，声音越来越“丰富/厚实”；再比较 p=0 与 p=2、方波开/关的差别。",
+    demoNote: "听音提示：先点一下页面任意按钮解锁声音（自动播放限制）。H=1 播放的是纯音，H>1 播放的是同基频的复音——音高不变但音色变厚。",
+    c2Title: "② 音色对比台：同基频，不同“频率 × 能量”", c2Tag: "同音高 · 不同波形 / 频谱 → 不同音色 · 可分别试听",
+    abLbl: "🔁 A→B 交替对比", abStopLbl: "⏹ 停止交替", c2Hint: "两栏音高完全相同，差异全部来自谐波的频率组合与能量分布。",
+    playALbl: "🔊 播放 A", playBLbl: "🔊 播放 B", padA: "A 音色", padB: "B 音色",
+    c2L1: "① 音高由基频 f₀ 决定：", c2L2: "② 音色 = 频率组合 × 能量分布：", c2L3: "③ 频谱读出音色：", c2L4: "④ 乐器与嗓音同理：",
+    c2B1: "两栏 f₀ 相同 → 音高相同（如都是 A3）。把音量调近后闭眼听，能区分它们靠的不是高低，而是“音色/音质”。",
+    c2B2: "波形曲线由“包含哪些谐波（频率）”和“每个谐波多强（能量）”共同决定：纯音只有一根线；方波=奇次谐波 1/n；锯齿=全部 1/n；拨弦/长笛等各有不同的能量分布。",
+    c2B3: "下图左侧是该音的频谱（横轴频率，柱高=能量/振幅），右侧是两三个周期内的波形。谱线越少越“空、干净”，越高频的柱越高声音越“亮、噪”。",
+    c2B4: "长笛≈纯音加少量弱谐波，双簧管/单簧管谐波较强且分布不同；元音 /a//i/ 的区别也是共振峰造成的能量分布差异——这正是后文“语音”动画的基础。",
+    c3Title: "③ 基频由谐波差决定（缺失基频实验）", c3Tag: "等间距谐波谱 · 相邻差 = f₀ · 去掉 f₀ 音高仍在",
+    playFullLbl: "🔊 播放“含基频”", playMissLbl: "🔊 播放“缺基频”", f0Hide: "👻 隐藏基频谱线", f0Show: "✨ 显示基频谱线",
+    missF0: "把基频调低再对比试听（如 100–200 Hz 效果最明显）",
+    c3L1: "① 谐波谱等间距：", c3L2: "② 缺失基频现象：", c3L3: "③ 纯音为何特殊：", c3L4: "④ 语音分析中的用处：",
+    c3B1: "周期性复音的各分量频率为 k·f₀（k=1,2,3…），频谱上相邻两根谱线的差恒等于 f₀ —— <b>基频 = 相邻谐波之差</b>。图上标出的 Δ 双箭头就是 f₀。",
+    c3B2: "把最低的 f₀ 谱线“藏起来”（只剩 2f₀, 3f₀, 4f₀…），谱线间距仍是 f₀、波形周期仍是 1/f₀，所以听者仍然“听到” f₀ 的音高——耳与脑根据谐波差重建了基频（虚拟基频 / 残响基频）。",
+    c3B3: "纯音只有一根谱线、没有“谐波差”可依，它的音高就是频率本身；复音则优先由基频/谐波差给出音高。",
+    c3B4: "测量说话嗓音的基频（F0）时，常通过频谱/倒谱里谐波的等间距（或相邻差）来确定——与本节“基频由谐波差决定”是同一个原理。",
+    tblTitle: "纯音 vs 复音 · 快速对比", th1: "项目", thPure: "纯音", thComplex: "复音（复合音）",
+    td1: "频率成分", td2: "波形", td3: "音高听感", td4: "音色 / 音质", td5: "实例",
+    t1a: "单一频率 f₀（一根谱线）", t1b: "基频 f₀ + 谐波（多根谱线）",
+    t2a: "标准正弦", t2b: "正弦按能量叠成的周期复杂波形",
+    t3a: "= 自身频率", t3b: "= 基频 f₀（缺失基频时由谐波差重建）",
+    t4a: "单调、纯净（几乎无泛音）", t4b: "取决于谐波频率与能量分布，丰富多样",
+    t5a: "音叉、测听纯音、正弦振荡器", t5b: "大多数乐器、人声元音/嗓音",
+    tk1: "🔑 叠加：", tk2: "🔑 音色：", tk3: "🔑 基频：",
+    tkb1: "复音 = 多个纯音同刻相加；只要频率成整数比，和仍为周期波。",
+    tkb2: "音质取决于频率 × 能量的组合（频谱形状），与音高（f₀）无关。",
+    tkb3: "周期性复音的基频 = 相邻谐波差；去掉基频分量音高仍能被感知。",
+    foot: "教学示意动画：波形为慢放示意；实际振动每秒数百次。声音用 WebAudio 按页面谐波实时合成。",
+    /* canvas 标注 */
+    caCursor: "同一时刻", caSum: "复音 = 各行逐点相加", caSpecT: "频谱（频率 × 能量）",
+    caFreq: "频率 →", caRowN: "第 n 行频率 = n·f₀", caHz: "Hz", caDelta: "相邻差 = f₀", caGhost: "缺失的基频（虚线）",
+    caPer: "波形周期仍 = 1/f₀", caFull: "含基频的复音", caMiss: "只含 2f₀…（缺基频）",
+    pres: { sine: "纯音·正弦", square: "方波", saw: "锯齿", tri: "三角", flute: "长笛", clar: "单簧管", oboe: "双簧管", pluck: "拨弦" }
+  },
+  en: {
+    pageTitle: "🎼 Pure & Complex Tones · Harmonics / Timbre / Fundamental",
+    sub: "Demo: <b>how pure tones add into a complex tone</b>, <b>listen to pure &amp; complex tones</b>, <b>timbre = frequency × energy</b>, <b>fundamental = harmonic spacing</b>.",
+    btnHelp: "📖 Help", helpTitle: "📖 How to read this page",
+    c1Title: "① Pure tones → complex tone (main demo)", c1Tag: "Additive synthesis · harmonic decomposition · pointwise sum on one time axis",
+    legRow: "each row = a pure tone (sine · harmonic)", legSum: "bright bold curve = complex tone (rows added)", legSpec: "bars = spectrum (frequency × energy)",
+    pauseLbl: "⏸ Pause", resumeLbl: "▶ Play", spdLbl: "Speed", f0Lbl: "Fundamental f₀", hLbl: "Harmonics H",
+    rollLbl: "Energy roll-off p", oddOn: "Odd-only (square): on", oddOff: "Odd-only (square): off",
+    annotOn: "🏷 Labels: on", annotOff: "🏷 Labels: off",
+    toneLbl: "🔊 Play complex", toneOffLbl: "🔇 Stop complex", pureLbl: "🎵 Pure f₀ only", pureOffLbl: "🔇 Stop pure",
+    soloHint: "(click any row in the figure to solo-listen that pure tone; click the bold curve for the complex tone)",
+    c1L1: "① A pure tone is a single-frequency sine:", c1L2: "② A complex tone is a sum of pure tones:", c1L3: "③ Harmonics & periodicity:",
+    c1L4: "④ Frequency × energy shapes timbre:", c1L5: "⑤ Try it:",
+    c1B1: "like a tuning fork or test tone: only f₀, one spectral line. Each row above is a pure tone; row n has frequency n·f₀.",
+    c1B2: "All rows share one time axis; at every instant add their values <b>point by point</b> to get the bright complex curve below — the superposition principle.",
+    c1B3: "If every component is an integer multiple of f₀ (f₀, 2f₀, 3f₀…), the sum stays periodic with period 1/f₀, so the <b>perceived pitch = fundamental f₀</b> no matter how many harmonics you add.",
+    c1B4: "Change harmonic count H, energy roll-off p (amplitude ∝ 1/nᵖ) or switch odd-only (≈ square): the waveform changes → timbre changes, but pitch does not.",
+    c1B5: "H=1 gives a pure tone; raise H and listen — the sound gets richer/thicker; then compare p=0 vs p=2 and square on/off.",
+    demoNote: "Audio tip: click any control once to unlock sound (autoplay policy). With H=1 you hear a pure tone; H&gt;1 plays a complex tone on the same fundamental — same pitch, thicker timbre.",
+    c2Title: "② Timbre compare: same fundamental, different frequency × energy", c2Tag: "Same pitch · different waveform/spectrum → different timbre",
+    abLbl: "🔁 Alternate A→B", abStopLbl: "⏹ Stop alternate", c2Hint: "Both channels share the same pitch; all differences come from harmonic content and energy distribution.",
+    playALbl: "🔊 Play A", playBLbl: "🔊 Play B", padA: "Timbre A", padB: "Timbre B",
+    c2L1: "① Pitch comes from the fundamental f₀:", c2L2: "② Timbre = frequency set × energy distribution:", c2L3: "③ Read timbre from the spectrum:", c2L4: "④ Same story for instruments & voice:",
+    c2B1: "Both channels share f₀ → same pitch (e.g. A3). Close your eyes and switch: the difference you hear is not pitch but timbre/quality.",
+    c2B2: "The waveform is set by which harmonics exist (frequencies) and how strong each one is (energy): a pure tone has one line; square = odd 1/n; saw = all 1/n; plucked strings and flutes have their own energy patterns.",
+    c2B3: "Left of each panel: spectrum (frequency axis, bar height = energy/amplitude); right: a few periods of the waveform. Fewer lines = emptier/cleaner; taller high lines = brighter/edgier.",
+    c2B4: "A flute ≈ pure tone with a few weak harmonics; oboe/clarinet differ in how strong which harmonics are; vowels /a/ vs /i/ differ by formant energy bumps — the basis of later “speech” animations.",
+    c3Title: "③ Fundamental = harmonic spacing (missing-fundamental demo)", c3Tag: "equally spaced spectrum · neighbour gap = f₀ · pitch survives without f₀",
+    playFullLbl: "🔊 Play “with f₀”", playMissLbl: "🔊 Play “no f₀”", f0Hide: "👻 Hide fundamental line", f0Show: "✨ Show fundamental line",
+    missF0: "Lower f₀ (e.g. 100–200 Hz) and compare — most obvious there.",
+    c3L1: "① Equally spaced spectrum:", c3L2: "② The missing-fundamental effect:", c3L3: "③ Why a pure tone is special:", c3L4: "④ Use in speech analysis:",
+    c3B1: "Components of a periodic complex tone sit at k·f₀ (k=1,2,3…); the gap between neighbouring lines is always f₀ — <b>the fundamental equals the harmonic spacing</b>. The Δ arrows mark f₀.",
+    c3B2: "Hide the lowest f₀ line (keep 2f₀, 3f₀, 4f₀…): the spacing is still f₀ and the waveform period stays 1/f₀, so listeners still “hear” f₀ — the ear/brain rebuild the fundamental from harmonic spacing (virtual/residue pitch).",
+    c3B3: "A pure tone has a single line and no harmonic spacing to rely on — its pitch is just its frequency; a complex tone gets its pitch from f₀ / the spacing.",
+    c3B4: "Measuring speaking pitch (F0) often uses the equal spacing (or differences) of harmonics in a spectrum/cepstrum — the very idea of “fundamental = harmonic spacing” here.",
+    tblTitle: "Pure vs complex tone · quick comparison", th1: "Aspect", thPure: "Pure tone", thComplex: "Complex tone",
+    td1: "Frequency content", td2: "Waveform", td3: "Perceived pitch", td4: "Timbre / quality", td5: "Examples",
+    t1a: "single f₀ (one spectral line)", t1b: "f₀ + harmonics (many lines)",
+    t2a: "pure sine", t2b: "periodic wave shaped by harmonic energy",
+    t3a: "= its own frequency", t3b: "= f₀ (rebuilt from spacing when f₀ is missing)",
+    t4a: "plain, pure (hardly any partials)", t4b: "depends on harmonic frequencies × energy, rich",
+    t5a: "tuning fork, audiometry tone, sine osc", t5b: "most instruments, vowels/voice",
+    tk1: "🔑 Add: ", tk2: "🔑 Timbre: ", tk3: "🔑 Fundamental: ",
+    tkb1: "complex tone = pure tones added; integer ratios keep it periodic.",
+    tkb2: "quality comes from frequency × energy (spectral shape), independent of pitch (f₀).",
+    tkb3: "fundamental of a periodic complex tone = adjacent-harmonic gap; pitch persists when f₀ is removed.",
+    foot: "Teaching animation: waveforms are slow-motion; real tones oscillate hundreds of times per second. Sound is synthesized live with WebAudio from the harmonics shown.",
+    caCursor: "same instant", caSum: "complex = pointwise sum of rows", caSpecT: "spectrum (frequency × energy)",
+    caFreq: "frequency →", caRowN: "row n has frequency n·f₀", caHz: "Hz", caDelta: "gap = f₀", caGhost: "missing fundamental (dashed)",
+    caPer: "waveform period stays 1/f₀", caFull: "complex with f₀", caMiss: "2f₀… only (no f₀)",
+    pres: { sine: "Sine", square: "Square", saw: "Saw", tri: "Triangle", flute: "Flute", clar: "Clarinet", oboe: "Oboe", pluck: "Pluck" }
+  }
+};
+
+/* ================= 状态 ================= */
+let LANG = "zh";
+const P = { running: true, spd: 1, f0: 220, H: 5, roll: 1, odd: false, annot: true };
+const C3 = { showF0: true };      // 缺失基频实验：是否显示/使用 f₀ 谱线
+const NOTES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+function noteName(f) {
+  const m = Math.round(69 + 12 * Math.log2(f / 440));
+  return NOTES[((m % 12) + 12) % 12] + (Math.floor(m / 12) - 1);
+}
+function ampN(n) { return (P.odd && n % 2 === 0) ? 0 : 1 / Math.pow(n, P.roll); }
+function ampArr(H) { const a = []; for (let n = 1; n <= H; n++) a.push(ampN(n)); return a; }
+
+const $ = id => document.getElementById(id);
+const t = k => (I18N[LANG] && I18N[LANG][k] !== undefined) ? I18N[LANG][k] : (I18N.zh[k] !== undefined ? I18N.zh[k] : k);
+
+/* ================= 画布工具 ================= */
+function setupCanvas(id) {
+  const cv = $(id);
+  if (!cv) return null;
+  const host = cv.parentElement;
+  const cssW = host.clientWidth;
+  if (!(cssW > 1)) return null;
+  const dpr = Math.min(3, window.devicePixelRatio || 1);
+  const lw = +cv.dataset.lw, lh = +cv.dataset.lh;
+  const bw = Math.max(2, Math.round(cssW * dpr));
+  const bh = Math.max(2, Math.round(cssW * lh / lw * dpr));
+  if (cv.width !== bw || cv.height !== bh) { cv.width = bw; cv.height = bh; }
+  const k = cssW / lw;
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(k * dpr, 0, 0, k * dpr, 0, 0);
+  return ctx;
+}
+function rrect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+const FNT = '"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+function ctxText(ctx, s, x, y, size, color, weight, align) {
+  ctx.font = (weight || 500) + " " + size + "px " + FNT;
+  ctx.fillStyle = color || "#e6eefb";
+  ctx.textAlign = align || "left";
+  ctx.textBaseline = "middle";
+  ctx.fillText(s, x, y);
+}
+function fillBg(ctx, W, H, top, bottom) {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, top); g.addColorStop(1, bottom);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+const PAL = ["#ffcf6e","#62d7ff","#7be0a0","#ff9ce0","#b18cff","#ffb45e","#8ef0c0","#ff8d9b","#ffd77a","#a5e0ff"];
+
+/* ================= 主演示画布：纯音 → 复音 ================= */
+const ADD = { W: 1240, H: 790, x0: 168, x1: 1130, yTop: 54, rowArea: 352, scroll: 0 };
+function drawAdd(ctx, time) {
+  const W = ADD.W, H = ADD.H;
+  fillBg(ctx, W, H, "#101a2e", "#070b13");
+  const x0 = ADD.x0, x1 = ADD.x1, width = x1 - x0;
+  const Hn = P.H;
+  const rh = ADD.rowArea / Hn;                 // 行高（自动均分）
+  const yTop = ADD.yTop;
+  const rowsEnd = yTop + ADD.rowArea;
+  const cySumY = rowsEnd + 84;                  // 复音带中心
+  const ySumTop = cySumY - 86, ySumBot = cySumY + 86;
+  const ySpecT = ySumBot + 22, ySpecB = H - 26; // 频谱区
+  const cycles = 2;                              // 屏内显示 2 个基频周期
+  const dt = (P.scroll) % 1;
+  const phaseAt = x => 2 * Math.PI * ( ((x - x0) / width) * cycles + dt );
+  /* 时间轴随时间右移：相位对 x 增加、对滚动参数减少 */
+  const ampRows = ampArr(Hn);
+  const maxA = Math.max(1, Math.max.apply(null, ampRows));
+
+  /* 0) 顶部说明 + 竖虚线（此刻） */
+  ctxText(ctx, t("caRowN") + "   ·   " + t("f0Lbl") + " = " + P.f0 + " Hz (" + noteName(P.f0) + ")", x0, 18, 13, "#9fb2d0", 600);
+  const cx = x0 + width * 0.5;
+  if (P.annot) {
+    ctx.setLineDash([6, 5]);
+    ctx.strokeStyle = "rgba(255,255,255,.16)"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cx, yTop - 6); ctx.lineTo(cx, ySumBot + 4); ctx.stroke();
+    ctx.setLineDash([]);
+    ctxText(ctx, t("caCursor"), cx, yTop - 24, 12, "#ffffff", 700, "center");
+  }
+
+  /* 1) 各纯音行 */
+  for (let n = 1; n <= Hn; n++) {
+    const yc = yTop + rh * (n - 1) + rh / 2;
+    const a = ampRows[n - 1];
+    const col = PAL[(n - 1) % PAL.length];
+    const amp = (a / maxA) * Math.min(rh * 0.34, 26);
+    /* 基线 */
+    ctx.strokeStyle = "rgba(255,255,255,.07)"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x0, yc); ctx.lineTo(x1, yc); ctx.stroke();
+    if (a <= 0.0001) {
+      ctx.strokeStyle = "rgba(255,255,255,.18)"; ctx.setLineDash([3, 4]);
+      ctx.beginPath(); ctx.moveTo(x0, yc); ctx.lineTo(x1, yc); ctx.stroke(); ctx.setLineDash([]);
+    } else {
+      ctx.strokeStyle = col; ctx.lineWidth = a <= 0 ? 1.2 : 1.7;
+      ctx.globalAlpha = 0.55 + 0.45 * (a / maxA);
+      ctx.beginPath();
+      for (let x = x0; x <= x1; x += 3) {
+        const v = amp * Math.sin(n * phaseAt(x));
+        const y = yc - v;
+        if (x === x0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    /* 行号标签（左侧）与频率（右侧） */
+    ctxText(ctx, n + "·f₀", x0 - 14, yc, 12.5, col, 700, "right");
+    ctxText(ctx, (n * P.f0) + " " + t("caHz"), 1234, yc, 11, "rgba(220,230,245,.6)", 500, "right");
+  }
+
+  /* 2) 复音（求和） */
+  ctx.strokeStyle = "rgba(255,255,255,.10)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x0, cySumY); ctx.lineTo(x1, cySumY); ctx.stroke();
+  const sumTxt = "Σ  " + t("caSum");
+  ctx.font = "700 13px " + FNT;
+  const tw = ctx.measureText(sumTxt).width;
+  ctx.fillStyle = "rgba(7,11,18,.76)";
+  rrect(ctx, x0 + 6, ySumTop + 4, tw + 20, 22, 9); ctx.fill();
+  ctxText(ctx, sumTxt, x0 + 16, ySumTop + 15, 13, "#8fe0ff", 700);
+  /* 采样求和以自适应缩放 */
+  let sum = 0, mx = 0;
+  for (let x = x0; x <= x1; x += 3) {
+    let s = 0;
+    for (let n = 1; n <= Hn; n++) s += ampRows[n - 1] * Math.sin(n * phaseAt(x));
+    sum = s;
+    if (Math.abs(s) > mx) mx = Math.abs(s);
+  }
+  const scale = mx > 0.0001 ? 78 / mx : 0;
+  const grad = ctx.createLinearGradient(x0, ySumTop, x0, ySumBot);
+  grad.addColorStop(0, "rgba(98,215,255,.06)");
+  grad.addColorStop(0.5, "rgba(98,215,255,.20)");
+  grad.addColorStop(1, "rgba(98,215,255,.06)");
+  ctx.fillStyle = grad; ctx.fillRect(x0 - 8, ySumTop, width + 16, ySumBot - ySumTop);
+  ctx.strokeStyle = "#8fe0ff"; ctx.lineWidth = 3.2;
+  ctx.beginPath();
+  for (let x = x0; x <= x1; x += 3) {
+    let s = 0;
+    for (let n = 1; n <= Hn; n++) s += ampRows[n - 1] * Math.sin(n * phaseAt(x));
+    const y = cySumY - s * scale;
+    if (x === x0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  /* 此刻取点：竖虚线与曲线交点 */
+  if (P.annot) {
+    let sNow = 0;
+    for (let n = 1; n <= Hn; n++) sNow += ampRows[n - 1] * Math.sin(n * phaseAt(cx));
+    ctx.fillStyle = "#ffcf6e";
+    for (let n = 1; n <= Hn; n++) {
+      const yc = yTop + rh * (n - 1) + rh / 2;
+      const a = ampRows[n - 1];
+      const amp = (a / maxA) * Math.min(rh * 0.34, 26);
+      const yy = yc - amp * Math.sin(n * phaseAt(cx));
+      if (amp > 0.3) { ctx.beginPath(); ctx.arc(cx, yy, 3.4, 0, Math.PI * 2); ctx.fill(); }
+    }
+    ctx.fillStyle = "#8fe0ff";
+    ctx.beginPath(); ctx.arc(cx, cySumY - sNow * scale, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#ffcf6e"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(cx, cySumY, 60, -Math.PI / 2.4, Math.PI / 2.4); ctx.stroke();
+  }
+
+  /* 3) 频谱柱（频率 × 能量） */
+  ctx.strokeStyle = "rgba(255,255,255,.09)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x0, ySpecB); ctx.lineTo(x1, ySpecB); ctx.stroke();
+  const barW = width / Hn;
+  for (let n = 1; n <= Hn; n++) {
+    const a = ampRows[n - 1];
+    const bh = (a / maxA) * (ySpecB - ySpecT - 30);
+    const bcx = x0 + barW * (n - 0.5);
+    ctx.fillStyle = n === 1 ? "#ffcf6e" : "rgba(123,224,160," + (0.45 + 0.55 * (a / maxA)).toFixed(3) + ")";
+    rrect(ctx, bcx - barW * 0.30, ySpecB - bh, barW * 0.6, Math.max(1, bh), 3); ctx.fill();
+    ctxText(ctx, n === 1 ? "f₀" : n + "f₀", bcx, ySpecB + 11, 11, n === 1 ? "#ffcf6e" : "rgba(160,200,180,.6)", 600, "center");
+  }
+  if (P.annot) {
+    ctxText(ctx, t("caSpecT"), x0, ySpecT - 4, 12, "#8fe0ff", 700);
+    ctxText(ctx, t("caFreq"), x1, ySpecB + 18, 10.5, "rgba(220,230,245,.4)", 500, "right");
+  }
+  /* 当前设置角标 */
+  const info = "H=" + P.H + "  p=" + P.roll.toFixed(2) + (P.odd ? "  odd" : "");
+  ctxText(ctx, info, x1, 18, 12, "#ffcf6e", 700, "right");
+}
+
+/* ================= 预设与音色台 ================= */
+const PRESETS = {
+  sine:   { zh: "纯音·正弦", en: "Sine", amp: [1,0,0,0,0,0,0,0,0,0,0,0] },
+  square: { amp: [1,0,0.333,0,0.2,0,0.143,0,0.111,0,0.091,0] },
+  saw:    { amp: [1,0.5,0.333,0.25,0.2,0.167,0.143,0.125,0.111,0.1,0.091,0.083] },
+  tri:    { amp: [1,0,0.111,0,0.04,0,0.0204,0,0.0123,0,0.0083,0] },
+  flute:  { amp: [1,0.45,0.28,0.18,0.1,0.05,0.02,0,0,0,0,0] },
+  clar:   { amp: [1,0,0.6,0,0.4,0,0.24,0,0.12,0,0.05,0] },
+  oboe:   { amp: [1,0.8,0.9,0.7,0.5,0.35,0.24,0.16,0.1,0.06,0.03,0] },
+  pluck:  { amp: [1,0.8,0.6,0.45,0.33,0.24,0.17,0.12,0.08,0.05,0.03,0.02] }
+};
+Object.keys(PRESETS).forEach(k => {
+  if (!PRESETS[k].zh) { PRESETS[k].zh = I18N.zh.pres[k]; }
+  if (!PRESETS[k].en) { PRESETS[k].en = I18N.en.pres[k] || k; }
+});
+const PADS = { A: { preset: "sine" }, B: { preset: "square" } };
+
+function drawPad(ctx, which) {
+  const pad = PADS[which];
+  const W = 640, H = 330;
+  fillBg(ctx, W, H, "#101a2e", "#070b13");
+  const pr = PRESETS[pad.preset];
+  const name = LANG === "en" ? pr.en : pr.zh;
+  const Hn = 12;
+  /* 左：频谱柱；右：波形 */
+  const x0 = 20, x1 = 300, yTop = 48, yBot = 300;
+  const barW = (x1 - x0) / Hn;
+  const maxA = Math.max(0.001, Math.max.apply(null, pr.amp));
+  ctxText(ctx, name + "  ·  " + P.f0 + " Hz", x0, 24, 13.5, "#62d7ff", 700);
+  ctx.strokeStyle = "rgba(255,255,255,.10)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x0, yBot); ctx.lineTo(x1, yBot); ctx.stroke();
+  for (let n = 1; n <= Hn; n++) {
+    const a = pr.amp[n - 1];
+    if (a <= 0) continue;
+    const bh = (a / maxA) * (yBot - yTop - 24);
+    const bcx = x0 + barW * (n - 0.5);
+    ctx.fillStyle = n === 1 ? "#ffcf6e" : "rgba(98,215,255," + (0.5 + 0.5 * (a / maxA)).toFixed(3) + ")";
+    rrect(ctx, bcx - barW * 0.26, yBot - bh, barW * 0.52, Math.max(1, bh), 2); ctx.fill();
+  }
+  ctxText(ctx, t("caSpecT"), x0, yTop - 14, 11, "#8fa3c4", 600);
+  ctxText(ctx, t("caFreq"), x1 - 2, yBot + 16, 10.5, "rgba(220,230,245,.4)", 500, "right");
+  /* 波形：展示 3 个基频周期 */
+  const wx0 = 320, wx1 = 624, wy = 200, wAmp = 78;
+  ctx.strokeStyle = "rgba(255,255,255,.09)";
+  ctx.beginPath(); ctx.moveTo(wx0, wy); ctx.lineTo(wx1, wy); ctx.stroke();
+  const scale = (() => { let mx = 0.001; for (let s = 0; s <= 3; s += 0.01) { let v = 0; for (let n = 1; n <= Hn; n++) v += pr.amp[n - 1] * Math.sin(2 * Math.PI * n * s); if (Math.abs(v) > mx) mx = Math.abs(v); } return wAmp / mx; })();
+  ctx.strokeStyle = "#8fe0ff"; ctx.lineWidth = 2.6;
+  ctx.beginPath();
+  for (let x = wx0; x <= wx1; x += 2) {
+    const s = (x - wx0) / (wx1 - wx0) * 3;
+    let v = 0;
+    for (let n = 1; n <= Hn; n++) v += pr.amp[n - 1] * Math.sin(2 * Math.PI * n * s);
+    const y = wy - v * scale;
+    if (x === wx0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctxText(ctx, LANG === "en" ? "waveform (3 periods)" : "波形（3 个周期）", wx0, wy + 42, 11, "#8fa3c4", 600);
+  ctxText(ctx, P.f0 + " Hz (" + noteName(P.f0) + ")", wx1, 24, 13, "#ffcf6e", 700, "right");
+}
+
+/* ================= 基频 = 谐波差画布 ================= */
+const KMISS = 8;
+function drawMiss(ctx, time) {
+  const W = 1240, H = 430;
+  fillBg(ctx, W, H, "#101a2e", "#070b13");
+  const x0 = 60, x1 = 1180, width = x1 - x0;
+  const yTop = 44, yBot = 172;            // 频谱线区
+  const xpos = n => x0 + (n - 1) / (KMISS - 1) * width;   // 等距（对数听感近似等距展示）
+  const yB = yBot, yT = yTop + 6;
+  /* 用等间距更符合“谐波差”：改用线性按 n 等距 */
+  const xL = n => x0 + (n - 0.5) / KMISS * width;
+  ctx.strokeStyle = "rgba(255,255,255,.09)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x0, yBot + 18); ctx.lineTo(x1, yBot + 18); ctx.stroke();
+  const maxH = yBot - yTop - 26;
+  const amp = n => 1 / Math.sqrt(n);       // 谱线能量示意
+  for (let n = 1; n <= KMISS; n++) {
+    const visible = !(n === 1 && !C3.showF0);
+    const xc = xL(n);
+    const bh = (amp(n) / amp(1)) * maxH;
+    const col = n === 1 ? "#ffcf6e" : "#62d7ff";
+    if (visible) {
+      ctx.fillStyle = col;
+      ctx.globalAlpha = 0.9;
+      rrect(ctx, xc - 9, yBot + 18 - bh, 18, bh, 4); ctx.fill();
+      ctx.globalAlpha = 1;
+      ctxText(ctx, (n === 1 ? "f₀" : n + "f₀") + "  " + (n * P.f0) + "", xc, yTop + 12, 11.5, col, 700, "center");
+    } else {
+      /* 缺失基频：虚线占位 */
+      ctx.strokeStyle = "rgba(255,207,110,.45)"; ctx.lineWidth = 1.4; ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(xc, yTop + 4); ctx.lineTo(xc, yBot + 18); ctx.stroke(); ctx.setLineDash([]);
+      ctxText(ctx, "f₀ ?", xc, yTop + 12, 11.5, "rgba(255,207,110,.6)", 700, "center");
+    }
+  }
+  if (P.annot) {
+    ctxText(ctx, t("caSpecT") + " · " + t("c3Title"), x0, 24, 12.5, "#8fe0ff", 700);
+    /* Δ 双箭头：基频与第二谐波（若基频隐藏则用 2f₀→3f₀） */
+    const a1 = C3.showF0 ? 1 : 2, a2 = a1 + 1;
+    const ya = yTop + 62;
+    const x1a = xL(a1), x1b = xL(a2);
+    arrow(ctx, x1a, ya, x1b, ya, "#ffcf6e", 2, 9);
+    arrow(ctx, x1b, ya, x1a, ya, "#ffcf6e", 2, 9);
+    ctxText(ctx, "Δ = f₀ = " + P.f0 + " Hz", (x1a + x1b) / 2, ya - 14, 13, "#ffcf6e", 700, "center");
+  }
+  /* 底部：缺基频时波形周期仍 = 1/f₀ */
+  const wy = 316, wAmp = 62;
+  ctxText(ctx, t("caPer"), x0, 214, 12.5, "#8fe0ff", 700);
+  ctx.strokeStyle = "rgba(255,255,255,.09)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x0, wy); ctx.lineTo(x1, wy); ctx.stroke();
+  const nCycles = 3;
+  const use = n => !(n === 1 && !C3.showF0);
+  function drawWave(col, lw, gl, sel) {
+    ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.globalAlpha = gl;
+    ctx.beginPath();
+    for (let x = x0; x <= x1; x += 2.5) {
+      const ph = (x - x0) / width * nCycles * 2 * Math.PI;
+      let v = 0;
+      for (let n = 1; n <= KMISS; n++) if (sel(n)) v += Math.sin(n * ph) / Math.sqrt(n);
+      const y = wy - v * (wAmp / 2.2);
+      if (x === x0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke(); ctx.globalAlpha = 1;
+  }
+  drawWave("rgba(255,255,255,.14)", 1.6, 1, () => true);              // 含基频（淡）
+  drawWave("#8fe0ff", 2.8, 1, use);                                   // 当前（含/缺基频）
+  /* 周期竖虚线 */
+  ctx.setLineDash([5, 5]); ctx.strokeStyle = "rgba(255,255,255,.20)";
+  for (let k = 1; k <= nCycles; k++) {
+    const x = x0 + width * k / nCycles;
+    ctx.beginPath(); ctx.moveTo(x, wy - wAmp - 16); ctx.lineTo(x, wy + wAmp + 10); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  ctxText(ctx, "T = 1/f₀", x0 + width * (1 / nCycles) + 8, wy - wAmp - 24, 11.5, "#ffcf6e", 700, "left");
+  ctxText(ctx, C3.showF0 ? t("caFull") : t("caMiss"), x1, wy + wAmp + 12, 11.5, C3.showF0 ? "#62d7ff" : "#ffcf6e", 700, "right");
+}
+function arrow(ctx, x1, y1, x2, y2, color, w, head) {
+  ctx.strokeStyle = color; ctx.lineWidth = w || 2;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  const a = Math.atan2(y2 - y1, x2 - x1);
+  const h = head || 8;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - h * Math.cos(a - 0.45), y2 - h * Math.sin(a - 0.45));
+  ctx.lineTo(x2 - h * Math.cos(a + 0.45), y2 - h * Math.sin(a + 0.45));
+  ctx.closePath(); ctx.fill();
+}
+
+/* ================= 音频：WebAudio 实时合成 ================= */
+let actx = null, master = null, currentOsc = null, currentGain = null;
+let altTimer = null, altStep = 0;
+let curKind = null;            // 'complex' | 'pure' | 'beep' | null
+function ensureAC() {
+  if (!actx) {
+    try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; }
+    master = actx.createGain(); master.gain.value = 0.5; master.connect(actx.destination);
+  }
+  if (actx.state === "suspended") { try { actx.resume(); } catch (e) {} }
+  return actx;
+}
+function haltSound() {
+  const ac = actx;
+  if (ac && currentOsc) {
+    try {
+      const t = ac.currentTime;
+      currentGain.gain.cancelScheduledValues(t);
+      currentGain.gain.setValueAtTime(currentGain.gain.value || 0.0001, t);
+      currentGain.gain.linearRampToValueAtTime(0.0001, t + 0.12);
+      const o = currentOsc;
+      setTimeout(function () { try { o.stop(); o.disconnect(); } catch (e) {} }, 220);
+    } catch (e) {}
+  }
+  currentOsc = null; currentGain = null;
+}
+function stopAlt() {
+  if (altTimer) { clearInterval(altTimer); altTimer = null; altStep = 0; }
+  refreshButtons();
+}
+function stopNow() {          // 手动停止：停止交替 + 停止声音
+  stopAlt();
+  haltSound();
+  curKind = null;
+  refreshAudioBtns();
+}
+/* 播放一个复音（amps 数组，amps[0] 为基频振幅），持续（不自动停止）；会停掉 A/B 交替 */
+function playComplex(freqBase, amps, gainMul, kind) {
+  stopAlt();
+  haltSound();
+  const ac = ensureAC();
+  if (!ac) { curKind = null; return; }
+  if (!ac) return;
+  const N = Math.max(2, amps.length + 1);
+  const real = new Float32Array(N), imag = new Float32Array(N);
+  let any = 0;
+  for (let i = 0; i < amps.length; i++) { imag[i + 1] = amps[i] || 0; if (imag[i + 1] > 0) any = 1; }
+  if (!any) imag[1] = 1;
+  try {
+    const wave = ac.createPeriodicWave(real, imag);
+    const osc = ac.createOscillator();
+    osc.setPeriodicWave(wave);
+    osc.frequency.value = freqBase;
+    const g = ac.createGain();
+    g.gain.value = 0;
+    osc.connect(g); g.connect(master);
+    osc.start();
+    const t = ac.currentTime;
+    g.gain.linearRampToValueAtTime(gainMul || 0.5, t + 0.03);
+    currentOsc = osc; currentGain = g;
+    curKind = kind || "complex";
+  } catch (e) { /* fallback */ }
+  refreshAudioBtns();
+}
+/* 短促试听：自动结束（不打断 A/B 交替计时） */
+function beep(freq, amps, durMs) {
+  haltSound();
+  const ac = ensureAC();
+  if (!ac) return;
+  const N = Math.max(2, amps.length + 1);
+  const real = new Float32Array(N), imag = new Float32Array(N);
+  for (let i = 0; i < amps.length; i++) imag[i + 1] = amps[i] || 0;
+  try {
+    const wave = ac.createPeriodicWave(real, imag);
+    const osc = ac.createOscillator();
+    osc.setPeriodicWave(wave);
+    osc.frequency.value = freq;
+    const g = ac.createGain(); g.gain.value = 0;
+    osc.connect(g); g.connect(master);
+    const t0 = ac.currentTime, d = (durMs || 900) / 1000;
+    g.gain.linearRampToValueAtTime(0.5, t0 + 0.02);
+    g.gain.setValueAtTime(0.5, t0 + Math.max(0.02, d - 0.15));
+    g.gain.linearRampToValueAtTime(0.0001, t0 + d);
+    osc.start(t0); osc.stop(t0 + d + 0.1);
+    currentOsc = osc; currentGain = g;
+    curKind = "beep";
+    setTimeout(function () { if (currentOsc === osc) { currentOsc = null; currentGain = null; curKind = null; refreshAudioBtns(); } }, d * 1000 + 160);
+  } catch (e) {}
+}
+const setPad = (which, key) => { PADS[which].preset = key; document.querySelectorAll("#pre" + which + " .btn").forEach(b => b.classList.toggle("on", b.dataset.key === key)); };
+const padAmps = which => PRESETS[PADS[which].preset].amp.slice(0, 12);
+/* 手动试听：先停 A/B 交替，再响一声 */
+function playManual(freq, amps, dur) { stopAlt(); beep(freq, amps, dur); refreshButtons(); }
+
+/* ================= 语言 / 控件 ================= */
+function buildPresetBtns() {
+  const zh = LANG === "zh";
+  ["A", "B"].forEach(function (wh) {
+    const host = $("pre" + wh);
+    host.innerHTML = "";
+    Object.keys(PRESETS).forEach(function (key) {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "btn" + (PADS[wh].preset === key ? " on" : "");
+      b.dataset.key = key;
+      b.textContent = zh ? PRESETS[key].zh : PRESETS[key].en;
+      b.addEventListener("click", function () {
+        setPad(wh, key);
+        refreshFreq();
+      });
+      host.appendChild(b);
+    });
+  });
+}
+function applyLang() {
+  document.documentElement.lang = LANG === "en" ? "en" : "zh-CN";
+  $("btnLang").textContent = LANG === "en" ? "中文" : "EN";
+  document.querySelectorAll("[data-i18n]").forEach(function (el) {
+    const k = el.getAttribute("data-i18n");
+    if (k === "pauseLbl" || k === "toneLbl" || k === "toneOffLbl" || k === "pureLbl" || k === "pureOffLbl") return;
+    el.innerHTML = t(k);
+  });
+  $("helpTitle").innerHTML = t("helpTitle");
+  document.title = LANG === "en" ? "Pure & Complex Tones · Harmonics / Timbre / Fundamental" : "纯音与复音动态图 · 谐波、音色与基频";
+  $("helpZh").classList.toggle("hidden", LANG !== "zh");
+  $("helpEn").classList.toggle("hidden", LANG !== "en");
+  buildPresetBtns();
+  refreshButtons();
+  refreshFreq();
+}
+function refreshButtons() {
+  $("pauseBtn").innerHTML = P.running ? t("pauseLbl") : t("resumeLbl");
+  refreshAudioBtns();
+  $("oddBtn").innerHTML = P.odd ? t("oddOn") : t("oddOff");
+  $("oddBtn").classList.toggle("on", P.odd);
+  $("annotBtn").innerHTML = P.annot ? t("annotOn") : t("annotOff");
+  $("annotBtn").classList.toggle("on", P.annot);
+  $("f0Toggle").firstElementChild.innerHTML = C3.showF0 ? t("f0Hide") : t("f0Show");
+  const abOn = !!altTimer;
+  $("abBtn").firstElementChild.innerHTML = abOn ? t("abStopLbl") : t("abLbl");
+  $("abBtn").classList.toggle("on", abOn);
+  $("f0Toggle").classList.toggle("on", !C3.showF0);
+}
+function refreshAudioBtns() {
+  const toneOn = curKind === "complex";
+  const pureOn = curKind === "pure";
+  if ($("toneBtn").firstElementChild) $("toneBtn").firstElementChild.innerHTML = toneOn ? t("toneOffLbl") : t("toneLbl");
+  if ($("pureBtn").firstElementChild) $("pureBtn").firstElementChild.innerHTML = pureOn ? t("pureOffLbl") : t("pureLbl");
+}
+function refreshFreq() {
+  $("f0V").textContent = P.f0 + " Hz · " + noteName(P.f0);
+  $("f0V2").textContent = P.f0 + " Hz · " + noteName(P.f0);
+  $("hV").textContent = P.H;
+  $("pV").textContent = P.roll.toFixed(2);
+  $("spdV").textContent = (P.spd * 1).toFixed(1) + "×";
+  $("demoNote").textContent = t("demoNote");
+  if (curKind === "complex") playComplex(P.f0, ampArr(P.H), 0.4, "complex");
+  else if (curKind === "pure") playComplex(P.f0, [1], 0.5, "pure");
+}
+
+/* ================= 主循环 ================= */
+const CVS = ["cvAdd", "cvA", "cvB", "cvMiss"];
+let animT = 0, lastTs = 0;
+const DRAWS = { cvAdd: drawAdd, cvA: c => drawPad(c, "A"), cvB: c => drawPad(c, "B"), cvMiss: drawMiss };
+function frame(now) {
+  window.__frames++;
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, (now - lastTs) / 1000 || 0.016);
+  lastTs = now;
+  if (P.running) {
+    animT += dt;
+    ADD.scroll = animT * P.spd * 0.05;
+  }
+  for (const id of CVS) {
+    const ctx = setupCanvas(id);
+    if (ctx) DRAWS[id](ctx, animT);
+  }
+}
+
+/* ================= 事件与启动 ================= */
+function init() {
+  CVS.forEach(function (id) {
+    const cv = $(id);
+    cv.setAttribute("data-lw", cv.getAttribute("width"));
+    cv.setAttribute("data-lh", cv.getAttribute("height"));
+  });
+
+  $("btnLang").addEventListener("click", function () { LANG = LANG === "zh" ? "en" : "zh"; applyLang(); });
+  $("btnHelp").addEventListener("click", function () { $("scrim").classList.add("show"); $("helpPanel").classList.add("show"); });
+  $("helpClose").addEventListener("click", closeHelp);
+  $("scrim").addEventListener("click", closeHelp);
+  function closeHelp() { $("scrim").classList.remove("show"); $("helpPanel").classList.remove("show"); }
+
+  document.addEventListener("keydown", function (e) {
+    if (e.code === "Space" && !/INPUT|BUTTON|TEXTAREA/.test(e.target.tagName)) { e.preventDefault(); P.running = !P.running; refreshButtons(); }
+    if (e.key === "Escape") closeHelp();
+  });
+
+  $("pauseBtn").addEventListener("click", function () { P.running = !P.running; refreshButtons(); });
+  $("spdS").addEventListener("input", function () { P.spd = +this.value; refreshFreq(); });
+  $("f0S").addEventListener("input", function () { P.f0 = +this.value; refreshFreq(); });
+  $("hS").addEventListener("input", function () { P.H = +this.value; refreshFreq(); });
+  $("pS").addEventListener("input", function () { P.roll = +this.value; refreshFreq(); });
+  $("oddBtn").addEventListener("click", function () { P.odd = !P.odd; refreshButtons(); refreshFreq(); });
+  $("annotBtn").addEventListener("click", function () { P.annot = !P.annot; refreshButtons(); });
+
+  /* 主演示音频 */
+  $("toneBtn").addEventListener("click", function () {
+    if (curKind === "complex") { stopNow(); } else { playComplex(P.f0, ampArr(P.H), 0.4, "complex"); }
+    refreshButtons();
+  });
+  $("pureBtn").addEventListener("click", function () {
+    if (curKind === "pure") { stopNow(); } else { playComplex(P.f0, [1], 0.5, "pure"); }
+    refreshButtons();
+  });
+  /* 点画布：行 = 单听该纯音；粗曲线区域 = 复音（手动试听，先停 A/B 交替） */
+  $("cvAdd").addEventListener("pointerdown", function (ev) {
+    stopAlt();
+    const rect = this.getBoundingClientRect();
+    const lw = ADD.W, lh = ADD.H;
+    const lx = (ev.clientX - rect.left) / rect.width * lw;
+    const ly = (ev.clientY - rect.top) / rect.height * lh;
+    const Hn = P.H, rh = ADD.rowArea / Hn, yTop = ADD.yTop;
+    const rowsEnd = yTop + ADD.rowArea;
+    const ySumTop = rowsEnd + 84 - 86, ySumBot = rowsEnd + 84 + 86;
+    if (ly > ySumTop - 10 && ly < ySumBot + 10) { beep(P.f0, ampArr(Hn), 1100); refreshButtons(); return; }
+    const n = Math.floor((ly - yTop) / rh) + 1;
+    if (n >= 1 && n <= Hn && ly > yTop - 2 && ly < yTop + ADD.rowArea + 2) {
+      beep(n * P.f0, [1], 700);
+    }
+    refreshButtons();
+  });
+
+  /* 音色台 */
+  buildPresetBtns();
+  $("playA").addEventListener("click", function () { playManual(P.f0, padAmps("A"), 1100); });
+  $("playB").addEventListener("click", function () { playManual(P.f0, padAmps("B"), 1100); });
+  $("abBtn").addEventListener("click", function () {
+    if (altTimer) { stopAlt(); haltSound(); curKind = null; refreshAudioBtns(); return; }
+    if (curKind === "complex" || curKind === "pure") { stopNow(); }
+    altStep = 0;
+    const run = function () {
+      altStep++;
+      beep(P.f0, padAmps(altStep % 2 === 1 ? "A" : "B"), 900);
+    };
+    run();
+    altTimer = setInterval(run, 1050);
+    refreshButtons();
+  });
+
+  /* 基频 = 谐波差 */
+  $("playFull").addEventListener("click", function () { C3.showF0 = true; refreshButtons(); const amps = []; for (let n = 1; n <= KMISS; n++) amps.push(1 / Math.sqrt(n)); playManual(P.f0, amps, 1500); });
+  $("playMiss").addEventListener("click", function () { C3.showF0 = false; refreshButtons(); const amps = [0]; for (let n = 2; n <= KMISS; n++) amps.push(1 / Math.sqrt(n)); playManual(P.f0, amps, 1500); });
+  $("f0Toggle").addEventListener("click", function () { C3.showF0 = !C3.showF0; refreshButtons(); });
+
+  window.addEventListener("resize", function () { lastTs = 0; });
+  applyLang();
+  window.__boot = true;
+  requestAnimationFrame(function (t0) { lastTs = t0; requestAnimationFrame(frame); });
+}
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
+</script>
+</body>
+</html>
