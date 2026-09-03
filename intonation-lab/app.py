@@ -870,7 +870,7 @@ with tb[1]:
     )
 with tb[2]:
     clicked_reset = st.button(
-        "🔄 " + tr("重置为原始曲线"), type="secondary",
+        "🔄 " + tr("重置"), type="secondary",
         help=tr("恢复由音频直接提取的原始音高曲线（可撤销）"),
     )
 with tb[3]:

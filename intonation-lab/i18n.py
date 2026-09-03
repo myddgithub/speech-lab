@@ -124,6 +124,7 @@ EN: dict[str, str] = {
     "恢复": "Redo",
     "恢复被撤销的操作，可多次点击逐级恢复": "Redo the undone actions; click repeatedly — a new action clears the redo history",
     "重置为原始曲线": "Reset to original",
+    "重置": "Reset",
     "恢复由音频直接提取的原始音高曲线（可撤销）": "Restore the original pitch curve extracted from the audio (undoable)",
     "音节文本（对齐用）": "Syllable text (for alignment)",
     "汉字每字一音节 / 拼音按声调数字切分，如：好1你2在4 或 wo3shi4shei2": "One Hanzi per syllable, or pinyin split by tone digit, e.g. hao1 ni3 zai4 or wo3shi4shei2",
