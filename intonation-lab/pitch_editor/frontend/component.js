@@ -57,7 +57,7 @@
       tSel: "播放选中段（编辑后音频）", tSelO: "播放选中段（解码后原始音频）",
       tAnnotate: "在下方音节轨拖拽创建/调整音节，Delete 删除", tFit: "重置视图缩放",
       dSt: "半音",
-      durHint: "先切分音节（PY），再在时长带上下拖动调节各音节音长（0.5×–2×）",
+      durHint: "先切分音节（PY），再在时长带上下拖动调节各音节音长（0.25×–3.0×）",
     },
     en: {
       play: "▶ Play edited", playOrig: "▶ Play original",
@@ -70,7 +70,7 @@
       tSel: "Play selected segment (edited audio)", tSelO: "Play selected segment (decoded original audio)",
       tAnnotate: "Drag to create/adjust syllables in the track below; Delete removes", tFit: "Reset view zoom",
       dSt: "st",
-      durHint: "Segment syllables (PY) first, then drag in the duration strip to adjust each syllable's length (0.5×–2×)",
+      durHint: "Segment syllables (PY) first, then drag in the duration strip to adjust each syllable's length (0.25×–3.0×)",
     },
   };
   let lang = "zh";
@@ -109,7 +109,7 @@
     urlOrig: null,
     label: "音高曲线",
     editable: true,
-    durFactors: [],   // 逐音节时长因子（与 syllables 对齐，0.5–2.0）
+    durFactors: [],   // 逐音节时长因子（与 syllables 对齐，0.25–3.0）
     componentEpoch: 0,
     durDirty: false,  // 本地拖动后，等待 Python 回传确认
   };
@@ -148,7 +148,8 @@
   let sylDrag = null; // {mode: create|move|resizeL|resizeR, idx, cursorT, t0, t1}
   let extraSel = null;      // {bi, idx} 额外层选中项
   let extraDrag = null;     // {bi, mode, idx, cursorT, initT0, initT1}
-  let selBoundary = null;   // 第 0 层（PY）被选中的边界时间（供 B 键复制到下方区间层）
+  let selBoundary = null;   // 第 0 层（PY）被选中的边界时间（供 B 键复制/Delete 合并）
+  let selEBoundary = null;  // {bi, t} 额外“区间”层被选中的边界（Delete 合并相邻两段）
   let hoverB = null;        // 当前悬停的 PY 边界（未选中时虚线预览）
   let lastSylMouse = { x: -1 };  // 音节轨内最近鼠标位置（供 B 键快速复制）
 
@@ -431,8 +432,8 @@
     ctx.stroke();
   }
 
-  // ---------------- 绘制（时长带：逐音节时长因子 0.5×–2×） ----------------
-  const DUR_MIN = 0.5, DUR_MAX = 2.0, DUR_PADT = 5, DUR_PADB = 9;
+  // ---------------- 绘制（时长带：逐音节时长因子 0.25×–3.0×） ----------------
+  const DUR_MIN = 0.25, DUR_MAX = 3.0, DUR_PADT = 5, DUR_PADB = 9;
   function durY(f) {
     const h = DUR_H - DUR_PADT - DUR_PADB;
     const t = (clamp(f, DUR_MIN, DUR_MAX) - DUR_MIN) / (DUR_MAX - DUR_MIN);
@@ -459,9 +460,9 @@
     dctx.font = "9px " + (cssVar("--font", "sans-serif"));
     dctx.fillStyle = "rgba(128,128,128,0.85)";
     dctx.textAlign = "left"; dctx.textBaseline = "middle";
-    dctx.fillText("2×", pad.L - 30, durY(2.0));
-    dctx.fillText("1×", pad.L - 30, durY(1.0));
-    dctx.fillText("0.5×", pad.L - 38, yBase);
+    dctx.fillText("3×", pad.L - 28, durY(DUR_MAX));
+    dctx.fillText("1×", pad.L - 28, durY(1.0));
+    dctx.fillText("0.25×", pad.L - 42, yBase);
     // 1× 基线
     const y1 = durY(1.0);
     dctx.setLineDash([4, 3]);
@@ -656,6 +657,18 @@
             sctx.fill();
           }
         }
+      }
+      // 选中边界（Delete 合并用）高亮
+      if (selEBoundary && selEBoundary.bi === bi) {
+        const bx = xOf(selEBoundary.t);
+        sctx.strokeStyle = "rgba(255,75,75,0.9)";
+        sctx.lineWidth = 1.5;
+        sctx.setLineDash([5, 3]);
+        sctx.beginPath();
+        sctx.moveTo(bx, top + 1);
+        sctx.lineTo(bx, top + EXT_B - 1);
+        sctx.stroke();
+        sctx.setLineDash([]);
       }
     }
   }
@@ -1065,9 +1078,10 @@
     return best;
   }
 
-  // 默认编号文本（音N）在结构变化后按时间顺序自动重排，
-  // 例如在“音2”内部插入边界后变为 音1 音2 音3 音4 ……（后续顺延）
-  const _DEFNUM_RE = /^音\d+$/;
+  // 默认编号文本（音N / 空）在结构变化后按时间顺序自动重排，
+  // 例如在“音2”内部插入边界后变为 音1 音2 音3 音4 ……（后续顺延）；
+  // 合并（删除边界）后同样按新顺序顺延。
+  const _DEFNUM_RE = /^(音\d+|)$/;
   function renumberDefaultLabels() {
     const items = state.syllables;
     if (!items.length || !items.every((s) => _DEFNUM_RE.test((s.text || "").trim()))) return false;
@@ -1283,6 +1297,69 @@
     return null;
   }
 
+  // 区间层内部边界（两端 0/dur 不计）
+  function extraIntervalBoundaryAt(cx, bi) {
+    const L = extraLayer(bi);
+    if (!L || L.kind !== "interval") return null;
+    let best = null;
+    let bestD = 6.5;
+    for (const it of L.items) {
+      for (const tt of [it.t0, it.t1]) {
+        if (!(tt > 0.005 && tt < state.dur - 0.005)) continue;
+        const d = Math.abs(xOf(tt) - cx);
+        if (d < bestD) { bestD = d; best = tt; }
+      }
+    }
+    return best;
+  }
+
+  // 找到以 t 为共享边界的相邻两项并合并（返回左项新索引；找不到返回 -1）
+  function mergeIntervalPair(items, t) {
+    const eps = 0.006;
+    for (let i = 0; i < items.length - 1; i++) {
+      const a = items[i], b = items[i + 1];
+      if (Math.abs(a.t1 - t) <= eps && Math.abs(b.t0 - t) <= eps) {
+        const merged = { t0: a.t0, t1: b.t1, text: (a.text || "") + (b.text || "") };
+        items.splice(i, 2, merged);
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  // Delete：删除 PY（第 0 层）选中边界 → 合并相邻两音节
+  function deleteBoundaryPY() {
+    if (selBoundary === null) return false;
+    const t = selBoundary;
+    selBoundary = null;
+    const items = state.syllables;
+    const i = mergeIntervalPair(items, t);
+    if (i < 0) return false;
+    if (i < state.durFactors.length - 1) state.durFactors.splice(i + 1, 1);
+    selectedSyl = i;
+    renumberDefaultLabels();
+    sendUpdate("syl_merge");
+    draw();
+    drawSyl();
+    return true;
+  }
+
+  // Delete：删除额外“区间”层选中边界 → 合并相邻两段
+  function deleteBoundaryExtra() {
+    const eb = selEBoundary;
+    if (!eb) return false;
+    selEBoundary = null;
+    const L = extraLayer(eb.bi);
+    if (!L || L.kind !== "interval") return false;
+    const i = mergeIntervalPair(L.items, eb.t);
+    if (i < 0) return false;
+    extraSel = { bi: eb.bi, idx: i };
+    sendUpdate("extra_merge");
+    draw();
+    drawSyl();
+    return true;
+  }
+
   function onExtraDown(e, cx, bi) {
     const t = tOf(cx);
     selectedSyl = -1;
@@ -1290,6 +1367,15 @@
     const hit = extraHit(cx, bi);
     extraSel = hit ? { bi: bi, idx: hit.idx } : null;
     waveSel = null; // 点选下方标注项后按标注项播放
+    // 区间层：靠近“内部边界线”点选 → 选中该边界（Delete 合并相邻两段）
+    selEBoundary = null;
+    if (L && L.kind === "interval") {
+      const bt = extraIntervalBoundaryAt(cx, bi);
+      if (bt !== null) {
+        selEBoundary = { bi: bi, t: bt };
+        extraSel = null;
+      }
+    }
     if (hit) {
       sylText.value = L.items[hit.idx].text || "";
     }
@@ -1402,7 +1488,10 @@
       } else if (d.mode !== "create") {
         const it = L.items[d.idx];
         const moved = it && (it.t0 !== d.initT0 || it.t1 !== d.initT1 || it.t !== d.initT);
-        if (moved) sendUpdate("extra_move");
+        if (moved) {
+          selEBoundary = null; // 边界随拖动已改变，旧选择失效
+          sendUpdate("extra_move");
+        }
       }
     }
     draw();
@@ -1490,8 +1579,11 @@
     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
     if (!state.editable) return;
 
-    // Delete/Backspace：优先删选中额外层项 / 音节，否则删选中音高点
+    // Delete/Backspace：① 先处理“选中边界 → 合并相邻两段”（区间层/音节均可），
+    // ② 再删选中额外层项 / 音节，③ 最后删选中音高点
     if (e.key === "Delete" || e.key === "Backspace") {
+      if (selEBoundary && deleteBoundaryExtra()) return;
+      if (selBoundary !== null && deleteBoundaryPY()) return;
       if (extraSel) {
         const L = extraLayer(extraSel.bi);
         if (L && L.items && L.items[extraSel.idx]) {

@@ -763,6 +763,10 @@ def synthesize_with_f0(
     return out.astype(np.float32)
 
 
+DURATION_FACTOR_MIN = 0.25
+DURATION_FACTOR_MAX = 3.0
+
+
 def build_duration_warp(
     syllables: list[dict], factors: list[float], duration: float
 ) -> tuple[list[float], list[float]]:
@@ -812,7 +816,7 @@ def build_duration_warp(
             if float(s["t0"]) - 1e-6 <= mid <= float(s["t1"]) + 1e-6:
                 fac = factor
                 break
-        seg_factors.append(float(np.clip(fac, 0.5, 2.0)))
+        seg_factors.append(float(np.clip(fac, DURATION_FACTOR_MIN, DURATION_FACTOR_MAX)))
     return bounds, seg_factors
 
 
@@ -947,7 +951,7 @@ def resynthesize_with_durations(
     if not np.all(np.isfinite(B)):
         return x.astype(np.float32)
     F = np.where(np.isfinite(F), F, 1.0)
-    F = np.clip(F, 0.5, 2.0)
+    F = np.clip(F, DURATION_FACTOR_MIN, DURATION_FACTOR_MAX)
     if len(B) < 2 or len(F) < len(B) - 1:
         return x.astype(np.float32)
     F = F[:len(B) - 1]

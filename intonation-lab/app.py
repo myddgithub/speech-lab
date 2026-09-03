@@ -148,7 +148,7 @@ def _sync_dur_factors() -> None:
     n = len(SS.get("syllables", []))
     cur = [float(v) if v is not None else 1.0 for v in (SS.get("dur_factors") or [])]
     cur = [v if np.isfinite(v) else 1.0 for v in cur]
-    cur = [max(0.8, min(1.5, v)) for v in cur]
+    cur = [max(core.DURATION_FACTOR_MIN, min(core.DURATION_FACTOR_MAX, v)) for v in cur]
     if len(cur) < n:
         cur += [1.0] * (n - len(cur))
     SS["dur_factors"] = cur[:n]
@@ -1113,7 +1113,7 @@ _HELP_HOW = {
   到段尾**精确停止**，不会连播后面的内容；
 - **任意段试听**：在顶部**波形图**上按住左右**拖拽框选**任意时间范围（出现蓝色选区），再点
   **▶ 播放选中·编辑后 / ·原始** 只播这一段；点选音节/区间段或重新框选会切换播放范围；
-- **时长调节（实验性）**：在图下方「时长带」把每个音节拖到 0.8×–1.5× 调音长，点「🕐 应用时长（重合成）」
+- **时长调节（实验性）**：在图下方「时长带」把每个音节拖到 0.25×–3.0× 调音长，点「🕐 应用时长（重合成）」
   生成新音频（保持音高；自然语音可能带轻微音色变化，请用「🎧 试听对比」左栏“应用时长前”对照）。
   应用后按钮变灰 = 已应用；再次拖动因子即可再次应用；「因子重置 1×」还原；
 - **保存音高编辑**：调好的音高控制点/特征点曲线可点「💾 保存结果」下的 **“⬇️ PitchTier”**
@@ -1133,7 +1133,7 @@ _HELP_HOW = {
 - For tiers 2..n use PY as a reference: **click a PY boundary** (red dashed line) → press **B** — interval tiers get a boundary, point tiers (TextTier) get a point at that instant;
 - **Play selection**: click any interval segment (a PY box or a tier like “word”) then use **▶ Play selection (edited / original)** to audition just that span — playback stops exactly at the segment end;
 - **Play an arbitrary range**: **drag horizontally on the waveform** at the top to select any time range (blue overlay), then use **▶ Play selection (edited / original)**; clicking a syllable/segment or re-dragging switches the range;
-- **Duration (experimental)**: in the “duration strip” below the chart drag each syllable to 0.8×–1.5× to change its length, then click **🕐 Apply durations (resynth.)** to produce a new audio (pitch kept; natural speech may colour slightly — compare with “before applying” on the left of 🎧 Compare). The grey button means it is already applied; drag a factor again to re-apply; “Reset factors to 1×” restores;
+- **Duration (experimental)**: in the “duration strip” below the chart drag each syllable to 0.25×–3.0× to change its length, then click **🕐 Apply durations (resynth.)** to produce a new audio (pitch kept; natural speech may colour slightly — compare with “before applying” on the left of 🎧 Compare). The grey button means it is already applied; drag a factor again to re-apply; “Reset factors to 1×” restores;
 - **Keep pitch edits**: your tuned pitch control / feature points can be saved under “💾 Save results” via **“⬇️ PitchTier”** (next to TextGrid) as a Praat PitchTier text file; or turn them into audio with **“💾 Freeze pitch into new audio”** in “✏️ Pitch editing”;
 - To align word by word: **double-click** a syllable box to split it first;
 - Language: switch **中文 | English** at the top-right of the page at any time.""",

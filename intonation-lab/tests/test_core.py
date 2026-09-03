@@ -114,6 +114,19 @@ class PitchTests(unittest.TestCase):
         self.assertEqual(boundaries, [0.0, 0.5, 1.0])
         self.assertEqual(factors, [0.5, 2.0])
 
+    def test_duration_warp_allows_quarter_to_triple(self) -> None:
+        syllables = [{"t0": 0.0, "t1": 1.0, "text": "a"}]
+        _, lo = core.build_duration_warp(syllables, [0.25], 1.0)
+        self.assertEqual(lo, [0.25])
+        _, hi = core.build_duration_warp(syllables, [3.0], 1.0)
+        self.assertEqual(hi, [3.0])
+        _, clipped = core.build_duration_warp(syllables, [0.1, 5.0], 1.0)
+        self.assertEqual(clipped, [0.25])
+        output = core.resynthesize_with_durations(
+            np.ones(8000, dtype=np.float32), 8000, [0.0, 1.0], [3.0]
+        )
+        self.assertEqual(len(output), 24000)
+
     def test_balanced_local_duration_edits_are_not_skipped(self) -> None:
         sr = 1000
         samples = np.concatenate([
