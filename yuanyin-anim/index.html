@@ -383,6 +383,15 @@ function currentMix() {
     const curl = [82, 58, 26, 8, 0, 0];
     for (let i = 0; i < surf.length; i++) surf[i][1] -= curl[i];
   }
+  /* 舌位图权重驱动整条舌面：高低、前后和舌尖曲率均连续变化。 */
+  const high = w.wi + w.wu;
+  const front = w.wi - w.wu;
+  const lift = [4, 12, 24, 32, 24, 7];
+  const shift = [18, 14, 10, 6, 2, 0];
+  for (let i = 0; i < surf.length; i++) {
+    surf[i][1] -= high * lift[i];
+    surf[i][0] -= front * shift[i];
+  }
   const g = lerp3(LIP.i.g, LIP.u.g, LIP.a.g, w.wi, w.wu, w.wa);
   const round = lerp3(LIP.i.round, LIP.u.round, LIP.a.round, w.wi, w.wu, w.wa);
   const fm = {
