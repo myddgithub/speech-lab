@@ -61,7 +61,7 @@ class AppSmokeTests(unittest.TestCase):
         app.query_params["demo"] = "1"
         app.run(timeout=60)
 
-        auto_segment = next(button for button in app.button if button.label == "音节自动切分")
+        auto_segment = next(button for button in app.button if button.label == "🎬 音节自动切分")
         auto_segment.click().run(timeout=60)
         self.assertGreater(len(app.session_state["syllables"]), 0)
 
@@ -95,7 +95,7 @@ class AppSmokeTests(unittest.TestCase):
         app.query_params["demo"] = "1"
         app.run(timeout=60)
 
-        auto_segment = next(button for button in app.button if button.label == "音节自动切分")
+        auto_segment = next(button for button in app.button if button.label == "🎬 音节自动切分")
         auto_segment.click().run(timeout=60)
         samples, sample_rate, _ = core.load_audio_bytes(app.session_state["audio_bytes"])
         textgrid = core.textgrid_export(

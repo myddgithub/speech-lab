@@ -52,6 +52,11 @@ st.markdown(
     div[data-testid="stVerticalBlock"] > div {
         gap: 0.35rem !important;
     }
+    /* 侧栏按钮：图标+文字左对齐（一级操作钮与折叠项观感一致） */
+    section[data-testid="stSidebar"] .stButton > button {
+        justify-content: flex-start !important;
+        text-align: left !important;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -511,7 +516,8 @@ with st.sidebar:
 
     if SS["audio_bytes"] is not None:
         if st.button(
-            tr("音节自动切分"), use_container_width=True,
+            "🎬 " + tr("音节自动切分"),
+            use_container_width=True,
             help=tr("按浊音段自动生成连续音节框（可再手动微调）"),
         ):
             _push_history()
@@ -522,7 +528,8 @@ with st.sidebar:
             _reset_dur_factors()
         n_syl = len(SS.get("syllables", []))
         if st.button(
-            tr("按声调提取特征点"), use_container_width=True,
+            "🎵 " + tr("按声调提取特征点"),
+            use_container_width=True,
             disabled=n_syl == 0,
             help=tr("对每个标注音节按声调提取特征点"),
         ):
