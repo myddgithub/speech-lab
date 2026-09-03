@@ -11,47 +11,75 @@
     --muted:#9a90ad; --accent:#ff7aa8; --accent2:#ffb86b; --line:#2c2537;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
+  html{scrollbar-gutter:stable;}
   body{
-    background:radial-gradient(1200px 700px at 50% -10%, #241b2e 0%, var(--bg) 55%);
+    background:radial-gradient(1500px 900px at 50% -10%, #241b2e 0%, var(--bg) 58%);
     color:var(--text);
     font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
-    min-height:100vh; display:flex; justify-content:center; padding:28px 16px 60px;
+    min-height:100vh;
+    padding:22px clamp(14px, 3vw, 44px) 64px;
   }
-  .wrap{width:100%; max-width:720px;}
-  header{text-align:center; margin-bottom:18px;}
-  header h1{font-size:24px; font-weight:600; letter-spacing:1px;}
-  header p{color:var(--muted); font-size:13px; margin-top:6px;}
+  .wrap{width:100%; max-width:1720px; margin:0 auto;}
+
+  /* ============ 顶栏 ============ */
+  header{display:flex; align-items:flex-start; gap:18px; flex-wrap:wrap; padding:4px 4px 18px;}
+  .head-text{flex:1 1 auto; min-width:0;}
+  header h1{font-size:26px; font-weight:700; letter-spacing:1px;}
+  header p{color:var(--muted); font-size:13px; margin-top:6px; line-height:1.7;}
+  .topbtns{display:flex; gap:8px; flex:none;}
+  #btnLang,#btnHelp{padding:7px 15px; font-size:13px; border-radius:999px; box-shadow:0 6px 18px rgba(0,0,0,.45);}
+  #btnLang{font-size:12px;}
+
+  /* ============ 宽屏三栏舞台：主视图 | 冠状切面+波形/谐波谱 | 控制栏 ============ */
+  .stage{
+    display:grid;
+    grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) 344px;
+    gap:16px;
+  }
+  .col-main,.col-side,.rail{display:flex; flex-direction:column; gap:16px; min-width:0;}
+  .rail{position:sticky; top:14px;}
+  /* 宽屏下让三张卡片等高：各自填满所在列，使底部严格对齐 */
+  .col-main > .card, .col-side > .card, .rail > .card{flex:1 1 auto;}
+
   .card{
     background:linear-gradient(180deg,var(--panel2),var(--panel));
-    border:1px solid var(--line); border-radius:16px; padding:16px;
-    box-shadow:0 18px 50px rgba(0,0,0,.45);
+    border:1px solid var(--line); border-radius:15px; padding:14px;
+    box-shadow:0 14px 42px rgba(0,0,0,.42);
   }
-  canvas{display:block; width:100%; height:auto; border-radius:10px; background:#0b0a10;}
-  .row{display:flex; gap:14px; margin-top:14px;}
-  .row canvas{flex:1; min-width:0;}
-  #coronal{margin-top:12px;}
-  .controls{margin-top:16px; display:flex; flex-direction:column; gap:12px;}
-  .ctl{display:flex; align-items:center; gap:12px;}
-  .ctl label{width:66px; font-size:13px; color:var(--muted); flex:none;}
-  .ctl input[type=range]{flex:1; accent-color:var(--accent);}
-  .ctl .val{width:215px; text-align:right; font-size:13px; font-variant-numeric:tabular-nums; color:var(--accent2); flex:none; white-space:nowrap;}
-  .freq-big{font-size:21px; font-weight:600; color:#fff;}
-  .btns{display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; align-items:center;}
-  .btns-line{flex-wrap:nowrap; justify-content:center;}
+  .cv{border-radius:11px; overflow:hidden; background:#0b0a10; border:1px solid rgba(255,255,255,.05);}
+  canvas{display:block; width:100%; height:auto;}
+  /* 中栏“三图叠加”：冠状切面在上，波形与谐波谱在下，整体高度与左列主图对齐 */
+  .side-stack{display:grid; grid-template-columns:1fr; gap:12px; align-content:start;}
+
   button{
     background:var(--panel2); color:var(--text); border:1px solid var(--line);
     border-radius:9px; padding:5px 10px; font-size:12px; cursor:pointer;
-    transition:all .15s; font-family:inherit; white-space:nowrap;
+    transition:all .15s; font-family:inherit; white-space:nowrap; text-align:center;
   }
-  #btnHelp{position:fixed; top:14px; right:16px; z-index:40; padding:7px 16px; font-size:13px; border-radius:999px; box-shadow:0 6px 18px rgba(0,0,0,.45);}
-  #btnLang{position:fixed; top:14px; right:104px; z-index:40; padding:7px 12px; font-size:12px; border-radius:999px; box-shadow:0 6px 18px rgba(0,0,0,.45);}
   button:hover{ border-color:var(--accent); color:#fff; }
   button.on{ background:linear-gradient(135deg,#b3416b,#7d2f55); border-color:var(--accent); color:#fff; }
   .preset{background:transparent;}
-  .hint{color:var(--muted); font-size:12px; line-height:1.8; margin-top:14px; text-align:center;}
+  .preset:hover{background:rgba(255,122,168,.08);}
+
+  /* ============ 控制面板 ============ */
+  .controls{display:flex; flex-direction:column; gap:12px;}
+  .ctl{display:grid; grid-template-columns:minmax(0,1fr) auto; column-gap:12px; row-gap:6px; align-items:center;}
+  .ctl label{grid-column:1; grid-row:1; font-size:12.5px; color:var(--muted);}
+  .ctl input[type=range]{grid-column:1/-1; grid-row:2; width:100%; margin:0; accent-color:var(--accent);}
+  .ctl .val{grid-column:2; grid-row:1; justify-self:end; text-align:right; font-size:12.5px;
+    font-variant-numeric:tabular-nums; color:var(--accent2); line-height:1.45; max-width:100%;}
+  .freq-big{font-size:20px; font-weight:600; color:#fff;}
+
+  .btns{display:flex; gap:6px; flex-wrap:wrap; align-items:center;}
+  .btns-line{display:grid; grid-template-columns:repeat(auto-fit, minmax(104px, 1fr)); gap:6px;}
+  .voice-group{display:grid; grid-template-columns:repeat(auto-fit, minmax(104px, 1fr)); gap:6px;}
+  .voice-group .voice-title{grid-column:1/-1; color:var(--muted); font-size:12px;}
+  .presets-row{display:flex; flex-wrap:wrap; gap:6px; align-items:center;}
+  #presetTitle{flex:0 0 100%; color:var(--muted); font-size:12px;}
+
+  /* ============ 帮助抽屉 ============ */
   #helpOverlay{position:fixed; inset:0; background:rgba(6,5,10,0.62); display:flex; justify-content:flex-end; z-index:45; padding:0;}
   #helpOverlay.hidden{display:none;}
-  body.help-open{padding-right:calc(min(430px,46vw) + 24px);}
   .helpBox{background:linear-gradient(180deg,#241d30,#171320); border:1px solid var(--line); border-right:none; border-radius:14px 0 0 14px; width:min(430px,46vw); max-width:100%; height:100%; display:flex; flex-direction:column; box-shadow:-14px 0 44px rgba(0,0,0,.55); animation:helpIn .28s ease;}
   @keyframes helpIn{from{transform:translateX(100%);}to{transform:none;}}
   .helpHead{display:flex; align-items:center; justify-content:space-between; padding:13px 18px; border-bottom:1px solid var(--line); font-size:15px; font-weight:600; flex:none;}
@@ -66,98 +94,139 @@
   .helpBody th{background:#2a2340; color:var(--accent2); font-weight:600; white-space:nowrap;}
   .helpBody code{background:#2a2338; padding:1px 5px; border-radius:5px; font-size:12px; color:#ffb86b;}
   .kbd{background:#2a2338; border:1px solid var(--line); border-bottom-width:2px; border-radius:4px; padding:0 6px; font-size:11px;}
-  .voice-group{display:flex; flex-wrap:wrap; gap:6px; align-items:center;}
-  .voice-group .voice-title{color:var(--muted); font-size:12px; margin-right:2px;}
-  @media (max-width:760px){
-    body{padding:18px 10px 40px;}
-    body.help-open{padding-right:10px;}
-    header h1{font-size:21px; padding-right:150px; text-align:left;}
-    header p{text-align:left;}
+
+  /* ============ 宽屏专属（≥1560px 三栏）：压缩控制栏以匹配两侧卡片高度 ============ */
+  @media (min-width:1560px){
+    .rail .card{padding:12px;}
+    .rail .controls{gap:10px;}
+    .rail .ctl{row-gap:5px; column-gap:8px;}
+    .rail .ctl input[type=range]{height:24px;}
+    .rail .btns-line{grid-template-columns:repeat(3, minmax(0,1fr)); gap:6px;}
+    .rail .voice-group{grid-template-columns:repeat(3, minmax(0,1fr)); gap:6px;}
+    .rail button{white-space:normal; line-height:1.35; padding:4px 8px;}
+    .rail .voice-title{font-size:11.5px;}
+    .rail .freq-big{font-size:18px;}
+  }
+
+  /* ============ 中窄屏（<1560px）：单列堆叠（空间不足自动向下铺） ============ */
+  @media (max-width:1559px){
+    .wrap{max-width:1080px;}
+    .stage{display:block;}
+    .stage > * + *{margin-top:16px;}
+    .col-main,.col-side,.rail{position:static;}
+    .rail{max-width:780px; margin:0 auto;}
+    /* 空间不足时自动向下铺：冠状切面通栏，两张图并排一行 */
+    .side-stack{grid-template-columns:1fr 1fr;}
+    #coronalWrap{grid-column:1/-1;}
+  }
+  @media (max-width:759px){
+    body{padding:14px 10px 46px;}
+    header{gap:10px; padding:0 2px 12px;}
+    header h1{font-size:20px;}
+    header p{font-size:12px;}
     .card{padding:10px; border-radius:12px;}
-    .row{gap:8px; margin-top:8px;}
-    .controls{margin-top:12px; gap:10px;}
-    .ctl{display:grid; grid-template-columns:66px minmax(0,1fr); gap:7px 8px;}
-    .ctl .val{grid-column:2; width:auto; text-align:left;}
-    .btns-line{flex-wrap:wrap;}
-    #btnHelp{top:10px; right:10px;}
-    #btnLang{top:10px; right:88px;}
+    .cv{border-radius:8px;}
+    button{padding:5px 9px; font-size:12px;}
+    .controls{gap:10px;}
+    .ctl{column-gap:8px;}
+    .btns-line{grid-template-columns:repeat(auto-fit, minmax(88px, 1fr));}
+    .voice-group{grid-template-columns:repeat(auto-fit, minmax(88px, 1fr));}
     .helpBox{width:100vw; border:0; border-radius:0;}
     .helpBody{padding:14px 12px 22px;}
-    .hint{text-align:left;}
+  }
+  @media (max-width:520px){
+    .side-stack{grid-template-columns:1fr;}
+    .voice-group{grid-template-columns:repeat(2, minmax(0,1fr));}
+    .btns-line{grid-template-columns:repeat(2, minmax(0,1fr));}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>🎤 声带振动模拟</h1>
-    <p>喉镜俯视 + 冠状切面 · 软骨与肌肉 · 黏膜波 · 气流粒子 · 实时合成音源</p>
-    <button id="btnLang" aria-label="切换到英文">EN</button>
-    <button id="btnHelp" aria-controls="helpOverlay" aria-expanded="false">❓ 帮助</button>
+    <div class="head-text">
+      <h1>🎤 声带振动模拟</h1>
+      <p>喉镜俯视 + 冠状切面 · 软骨与肌肉 · 黏膜波 · 气流粒子 · 实时合成音源</p>
+    </div>
+    <div class="topbtns">
+      <button id="btnLang" aria-label="切换到英文" type="button">EN</button>
+      <button id="btnHelp" aria-controls="helpOverlay" aria-expanded="false" type="button">❓ 帮助</button>
+    </div>
   </header>
 
-  <div class="card">
-    <canvas id="larynx" width="640" height="430" role="img" aria-label="喉镜俯视声带振动动画"></canvas>
-    <canvas id="coronal" width="640" height="170" role="img" aria-label="喉部冠状切面声带振动动画"></canvas>
-    <div class="row">
-      <canvas id="wave" width="300" height="110" role="img" aria-label="声门面积波形"></canvas>
-      <canvas id="spec" width="300" height="110" role="img" aria-label="声音谐波谱"></canvas>
-    </div>
+  <div class="stage">
+    <!-- 主视图：喉镜俯视 -->
+    <section class="col-main">
+      <div class="card">
+        <div class="cv">
+          <canvas id="larynx" width="640" height="430" role="img" aria-label="喉镜俯视声带振动动画"></canvas>
+        </div>
+      </div>
+    </section>
 
-    <div class="controls">
-      <div class="ctl">
-        <label for="f0">基频 f₀</label>
-        <input type="range" id="f0" min="50" max="440" step="1" value="130" />
-        <div class="val"><span class="freq-big" id="f0show">130</span> Hz · <span id="note"></span> <span id="mode"></span></div>
+    <!-- 冠状切面 + 波形 / 谐波谱：与主视图同卡片、同高度带（宽屏上下对齐） -->
+    <section class="col-side">
+      <div class="card">
+        <div class="side-stack">
+          <div class="cv" id="coronalWrap"><canvas id="coronal" width="640" height="210" role="img" aria-label="喉部冠状切面声带振动动画"></canvas></div>
+          <div class="cv"><canvas id="wave" width="300" height="70" role="img" aria-label="声门面积波形"></canvas></div>
+          <div class="cv"><canvas id="spec" width="300" height="70" role="img" aria-label="声音谐波谱"></canvas></div>
+        </div>
       </div>
-      <div class="ctl">
-        <label for="amp">振幅</label>
-        <input type="range" id="amp" min="0" max="1" step="0.01" value="0.6" />
-        <div class="val" id="ampShow">0.60</div>
+    </section>
+
+    <!-- 控制面板（宽屏右侧固定栏） -->
+    <aside class="rail">
+      <div class="card">
+        <div class="controls">
+          <div class="ctl">
+            <label for="f0">基频 f₀</label>
+            <input type="range" id="f0" min="50" max="440" step="1" value="130" />
+            <div class="val"><span class="freq-big" id="f0show">130</span> Hz · <span id="note"></span> <span id="mode"></span></div>
+          </div>
+          <div class="ctl">
+            <label for="amp">振幅</label>
+            <input type="range" id="amp" min="0" max="1" step="0.01" value="0.6" />
+            <div class="val" id="ampShow">0.60</div>
+          </div>
+          <div class="ctl">
+            <label for="breathy">气息感</label>
+            <input type="range" id="breathy" min="0" max="1" step="0.01" value="0.12" />
+            <div class="val" id="brShow">0.12</div>
+          </div>
+          <div class="ctl">
+            <label for="disp">慢放倍数</label>
+            <input type="range" id="disp" min="10" max="200" step="10" value="40" />
+            <div class="val"><span id="dispShow">40</span>×</div>
+          </div>
+          <div class="btns-line">
+            <button id="btnSound" aria-pressed="false">🔊 发声</button>
+            <button id="btnPause" aria-pressed="false">⏸ 暂停</button>
+            <button id="btnReal" aria-pressed="false">⏱ 实时</button>
+            <button id="btnStrobe" aria-pressed="false">⚡ 频闪</button>
+            <button id="btnLabels" aria-pressed="true">🔍 解剖标注</button>
+            <button id="btnCoronal" aria-pressed="true">🧬 冠状切面</button>
+          </div>
+          <div class="voice-group" aria-label="嗓音模态">
+            <span class="voice-title" data-i18n="voiceTitle">嗓音模态：</span>
+            <button class="voice-btn on" id="btnVoiceModal" aria-pressed="true">正常模态</button>
+            <button class="voice-btn" id="btnVoiceFalsetto" aria-pressed="false">假声</button>
+            <button class="voice-btn" id="btnVoiceBreathy" aria-pressed="false">气声</button>
+            <button class="voice-btn" id="btnVoicePressed" aria-pressed="false">紧喉</button>
+            <button class="voice-btn" id="btnVoiceCreaky" aria-pressed="false">气泡</button>
+            <button class="voice-btn" id="btnVoiceWhisper" aria-pressed="false">耳语</button>
+          </div>
+          <div class="presets-row">
+            <span id="presetTitle" style="color:var(--muted); font-size:12px;">预设：</span>
+            <button class="preset" data-f0="110" data-amp="0.9" data-br="0.1">男低音 110 Hz</button>
+            <button class="preset" data-f0="220" data-amp="0.85" data-br="0.12">女声 220 Hz</button>
+            <button class="preset" data-f0="300" data-amp="0.8" data-br="0.1">童声 300 Hz</button>
+            <button class="preset" data-f0="180" data-amp="0.6" data-br="0.85">气息声</button>
+          </div>
+        </div>
       </div>
-      <div class="ctl">
-        <label for="breathy">气息感</label>
-        <input type="range" id="breathy" min="0" max="1" step="0.01" value="0.12" />
-        <div class="val" id="brShow">0.12</div>
-      </div>
-      <div class="ctl">
-        <label for="disp">慢放倍数</label>
-        <input type="range" id="disp" min="10" max="200" step="10" value="40" />
-        <div class="val"><span id="dispShow">40</span>×</div>
-      </div>
-      <div class="btns btns-line">
-        <button id="btnSound" aria-pressed="false">🔊 发声</button>
-        <button id="btnPause" aria-pressed="false">⏸ 暂停</button>
-        <button id="btnReal" aria-pressed="false">⏱ 实时</button>
-        <button id="btnStrobe" aria-pressed="false">⚡ 频闪</button>
-        <button id="btnLabels" aria-pressed="true">🔍 解剖标注</button>
-        <button id="btnCoronal" aria-pressed="true">🧬 冠状切面</button>
-      </div>
-      <div class="voice-group" aria-label="嗓音形态">
-        <span class="voice-title" data-i18n="voiceTitle">嗓音模态：</span>
-        <button class="voice-btn on" id="btnVoiceModal" aria-pressed="true">正常模态</button>
-        <button class="voice-btn" id="btnVoiceFalsetto" aria-pressed="false">假声</button>
-        <button class="voice-btn" id="btnVoiceBreathy" aria-pressed="false">气声</button>
-        <button class="voice-btn" id="btnVoicePressed" aria-pressed="false">紧喉</button>
-        <button class="voice-btn" id="btnVoiceCreaky" aria-pressed="false">气泡</button>
-        <button class="voice-btn" id="btnVoiceWhisper" aria-pressed="false">耳语</button>
-      </div>
-      <div class="btns">
-        <span id="presetTitle" style="color:var(--muted); font-size:12px;">预设：</span>
-        <button class="preset" data-f0="110" data-amp="0.9" data-br="0.1">男低音 110 Hz</button>
-        <button class="preset" data-f0="220" data-amp="0.85" data-br="0.12">女声 220 Hz</button>
-        <button class="preset" data-f0="300" data-amp="0.8" data-br="0.1">童声 300 Hz</button>
-        <button class="preset" data-f0="180" data-amp="0.6" data-br="0.85">气息声</button>
-      </div>
-    </div>
+    </aside>
   </div>
-
-  <p class="hint" id="hintText">
-    上 = 前方（会厌方向），下 = 后方（杓状软骨）。两条声带周期性开合，气流从下方穿过声门。<br/>
-    声带表面移动的波纹是「黏膜波」；下方左图为声门面积波形，右图为谐波谱。<br/>
-    基频 130 Hz 表示每秒振动 130 次，太快看不清；默认「慢放 ×40」演示，调高基频画面会明显变快。点「实时」看真实速度，「频闪」固定为 1.2 周期/秒。<br/>
-    主视图为喉镜俯视：上=前（会厌），下=后（杓状软骨），可见会厌软骨、杓会厌襞、室襞（假声带）、喉室、声带、杓状软骨、杓间肌、环状软骨等；下方冠状切面展示声带肌（甲杓肌）、环杓侧肌、环甲肌。「🔍 解剖标注」可开关全部名称。「嗓音形态」可切换正常模态、假声、气声、紧喉、气泡五种简化模型。按空格暂停。
-  </p>
 </div>
 
 <div id="helpOverlay" class="hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle" aria-hidden="true">
@@ -166,6 +235,7 @@
     <div class="helpBody" id="helpZh">
       <h3>📌 这是什么</h3>
       <p>本页面用动画模拟<b>声带振动发声</b>：喉镜俯视视角 + 冠状切面，实时合成嗓音。拖动基频、振幅、气息感等参数，观察声带如何开合、气流如何穿过声门，理解喉部解剖与发声机制。</p>
+      <p><b>怎么读这张图：</b>图上为<b>前</b>（会厌方向），下为<b>后</b>（杓状软骨方向）；大图为喉镜俯视主视图。宽屏下右侧从上到下依次为<b>冠状切面</b>、<b>声门面积波形</b>、<b>谐波谱</b>，与主图上下对齐；窗口较窄、横向空间不足时，这几张图会自动转为主图下方的纵向排列。基频 130 Hz 表示声带每秒振动 130 次，人眼来不及分辨，因此默认「慢放 ×40」演示；点「⏱ 实时」看真实速度，或用「⚡ 频闪」固定为 1.2 周期/秒。</p>
 
       <h3>🦴 一、喉部解剖（主视图 · 喉镜俯视）</h3>
       <p>图上为<b>前</b>（会厌方向），下为<b>后</b>（杓状软骨方向），两条声带之间的气道即<b>声门</b>。点「🔍 解剖标注」可看结构名称。</p>
@@ -243,6 +313,7 @@
     <div class="helpBody" id="helpEn" hidden>
       <h3>📌 About this simulator</h3>
       <p>This educational model combines a top-view laryngoscopy animation, a coronal section, a glottal-area waveform, a harmonic spectrum, and a synthesized sound source.</p>
+      <p><b>Reading the layout:</b> Anterior is at the top (epiglottis) and posterior at the bottom (arytenoid cartilages); the large figure is the laryngoscopy-style top view. On wide screens the coronal section, glottal-area waveform and harmonic spectrum are stacked beside it in the right column, aligned top and bottom with the main view; when horizontal space is tight they automatically reflow below the main view. Since 130 closures per second are too fast to follow, the animation runs in slow motion by default (×40) — use Real-time for the true speed or Strobe to fix the display at 1.2 cycles/s.</p>
       <h3>🦴 Anatomy</h3>
       <p>Anterior is at the top (epiglottis) and posterior is at the bottom (arytenoid cartilages). The true vocal folds form the vibrating sound source; the false folds are shown as protective tissue, not as the source of falsetto.</p>
       <h3>🎼 Phonation</h3>
@@ -269,19 +340,32 @@
 /* ================= DOM ================= */
 const $ = id => document.getElementById(id);
 const lx = $('larynx'), co = $('coronal'), wv = $('wave'), sp = $('spec');
+/* 画布始终以“逻辑分辨率”绘制（数值不变），由 transform 负责缩放到实际显示尺寸，
+   因此无论布局多宽或多窄、设备像素比多高，画面都保持清晰。 */
 function crispCanvas(canvas){
-  const logicalW = canvas.width, logicalH = canvas.height;
-  const dpr = Math.min(3, Math.max(1, window.devicePixelRatio || 1));
-  canvas.dataset.logicalWidth = logicalW;
-  canvas.dataset.logicalHeight = logicalH;
-  canvas.width = Math.round(logicalW * dpr);
-  canvas.height = Math.round(logicalH * dpr);
-  const ctx = canvas.getContext('2d');
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return ctx;
+  canvas.dataset.logicalWidth  = String(canvas.getAttribute('width'));
+  canvas.dataset.logicalHeight = String(canvas.getAttribute('height'));
+  return canvas.getContext('2d');
 }
 const lctx = crispCanvas(lx), cctx = crispCanvas(co),
       wctx = crispCanvas(wv), sctx = crispCanvas(sp);
+const CANVAS_HOSTS = [lx, co, wv, sp].map(cv => ({ cv, host: cv.parentElement }));
+function syncCanvasSizes(){
+  const dpr = Math.min(3, Math.max(1, window.devicePixelRatio || 1));
+  for (const {cv, host} of CANVAS_HOSTS){
+    const cssW = host.clientWidth;              // 画布容器的实际 CSS 宽度
+    if (!(cssW > 1)) continue;                  // 隐藏时跳过（如关闭冠状切面）
+    const lw = +cv.dataset.logicalWidth, lh = +cv.dataset.logicalHeight;
+    const bw = Math.max(2, Math.round(cssW * dpr));
+    const bh = Math.max(2, Math.round(cssW * lh / lw * dpr));
+    if (cv.width !== bw || cv.height !== bh){   // 仅在尺寸变化时重建位图
+      cv.width = bw;
+      cv.height = bh;
+    }
+    const k = cssW / lw;                        // 逻辑空间 → CSS 空间的缩放
+    cv.getContext('2d').setTransform(k * dpr, 0, 0, k * dpr, 0, 0);
+  }
+}
 
 /* ================= 参数 ================= */
 const P = { f0:130, amp:0.6, breathy:0.12, sound:false, paused:false, realtime:false, strobe:false, factor:40, labels:true, coronal:true, register:'modal', voice:'modal' };
@@ -730,6 +814,12 @@ function drawCoronal(phase){
   cctx.fillStyle = '#0b0a10';
   cctx.fillRect(0,0,W2,H2);
 
+  // 画布加高后（H2 > 原设计高 170）按比例纵向放大内容，让切面图铺满更高的图框，
+  // 使中栏三图叠加的高度与左列主视图上下对齐
+  const sy = H2 / 170;
+  cctx.save();
+  cctx.scale(1, sy);
+
   // 甲状软骨（盾形轮廓）
   const gT = cctx.createLinearGradient(0, 10, 0, 96);
   gT.addColorStop(0, 'rgba(214,202,178,0.16)');
@@ -874,6 +964,7 @@ function drawCoronal(phase){
   cctx.textAlign = 'left';
   cctx.fillText(diagramText('coronal'), 8, 14);
   if (P.labels) drawCoronalLabels(cctx, cx);
+  cctx.restore();
 }
 function drawCoronalLabels(ctx, cx){
   ctx.font = '600 11px sans-serif';
@@ -1097,9 +1188,6 @@ function applyLanguage(){
   const canvasAria = LANG === 'en' ? ['Top-view vocal-fold vibration animation','Coronal vocal-fold vibration animation','Glottal area waveform','Harmonic spectrum'] : ['喉镜俯视声带振动动画','喉部冠状切面声带振动动画','声门面积波形','声音谐波谱'];
   [lx,co,wv,sp].forEach((canvas,i)=> canvas.setAttribute('aria-label', canvasAria[i]));
   document.querySelector('.voice-group').setAttribute('aria-label', LANG === 'en' ? 'Voice modes' : '嗓音模态');
-  $('hintText').innerHTML = LANG === 'en'
-    ? 'Top = anterior (epiglottis), bottom = posterior (arytenoids). The two vocal folds open and close while airflow passes through the glottis.<br/>The upper-left view shows a laryngoscopy-style top view; the lower section is a coronal view. Use the anatomy-label and voice-mode controls to compare the simplified patterns.<br/>Press <b>Space</b> to pause. Real-time shows the nominal speed; strobe fixes the display at 1.2 cycles/s.'
-    : '上 = 前方（会厌方向），下 = 后方（杓状软骨）。两条声带周期性开合，气流从下方穿过声门。<br/>上方为喉镜俯视图，下方为冠状切面。可用解剖标注和嗓音模态控件比较不同简化模式。<br/>按 <b>空格</b>暂停。实时模式显示名义速度；频闪模式固定为每秒 1.2 个周期。';
   document.title = LANG === 'en' ? 'Vocal Fold Vibration Simulator' : '声带振动模拟 · Vocal Fold Vibration';
   el.btnHelp.textContent=t.help; el.btnLang.textContent=t.lang; el.btnLang.setAttribute('aria-label',t.ariaLang);
   el.helpClose.title=t.close; el.helpClose.setAttribute('aria-label',t.close);
@@ -1187,7 +1275,8 @@ el.btnCoronal.addEventListener('click', ()=>{
   P.coronal = !P.coronal;
   el.btnCoronal.classList.toggle('on', P.coronal);
   el.btnCoronal.setAttribute('aria-pressed', String(P.coronal));
-  co.style.display = P.coronal ? 'block' : 'none';
+  $('coronalWrap').style.display = P.coronal ? '' : 'none';
+  syncCanvasSizes();
 });
 el.btnVoiceModal.addEventListener('click', ()=> setVoice('modal'));
 el.btnVoiceFalsetto.addEventListener('click', ()=> setVoice('falsetto'));
@@ -1230,6 +1319,15 @@ el.dispShow.textContent = P.factor;
 el.btnLabels.classList.add('on');
 el.btnCoronal.classList.add('on');
 applyLanguage();
+
+/* ================= 画布随容器自适应（宽屏 / 窗口缩放 / 显隐切换） ================= */
+try{
+  const ro = new ResizeObserver(() => syncCanvasSizes());
+  CANVAS_HOSTS.forEach(({host}) => ro.observe(host));
+}catch(err){
+  window.addEventListener('resize', syncCanvasSizes);
+}
+syncCanvasSizes();
 
 /* ================= 主循环 ================= */
 function frame(ts){
