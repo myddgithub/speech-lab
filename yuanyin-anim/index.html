@@ -318,7 +318,7 @@ const AREA = {
 };
 
 let ZOOM = 1;
-let state = { x: VTX.a.x, y: VTX.a.y, demo: true, voice: false, rhotic: false, labels: true, t: 0, dirty: true, renderSurf: null };
+let state = { x: VTX.a.x, y: VTX.a.y, demo: true, voice: false, rhotic: false, labels: true, t: 0, dirty: true };
 let lastInfoKey = '';
 let lastInfoTime = 0;
 
@@ -414,10 +414,8 @@ function drawTract(mix) {
   T.drawScene(ctx, {
     inv: T.invFor(cv, ZOOM),
     time: state.t,
-    tongueSurf: (state.renderSurf = state.renderSurf || mix.surf.map(function (p) { return p.slice(); }),
-      state.renderSurf = state.renderSurf.map(function (p, i) {
-        return [p[0] + (mix.surf[i][0] - p[0]) * 0.20, p[1] + (mix.surf[i][1] - p[1]) * 0.20];
-      })),
+    tongueSurf: mix.surf,
+
     vel: T.VEL_UP,
     lip: { g: mix.lip.g, raise: 0, round: mix.lip.round, jaw: jaw },
     voicedOn: true,
@@ -1085,6 +1083,7 @@ document.getElementById('btnDemo').addEventListener('click', function () {
 });
 document.getElementById('btnRhotic').addEventListener('click', function () {
   state.rhotic = !state.rhotic;
+  syncRhoticButton();
   state.dirty = true;
   updateInfo(currentMix(), true);
 });
