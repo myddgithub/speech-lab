@@ -206,7 +206,7 @@
       <div class="cav-card" id="k2"><div class="t">声学（共振峰与音色）</div>声带谐波经共振腔滤波，能量集中处成为共振峰：<b>F1 低</b> ← 开口小/舌位高（i、u）；<b>F1 高</b> ← 口张大（a）；<b>F2 高</b> ← 舌位前、展唇（i）；<b>F2 低</b> ← 舌位后、圆唇（u）。峰的位置（Hz）＝元音「音色」的声学签名。</div>
       <div class="cav-card" id="k3"><div class="t">听觉（感知）</div>人耳可听 20–20000 Hz，但绝非一样灵：对约 <b>1–5 kHz</b> 最敏感，且语音能量集中在 <b>250–4000 Hz</b>。a / i / u 的 F1–F3 恰好都在这一高敏感区，所以只需很小的声能即可清晰辨别。</div>
     </div>
-    <div class="hint" id="kNote" style="margin-top:10px">模型为教学简化：舌位图内任意点由 a/i/u 三顶点的「口形 + 共振峰」平滑混合而成；真实发音还受个人声道尺寸、语速与语境影响。</div>
+    <div class="hint" id="kNote" style="margin-top:10px">模型为教学简化：舌位图内任意点由 a/i/u 代表点的「口形 + 共振峰」平滑混合而成；真实发音还受个人声道尺寸、语速与语境影响。</div>
   </div>
 
   <div class="hint legend" id="footLegend">
@@ -254,7 +254,7 @@
       <h3>Shortcuts</h3>
       <p>Arrow keys move the tongue point; 1/2/3 jump to i/u/a; Space toggles voice; Esc closes this panel.</p>
       <h3>Note</h3>
-      <p>Teaching simplification: formants are typical adult-male vowel averages (i 280/2300, u 300/650, a 800/1200 Hz); continuous changes are approximated by three-corner weighting. Not a clinical assessment tool.</p>
+      <p>Teaching simplification: formants are typical adult-male vowel averages (i 280/2300, u 300/650, a 800/1200 Hz); continuous changes are approximated by weighting the a/i/u anchor points. Not a clinical assessment tool.</p>
     </div>
   </div>
 </div>
@@ -281,20 +281,21 @@ const lerp3 = (a, b, c, wi, wu, wa) => a * wi + b * wu + c * wa;
 /* ---------- 三角图几何（逻辑坐标 360x330） ---------- */
 const CW = 360, CH = 330;
 const VTX = {
-  i: { x: 96, y: 58 },
-  u: { x: 254, y: 82 },
-  a: { x: 174, y: 258 }
+  i: { x: 68, y: 54 },
+  u: { x: 292, y: 54 },
+  a: { x: 92, y: 270 }
 };
+/* IPA 元音图：上高、下低，左前、右后；右侧边界略向内收。 */
 const CHART_ZONE = [
-  { x: 62, y: 38 }, { x: 292, y: 70 },
-  { x: 250, y: 232 }, { x: 70, y: 292 }
+  { x: 40, y: 34 }, { x: 320, y: 34 },
+  { x: 270, y: 286 }, { x: 82, y: 286 }
 ];
 
 /* ---------- 三个典型元音的发音姿态（舌面6点、口形、共振峰） ---------- */
 const SURF = {
-  i: [[214, 398], [240, 366], [280, 316], [340, 286], [420, 334], [470, 406]],
-  u: [[206, 402], [236, 392], [276, 374], [336, 334], [430, 286], [468, 400]],
-  a: [[212, 432], [240, 426], [280, 414], [340, 400], [432, 388], [472, 420]]
+  i: [[214, 396], [240, 374], [280, 332], [340, 312], [430, 350], [470, 406]],
+  u: [[206, 400], [236, 392], [276, 384], [336, 358], [430, 296], [468, 400]],
+  a: [[212, 428], [240, 420], [280, 412], [340, 406], [432, 392], [472, 418]]
 };
 const LIP = {
   i: { g: 6,  round: 0,   w: 38, h: 8,  name: '展唇' },
@@ -450,12 +451,27 @@ function drawChart(mix) {
   ctx.setLineDash([3, 4]);
   for (let k = 1; k < 4; k++) {
     const t = k / 4;
-    const L = { x: lerp(VTX.i.x, VTX.a.x, t), y: lerp(VTX.i.y, VTX.a.y, t) };
-    const R = { x: lerp(VTX.u.x, VTX.a.x, t), y: lerp(VTX.u.y, VTX.a.y, t) };
+    const L = { x: lerp(CHART_ZONE[0].x, CHART_ZONE[3].x, t), y: lerp(CHART_ZONE[0].y, CHART_ZONE[3].y, t) };
+    const R = { x: lerp(CHART_ZONE[1].x, CHART_ZONE[2].x, t), y: lerp(CHART_ZONE[1].y, CHART_ZONE[2].y, t) };
     ctx.beginPath(); ctx.moveTo(L.x, L.y); ctx.lineTo(R.x, R.y); ctx.stroke();
   }
   ctx.setLineDash([]);
 
+  /* IPA 标准元音点：展示常用的前/央/后元音列。 */
+  const ipaPoints = [
+    ['y', 94, 54], ['ɪ', 80, 88], ['ʊ', 280, 88],
+    ['e', 86, 122], ['ɤ', 250, 122], ['o', 282, 122],
+    ['ə', 180, 154], ['ɛ', 92, 188], ['ɔ', 266, 188],
+    ['ɑ', 206, 270]
+  ];
+  ctx.font = '700 20px "Charis SIL","Doulos SIL","Segoe UI",serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ipaPoints.forEach(function (p) {
+    ctx.fillStyle = 'rgba(200,190,220,.88)';
+    ctx.fillText(p[0], p[1], p[2] - 8);
+    ctx.fillStyle = 'rgba(139,124,178,.62)';
+    ctx.beginPath(); ctx.arc(p[1], p[2], 2.5, 0, 6.283); ctx.fill();
+  });
   /* 顶角标签 */
   const meta = {
     i: { sym: 'i', sub: APP_LANG === 'en' ? 'front · high · spread' : '前高 · 展唇', c: '#7fd8ff', dx: -8, dy: -8 },
@@ -1080,7 +1096,7 @@ document.addEventListener('keydown', function (e) {
 /* ---------- 中英文 ---------- */
 const UI_TEXT = {
   zh: { title: '元音发音动态图', sub: '同一个声音，三个视角：生理（共振腔形状）→ 声学（共振峰与音色）→ 听觉（人耳敏感区间）。在舌位图上按住拖动，三张图同时变化。', help: '使用说明', lang: 'EN', ariaLang: '切换到英文' },
-  en: { title: 'Vowel Production · Physiology–Acoustics–Hearing', sub: 'One sound, three views: <b>physiology</b> (resonance cavities) → <b>acoustics</b> (formants & timbre) → <b>hearing</b> (ear sensitivity). Press and drag inside the vowel triangle — all three panels update together.', help: 'Help', lang: '中文', ariaLang: '切换到中文' }
+  en: { title: 'Vowel Production · Physiology–Acoustics–Hearing', sub: 'One sound, three views: <b>physiology</b> (resonance cavities) → <b>acoustics</b> (formants & timbre) → <b>hearing</b> (ear sensitivity). Press and drag inside the IPA vowel chart — all three panels update together.', help: 'Help', lang: '中文', ariaLang: '切换到中文' }
 };
 function applyLanguage() {
   const en = APP_LANG === 'en';
@@ -1130,7 +1146,7 @@ function applyLanguage() {
     k1: ['<div class="t">生理（共振腔形状）</div>舌高点前后、高低与双唇圆展构成两个可变共振腔：<b>后腔</b>与<b>前腔</b>。舌位前、圆唇少 → 前腔短而开口大；舌位后、圆唇 → 前腔被唇「延长」。', '<div class="t">Physiology (cavity shape)</div>The front–back position and height of the tongue hump, together with the lips, make two variable resonators: the <b>back</b> and <b>front</b> cavities. Front tongue, less rounding → short, wide-open front cavity; back tongue with rounding → the lips “lengthen” the front cavity.'],
     k2: ['<div class="t">声学（共振峰与音色）</div>声带谐波经共振腔滤波，能量集中处成为共振峰：<b>F1 低</b> ← 开口小/舌位高（i、u）；<b>F1 高</b> ← 口张大（a）；<b>F2 高</b> ← 舌位前、展唇（i）；<b>F2 低</b> ← 舌位后、圆唇（u）。峰的位置（Hz）＝元音「音色」的声学签名。', '<div class="t">Acoustics (formants &amp; timbre)</div>Glottal harmonics are filtered by the cavities; the energy peaks become formants: <b>low F1</b> ← small opening / high tongue (i, u); <b>high F1</b> ← wide mouth (a); <b>high F2</b> ← front tongue, spread lips (i); <b>low F2</b> ← back tongue, rounded lips (u). Peak frequencies (Hz) are the acoustic signature of vowel quality.'],
     k3: ['<div class="t">听觉（感知）</div>人耳可听 20–20000 Hz，但绝非一样灵：对约 <b>1–5 kHz</b> 最敏感，且语音能量集中在 <b>250–4000 Hz</b>。a / i / u 的 F1–F3 恰好都在这一高敏感区，所以只需很小的声能即可清晰辨别。', '<div class="t">Hearing (perception)</div>The ear covers 20–20000 Hz but is not equally sensitive: it is most sensitive around <b>1–5 kHz</b>, and speech energy concentrates in <b>250–4000 Hz</b>. The F1–F3 of a / i / u all fall inside this high-sensitivity zone, so even faint vowels are clearly distinguished.'],
-    kNote: ['模型为教学简化：舌位图内任意点由 a/i/u 三顶点的「口形 + 共振峰」平滑混合而成；真实发音还受个人声道尺寸、语速与语境影响。', 'Simplified teaching model: any point in the triangle smoothly mixes the mouth shape + formants of the three corners a / i / u; real speech also depends on individual tract size, rate and context.'],
+    kNote: ['模型为教学简化：舌位图内任意点由 a/i/u 代表点的「口形 + 共振峰」平滑混合而成；真实发音还受个人声道尺寸、语速与语境影响。', 'Simplified teaching model: any point in the IPA anchor points smoothly mix the mouth shape + formants of the three corners a / i / u; real speech also depends on individual tract size, rate and context.'],
     f0: ['F1（开口度/舌高）', 'F1 (opening / tongue height)'],
     f1: ['F2（舌位前后/唇形）', 'F2 (front–back / lip shape)'],
     f2: ['F3（次要听感）', 'F3 (secondary cue)'],
@@ -1139,7 +1155,7 @@ function applyLanguage() {
     f5: ['声带振动', 'vocal-fold vibration'],
     lblText: ['显示器官标注', 'Show anatomy labels'],
     aria1: ['发音器官剖面动态图', 'Articulation profile animation'],
-    aria2: ['a i u 元音舌位图，可拖动', 'a i u vowel triangle chart, draggable'],
+    aria2: ['a i u 元音舌位图，可拖动', 'a i u IPA vowel chart, draggable'],
     aria3: ['口型前视图', 'Lip front view'],
     aria4: ['声道横截面积示意', 'Vocal-tract cross-section schematic'],
     aria5: ['声源滤波频谱图', 'Source-filter spectrum chart'],
@@ -1151,7 +1167,7 @@ function applyLanguage() {
   });
   const cards = document.querySelectorAll('.card-title');
   const zhT = ['① 生理 · 发音器官剖面 ', '② 舌位图 · a / i / u ', '③ 声学 · 共振腔形状 → 共振峰 → 元音音色 ', '④ 听觉 · 人耳敏感度与元音的听觉区间 ', '📎 '];
-  const enT = ['① Physiology · articulation profile ', '② Vowel triangle · a / i / u ', '③ Acoustics · cavity shape → formants → vowel colour ', '④ Hearing · ear sensitivity & where vowels sit ', '📎 '];
+  const enT = ['① Physiology · articulation profile ', '② IPA vowel chart · a / i / u ', '③ Acoustics · cavity shape → formants → vowel colour ', '④ Hearing · ear sensitivity & where vowels sit ', '📎 '];
   for (let i = 0; i < cards.length; i++) {
     if (i < zhT.length && cards[i].firstChild && cards[i].firstChild.nodeType === 3) {
       cards[i].firstChild.nodeValue = en ? enT[i] : zhT[i];

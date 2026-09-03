@@ -450,16 +450,6 @@
     ctx.fillStyle = tg;
     smoothPath(ctx, tonguePts, true); ctx.fill();
     ctx.strokeStyle = '#ff9ec2'; ctx.lineWidth = 1.4 * inv; ctx.stroke();
-    /* 舌背最高点：用随舌面数据变化的高光标出隆起。 */
-    let hump = drawSurf[0];
-    for (let hi = 1; hi < drawSurf.length; hi++) if (drawSurf[hi][1] < hump[1]) hump = drawSurf[hi];
-    const hg = ctx.createRadialGradient(hump[0], hump[1], 1, hump[0], hump[1], 22 * inv);
-    hg.addColorStop(0, 'rgba(255,209,102,.32)');
-    hg.addColorStop(1, 'rgba(255,209,102,0)');
-    ctx.fillStyle = hg;
-    ctx.beginPath(); ctx.arc(hump[0], hump[1], 22 * inv, 0, 6.283); ctx.fill();
-    ctx.fillStyle = '#ffd166';
-    ctx.beginPath(); ctx.arc(hump[0], hump[1], 2.8 * inv, 0, 6.283); ctx.fill();
 
     const cav = [
       { x: 176, y: 322 }, { x: 202, y: 310 }, { x: 230, y: 286 }, { x: 300, y: 252 }, { x: 398, y: 242 },
