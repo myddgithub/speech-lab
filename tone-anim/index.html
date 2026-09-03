@@ -458,7 +458,7 @@ function drawAdd(ctx, time) {
   const ySumTop = cySumY - 86, ySumBot = cySumY + 86;
   const ySpecT = ySumBot + 22, ySpecB = H - 26; // 频谱区
   const cycles = 2;                              // 屏内显示 2 个基频周期
-  const dt = (P.scroll) % 1;
+  const dt = ADD.scroll;                     // 已滚动的基频周期数（相位时基）
   const phaseAt = x => 2 * Math.PI * ( ((x - x0) / width) * cycles + dt );
   /* 时间轴随时间右移：相位对 x 增加、对滚动参数减少 */
   const ampRows = ampArr(Hn);
@@ -892,7 +892,8 @@ function frame(now) {
   lastTs = now;
   if (P.running) {
     animT += dt;
-    ADD.scroll = animT * P.spd * 0.05;
+    ADD.scroll = animT * P.spd * 0.9;    // 滚动相位速率（速度滑杆可调）
+    if (ADD.scroll > 1e6) { animT = 0; ADD.scroll = 0; }  // 防止长时间运行数值过大
   }
   for (const id of CVS) {
     const ctx = setupCanvas(id);
