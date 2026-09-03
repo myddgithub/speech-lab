@@ -306,7 +306,8 @@
     const jaw = lip.jaw || 0;
     const yM = 336 + jaw * 16;
     const hu = lip.g / 2;
-    const off = lip.round ? 10 : 0;
+    const rnd = Math.max(0, Math.min(1, lip.round || 0));
+    const off = rnd * 10;
     if (lip.raise) {
       const up = ctx.createLinearGradient(150, 288, 215, 308);
       up.addColorStop(0, '#8a4567'); up.addColorStop(1, '#b06385');
@@ -368,9 +369,13 @@
     ctx.quadraticCurveTo(172 - off, 362 + jaw * 16, 158 - off, 352 + jaw * 14);
     ctx.quadraticCurveTo(150 - off, 346 + jaw * 10, 158 - off, lowerTop + 2);
     ctx.closePath(); ctx.fill();
-    if (lip.round) {
+    if (rnd > 0.02) {
+      ctx.globalAlpha = 0.2 + 0.8 * rnd;
       ctx.fillStyle = '#0e0c16';
-      ctx.beginPath(); ctx.ellipse(170 - off, yM, 8, Math.max(3, hu * 0.7), 0, 0, 6.283); ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(170 - off, yM, 2 + 6 * rnd, Math.max(1.2, Math.max(3, hu * 0.7) * rnd), 0, 0, 6.283);
+      ctx.fill();
+      ctx.globalAlpha = 1;
     }
   }
 
@@ -445,6 +450,16 @@
     ctx.fillStyle = tg;
     smoothPath(ctx, tonguePts, true); ctx.fill();
     ctx.strokeStyle = '#ff9ec2'; ctx.lineWidth = 1.4 * inv; ctx.stroke();
+    /* 舌背最高点：用随舌面数据变化的高光标出隆起。 */
+    let hump = drawSurf[0];
+    for (let hi = 1; hi < drawSurf.length; hi++) if (drawSurf[hi][1] < hump[1]) hump = drawSurf[hi];
+    const hg = ctx.createRadialGradient(hump[0], hump[1], 1, hump[0], hump[1], 22 * inv);
+    hg.addColorStop(0, 'rgba(255,209,102,.32)');
+    hg.addColorStop(1, 'rgba(255,209,102,0)');
+    ctx.fillStyle = hg;
+    ctx.beginPath(); ctx.arc(hump[0], hump[1], 22 * inv, 0, 6.283); ctx.fill();
+    ctx.fillStyle = '#ffd166';
+    ctx.beginPath(); ctx.arc(hump[0], hump[1], 2.8 * inv, 0, 6.283); ctx.fill();
 
     const cav = [
       { x: 176, y: 322 }, { x: 202, y: 310 }, { x: 230, y: 286 }, { x: 300, y: 252 }, { x: 398, y: 242 },

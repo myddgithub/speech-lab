@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="dark" />
+<title>元音发音动态图 · 生理—声学—听觉</title>
+<style>
+  :root{ --zoom:1; --bg:#0d0b12; --panel:#17131f; --panel2:#1e1929; --text:#e8e2ef; --muted:#9a90ad; --accent:#ff7aa8; --accent2:#ffb86b; --line:#2c2537; --cyan:#7fd8ff; --amber:#ffd166; }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:radial-gradient(1200px 700px at 50% -10%, #241b2e 0%, var(--bg) 55%); color:var(--text); font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif; min-height:100vh; padding:28px 16px 60px; }
+  .wrap{max-width:1320px; margin:0 auto;}
+  header{text-align:center; margin-bottom:20px;}
+  header h1{font-size:calc(28px * 1.06 * var(--zoom)); font-weight:600; letter-spacing:2px;}
+  header p{color:var(--muted); font-size:calc(13.5px * 1.06 * var(--zoom)); margin-top:8px; line-height:1.8;}
+  header p b{color:var(--accent2); font-weight:600;}
+  .fontctl{display:flex; align-items:center; justify-content:center; gap:10px; margin-top:12px;}
+  .fontctl .fclabel{font-size:calc(13px * 1.06 * var(--zoom)); color:var(--muted);}
+  .fontctl input[type=range]{width:170px; accent-color:var(--accent);}
+  .fontctl .fcval{font-size:calc(12.5px * 1.06 * var(--zoom)); color:var(--accent2); width:52px; text-align:left; font-variant-numeric:tabular-nums;}
+  .card{background:linear-gradient(180deg,var(--panel2),var(--panel)); border:1px solid var(--line); border-radius:16px; padding:16px; box-shadow:0 18px 50px rgba(0,0,0,.45); margin-bottom:16px;}
+  .card-title{font-size:calc(14.5px * 1.06 * var(--zoom)); font-weight:600; letter-spacing:1px; margin-bottom:12px; color:var(--text); display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .hint-inline{color:var(--muted); font-weight:400; font-size:calc(12.5px * 1.06 * var(--zoom));}
+  .main{display:grid; grid-template-columns:1.06fr .94fr; gap:16px; align-items:stretch;}
+  @media(max-width:980px){ .main{grid-template-columns:1fr;} }
+  canvas{display:block; width:100%; height:auto; border-radius:10px; background:#0b0a10; border:1px solid var(--line);}
+  .canvas-tools{display:flex; justify-content:space-between; align-items:center; margin-top:10px; gap:10px; flex-wrap:wrap;}
+  .canvas-tools label{font-size:calc(12.5px * 1.06 * var(--zoom)); color:var(--muted); cursor:pointer; display:flex; align-items:center; gap:6px;}
+  .badge{font-size:calc(12.5px * 1.06 * var(--zoom)); padding:4px 14px; border-radius:999px; border:1px solid var(--line); background:var(--panel2); color:var(--accent2); letter-spacing:2px; white-space:nowrap;}
+  .chips{display:flex; flex-wrap:wrap; gap:6px; margin:12px 0 2px;}
+  .chip{font-size:calc(12.5px * 1.06 * var(--zoom)); padding:3px 10px; border-radius:999px; background:var(--panel2); border:1px solid var(--line); color:var(--muted);}
+  .chip.hot{border-color:var(--accent); color:var(--accent);}
+  .chip.f1{border-color:#ffb86b; color:#ffb86b;}
+  .chip.f2{border-color:#7fd8ff; color:#7fd8ff;}
+  .chip.f3{border-color:#ff7aa8; color:#ff7aa8;}
+  .desc{margin-top:12px; font-size:calc(13.5px * 1.06 * var(--zoom)); line-height:1.95; color:var(--text); min-height:44px;}
+  .desc b{color:var(--accent2); font-weight:600;}
+  .tip{margin-top:10px; font-size:calc(13px * 1.06 * var(--zoom)); line-height:1.85; color:var(--accent2); border-left:3px solid var(--accent2); padding:6px 12px; background:rgba(255,177,104,.06); border-radius:0 8px 8px 0;}
+  .controls{display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; align-items:center;}
+  button{background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:9px; padding:6px 14px; font-size:calc(13.5px * 1.06 * var(--zoom)); cursor:pointer; transition:all .15s; font-family:inherit;}
+  button:hover{border-color:var(--accent); color:#fff;}
+  button.on{background:linear-gradient(135deg,#b3416b,#7d2f55); border-color:var(--accent); color:#fff;}
+  .vowel-btn{min-width:44px; font-size:calc(17px * 1.06 * var(--zoom)); font-weight:700; padding:4px 6px;}
+  .mixbar{display:flex; height:12px; border-radius:999px; overflow:hidden; border:1px solid var(--line); margin:10px 0 2px;}
+  .mixbar i{display:block; height:100%; transition:width .12s linear;}
+  .mixlab{display:flex; gap:14px; font-size:calc(12px * 1.06 * var(--zoom)); color:var(--muted);}
+  .mixlab span{display:flex; align-items:center; gap:5px;}
+  .mixlab i{width:9px; height:9px; border-radius:50%; display:inline-block;}
+  .mixlab b{font-weight:600; color:var(--text);}
+  .front-box{display:flex; align-items:stretch; gap:14px; margin-top:12px; flex-wrap:wrap;}
+  .front-pane{flex:none; width:230px;}
+  .pane-title{font-size:calc(12px * 1.06 * var(--zoom)); color:var(--muted); letter-spacing:2px; margin-bottom:6px;}
+  #frontCv{width:230px;}
+  .notes{flex:1; min-width:220px; display:flex; flex-direction:column; justify-content:center; gap:8px;}
+  .notes .n{font-size:calc(12.5px * 1.06 * var(--zoom)); color:var(--muted); line-height:1.8; padding-left:12px; border-left:2px solid var(--line);}
+  .notes .n b{color:var(--text); font-weight:600;}
+  .hint{color:var(--muted); font-size:calc(12.5px * 1.06 * var(--zoom)); line-height:2; text-align:center; margin-top:4px;}
+  .chartHint{text-align:center; font-size:calc(12px * 1.06 * var(--zoom)); color:var(--amber); margin-top:8px; line-height:1.7;}
+  #chartCv{max-width:430px; margin:0 auto;}
+  #btnHelp{position:fixed; top:14px; right:16px; z-index:40; padding:7px 16px; font-size:13px; border-radius:999px; box-shadow:0 6px 18px rgba(0,0,0,.45);}
+  #btnLang{position:fixed; top:14px; right:112px; z-index:40; padding:7px 12px; font-size:12px; border-radius:999px; box-shadow:0 6px 18px rgba(0,0,0,.45);}
+  #helpOverlay{position:fixed; inset:0; background:rgba(6,5,10,0.62); display:flex; justify-content:flex-end; z-index:45; padding:0;}
+  #helpOverlay.hidden{display:none;}
+  body.help-open{padding-right:min(470px,50vw);}
+  .helpBox{background:linear-gradient(180deg,#241d30,#171320); border:1px solid var(--line); border-right:none; border-radius:14px 0 0 14px; width:min(470px,50vw); max-width:100%; height:100%; display:flex; flex-direction:column; box-shadow:-14px 0 44px rgba(0,0,0,.55); animation:helpIn .28s ease;}
+  @keyframes helpIn{from{transform:translateX(100%);}to{transform:none;}}
+  .helpHead{display:flex; align-items:center; justify-content:space-between; padding:13px 18px; border-bottom:1px solid var(--line); font-size:15px; font-weight:600; flex:none;}
+  .helpHead button{background:transparent; border:none; color:var(--muted); font-size:19px; cursor:pointer; padding:0 6px; line-height:1;}
+  .helpHead button:hover{color:#fff;}
+  .helpBody{overflow-y:auto; padding:16px 20px 24px; font-size:calc(13.5px * 1.06 * var(--zoom)); line-height:2; color:var(--text);}
+  .helpBody h3{font-size:calc(14.5px * 1.06 * var(--zoom)); margin:18px 0 6px; color:var(--accent2);}
+  .helpBody code{background:rgba(255,255,255,.07); padding:0 6px; border-radius:6px; font-size:.92em;}
+  .legend{display:flex; gap:14px; justify-content:center; flex-wrap:wrap;}
+  .legend span{display:flex; align-items:center; gap:6px; color:var(--muted); font-size:calc(12px * 1.06 * var(--zoom));}
+  .dot{width:9px; height:9px; border-radius:50%; display:inline-block; flex:none;}
+  .line{width:16px; height:0; border-top:2px solid; display:inline-block; flex:none;}
+  .audio-note{margin-top:10px; font-size:calc(11.5px * 1.06 * var(--zoom)); color:var(--muted); line-height:1.7;}
+  .ctls{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; align-items:center;}
+  .ctls .cap{font-size:calc(12.5px * 1.06 * var(--zoom)); color:var(--muted); flex:none;}
+  .cav-row{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;}
+  @media(max-width:640px){ .cav-row{grid-template-columns:1fr;} }
+  .cav-card{background:rgba(255,255,255,.025); border:1px solid rgba(44,37,55,.7); border-radius:10px; padding:9px 12px; font-size:calc(12.5px * 1.06 * var(--zoom)); line-height:1.85;}
+  .cav-card b{font-weight:600;}
+  .cav-card .t{letter-spacing:1px; font-size:calc(11.5px * 1.06 * var(--zoom)); color:var(--muted);}
+  .bar{height:7px; border-radius:99px; background:var(--panel2); border:1px solid var(--line); overflow:hidden; margin:5px 0 2px;}
+  .bar i{display:block; height:100%; border-radius:99px; transition:width .12s linear;}
+  .meter{display:flex; justify-content:space-between; font-size:calc(11px * 1.06 * var(--zoom)); color:var(--muted); font-variant-numeric:tabular-nums;}
+  .vs{text-align:center; color:var(--muted); font-size:calc(11px * 1.06 * var(--zoom));}
+  .flow-line{display:flex; align-items:center; justify-content:center; gap:10px; margin:4px 0 10px; flex-wrap:wrap; font-size:calc(12.5px * 1.06 * var(--zoom));}
+  .flow-line .box{background:var(--panel2); border:1px solid var(--line); padding:3px 12px; border-radius:999px; color:var(--muted);}
+  .flow-line .arrow{color:var(--accent); font-weight:700;}
+  .flow-line .box.hot{color:#fff; border-color:var(--accent);}
+</style>
+</head>
+<body>
+<button id="btnLang" aria-label="切换到英文">EN</button>
+<button id="btnHelp" aria-controls="helpOverlay" aria-expanded="false">使用说明</button>
+<div class="wrap">
+  <header>
+    <h1>元音发音动态图</h1>
+    <p>同一个声音，三个视角：<b>生理</b>（共振腔形状）→ <b>声学</b>（共振峰与音色）→ <b>听觉</b>（人耳敏感区间）。在舌位图上按住拖动，三张图同时变化。</p>
+    <div class="fontctl">
+      <span class="fclabel">字号</span>
+      <input type="range" id="fontSize" min="0.85" max="1.35" step="0.05" value="1" />
+      <span class="fcval" id="fontSizeVal">1.00×</span>
+    </div>
+  </header>
+
+  <div class="main">
+    <!-- 左：生理 -->
+    <div class="card">
+      <div class="card-title">① 生理 · 发音器官剖面 <span class="hint-inline" id="c1hint">口腔共振腔随舌位连续变形；双唇、下颌、声带联动</span></div>
+      <canvas id="mainCv" width="780" height="560" role="img" aria-label="发音器官剖面动态图"></canvas>
+      <div class="canvas-tools">
+        <label><input type="checkbox" id="lblToggle" checked /> <span id="lblText">显示器官标注</span></label>
+        <span class="badge" id="stageBadge">—</span>
+      </div>
+      <div class="front-box">
+        <div class="front-pane">
+          <div class="pane-title" id="paneLips">口型前视图</div>
+          <canvas id="frontCv" width="230" height="190" role="img" aria-label="口型前视图"></canvas>
+        </div>
+        <div class="notes">
+          <div class="n" id="note1"><b>前腔与后腔</b>：舌位把声道分成两个共振腔——收窄点后面的<b>后腔</b>主要决定 F1，收窄点前面的<b>前腔</b>和唇形主要决定 F2（见下「声学」卡）。</div>
+          <div class="n" id="note2">元音都是浊音：<b>声带</b>持续振动，气流平稳通过口腔，软腭上抬、鼻腔关闭。</div>
+          <div class="n" id="note3">黄色圆点是舌体最高点；口型前视图中的圆孔会随<b>圆唇/展唇</b>变化。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右：交互 -->
+    <div class="card">
+      <div class="card-title">② 舌位图 · a / i / u <span class="hint-inline" id="c2hint">按住鼠标拖动舌位点：口腔形状、共振峰、音色实时联动</span></div>
+      <canvas id="chartCv" width="360" height="330" role="img" aria-label="a i u 元音舌位图，可拖动"></canvas>
+      <div class="chartHint" id="chartHint">👆 在梯形范围内按住并移动鼠标（或点下方 a / i / u 跳到典型元音）</div>
+      <div class="mixbar" id="mixBar" aria-hidden="true"><i id="mixI" style="background:#7fd8ff"></i><i id="mixU" style="background:#ff7aa8"></i><i id="mixA" style="background:#ffb86b"></i></div>
+      <div class="mixlab">
+        <span><i style="background:#7fd8ff"></i>i <b id="mixIV">0%</b></span>
+        <span><i style="background:#ff7aa8"></i>u <b id="mixUV">0%</b></span>
+        <span><i style="background:#ffb86b"></i>a <b id="mixAV">0%</b></span>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div class="desc" id="desc"></div>
+      <div class="tip" id="tip"></div>
+      <div class="ctls">
+        <span class="cap" id="capJump">跳到典型元音</span>
+        <button class="vowel-btn" data-v="i" style="color:#7fd8ff">i</button>
+        <button class="vowel-btn" data-v="u" style="color:#ff7aa8">u</button>
+        <button class="vowel-btn" data-v="a" style="color:#ffb86b">a</button>
+        <span style="flex:1"></span>
+        <button id="btnDemo" class="on">⏸ 示范</button>
+        <button id="btnVoice">🔊 发声</button>
+      </div>
+      <div class="audio-note" id="voiceNote">发声 = 用声道共振峰实时合成嗓音（基频恒为 158 Hz）。拖舌位或点示范循环，可听到音色随 F1/F2 滑移。第一次发声需点击浏览器允许音频。</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- 左：声学 -->
+    <div class="card">
+      <div class="card-title">③ 声学 · 共振腔形状 → 共振峰 → 元音音色 <span class="hint-inline" id="c3hint">上：声道横截面积；下：声源谐波被共振腔滤波成元音频谱</span></div>
+      <div class="flow-line">
+        <span class="box" id="fl1">声门声源（谐波，振幅随频率下降）</span><span class="arrow">→</span>
+        <span class="box hot" id="fl2">共振腔滤波（F1 F2 F3 峰）</span><span class="arrow">→</span>
+        <span class="box" id="fl3">口唇辐射＝元音音色</span>
+      </div>
+      <canvas id="cavCv" width="620" height="210" role="img" aria-label="声道横截面积示意"></canvas>
+      <canvas id="acouCv" width="620" height="215" role="img" aria-label="声源滤波频谱图"></canvas>
+      <div class="cav-row">
+        <div class="cav-card">
+          <div class="t" id="cav1t">后腔（收窄点 → 声门）· 主要定 F1</div>
+          <div class="bar"><i id="backBar" style="background:#ffb86b"></i></div>
+          <div class="meter"><span id="cav1s">体积小 → F1 低（i、u）</span><span id="backTxt">—</span></div>
+        </div>
+        <div class="cav-card">
+          <div class="t" id="cav2t">前腔（收窄点 → 双唇）· 主要定 F2</div>
+          <div class="bar"><i id="frontBar" style="background:#7fd8ff"></i></div>
+          <div class="meter"><span id="cav2s">腔短/口开 → F2 高（i）；圆唇加长 → F2 低（u）</span><span id="frontTxt">—</span></div>
+        </div>
+      </div>
+      <div class="hint" id="cavNote" style="text-align:left">示意：下方横条从左前到右后用「体积」表示两腔大小——舌体收窄点前后滑动时两腔此消彼长，共振峰随之移动（教学简化模型）。</div>
+    </div>
+
+    <!-- 右：听觉 -->
+    <div class="card">
+      <div class="card-title">④ 听觉 · 人耳敏感度与元音的听觉区间 <span class="hint-inline" id="c4hint">等响曲线示意：曲线越低表示人耳越敏感</span></div>
+      <canvas id="hearCv" width="620" height="300" role="img" aria-label="人耳等响敏感度曲线与元音共振峰位置"></canvas>
+      <div class="hint legend" id="hearLegend">
+        <span><i class="line" style="border-color:#9a90ad"></i><span id="lg0">听阈</span></span>
+        <span><i class="line" style="border-color:#c9b8ff"></i><span id="lg1">40 phon</span></span>
+        <span><i class="line" style="border-color:#c9b8ff;border-style:dashed"></i><span id="lg2">70 phon</span></span>
+        <span><i class="dot" style="background:#3d3552"></i><span id="lg3">语音频带 250–4000 Hz</span></span>
+        <span><i class="dot" style="background:#ffd166"></i><span id="lg4">最敏感区 ≈1–5 kHz</span></span>
+        <span><i class="dot" style="background:#ffb86b"></i><span id="lg5">当前 F1</span></span>
+        <span><i class="dot" style="background:#7fd8ff"></i><span id="lg6">当前 F2</span></span>
+        <span><i class="dot" style="background:#ff7aa8"></i><span id="lg7">当前 F3</span></span>
+      </div>
+      <div class="tip" id="hearTip">当前元音的共振峰落在人耳最敏感、语音信息最集中的频带内——这正是「同一口腔形状」能被我们清楚感知的听觉基础。</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📎 <span id="kTitle">三者如何连起来</span> <span class="hint-inline" id="kHint">拖动舌位图即可验证下面每一句话</span></div>
+    <div class="cav-row" style="grid-template-columns:repeat(3,1fr)">
+      <div class="cav-card" id="k1"><div class="t">生理（共振腔形状）</div>舌高点前后、高低与双唇圆展构成两个可变共振腔：<b>后腔</b>与<b>前腔</b>。舌位前、圆唇少 → 前腔短而开口大；舌位后、圆唇 → 前腔被唇「延长」。</div>
+      <div class="cav-card" id="k2"><div class="t">声学（共振峰与音色）</div>声带谐波经共振腔滤波，能量集中处成为共振峰：<b>F1 低</b> ← 开口小/舌位高（i、u）；<b>F1 高</b> ← 口张大（a）；<b>F2 高</b> ← 舌位前、展唇（i）；<b>F2 低</b> ← 舌位后、圆唇（u）。峰的位置（Hz）＝元音「音色」的声学签名。</div>
+      <div class="cav-card" id="k3"><div class="t">听觉（感知）</div>人耳可听 20–20000 Hz，但绝非一样灵：对约 <b>1–5 kHz</b> 最敏感，且语音能量集中在 <b>250–4000 Hz</b>。a / i / u 的 F1–F3 恰好都在这一高敏感区，所以只需很小的声能即可清晰辨别。</div>
+    </div>
+    <div class="hint" id="kNote" style="margin-top:10px">模型为教学简化：舌位图内任意点由 a/i/u 三顶点的「口形 + 共振峰」平滑混合而成；真实发音还受个人声道尺寸、语速与语境影响。</div>
+  </div>
+
+  <div class="hint legend" id="footLegend">
+    <span><i class="dot" style="background:#ffb86b"></i><span id="f0">F1（开口度/舌高）</span></span>
+    <span><i class="dot" style="background:#7fd8ff"></i><span id="f1">F2（舌位前后/唇形）</span></span>
+    <span><i class="dot" style="background:#ff7aa8"></i><span id="f2">F3（次要听感）</span></span>
+    <span><i class="dot" style="background:#ffd166"></i><span id="f3">舌位点</span></span>
+    <span><i class="dot" style="background:#ff9ec2"></i><span id="f4">舌体</span></span>
+    <span><i class="dot" style="background:#ffb86b"></i><span id="f5">声带振动</span></span>
+  </div>
+</div>
+
+<div id="helpOverlay" class="hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle" aria-hidden="true">
+  <div class="helpBox">
+    <div class="helpHead"><span id="helpTitle">帮助</span><button id="helpClose" aria-label="关闭帮助">×</button></div>
+    <div class="helpBody" id="helpZh">
+      <h3>怎么玩</h3>
+      中间那张 <b>a–i–u 元音舌位图</b>是最核心的交互：<b>按住鼠标在里面拖动</b>，舌位点把 a（低、口大）、i（前高、展唇）、u（后高、圆唇）三个典型元音按比例「混合」起来。左上的剖面（口腔形状）、下方的共振腔横条与频谱、右侧的听觉曲线和合成的嗓音全部跟着变。
+      <h3>三个顶点</h3>
+      <code>i</code> 舌位前高、嘴角展开 → 前腔短 → F2 最高（≈2300 Hz），开口小 → F1 最低（≈280 Hz）。<br/>
+      <code>u</code> 舌位后高、双唇收圆 → 前腔被圆唇加长 → F2 很低（≈650 Hz），F1 也低（≈300 Hz）。<br/>
+      <code>a</code> 舌位最低、口张大 → F1 最高（≈800 Hz），F2 居中（≈1200 Hz）。<br/>
+      三角图里的任意一点 ≈ 三种口形/三种共振峰的加权平均（示例：[ə] 大致在正中间）。
+      <h3>生理 ↔ 声学 ↔ 听觉</h3>
+      <b>生理</b>：舌高点把声道分成后腔（声门到收窄点）与前腔（收窄点到唇）。<b>声学</b>：声带发出的谐波被这两个腔体选择性地放大/削弱，能量集中处就是共振峰 F1/F2/F3——它决定了元音的「音色」。<b>听觉</b>：右下图是等响曲线示意——横轴 20–20000 Hz 为人耳可听范围，曲线越低越敏感。元音的 F1–F3 都落在 1–5 kHz 的最敏感区与 250–4000 Hz 的语音频带里，所以微弱的声音也能被清楚感知。
+      <h3>按钮</h3>
+      <b>示范</b>：让舌位点沿三角形 i→u→a→i 自动循环，边动边看边听。<b>发声</b>：实时合成嗓音；发声状态下拖舌位/看示范，可听到音色随共振峰滑移（基频固定 158 Hz，便于把注意力放在音色上）。也可以先点 a/i/u 快速跳到典型元音再听。
+      <h3>快捷键</h3>
+      方向键移动舌位点；1 / 2 / 3 跳到 i / u / a；空格 发声；Esc 关闭说明。
+      <h3>说明</h3>
+      本页为教学简化模型：共振峰为典型成年男性元音均值（i 280/2300、u 300/650、a 800/1200 Hz），不是临床诊断工具；F1–F3 随舌位的连续变化用三顶点加权近似，真实声道还受唇齿位置、舌形细节等影响。
+    </div>
+    <div class="helpBody" id="helpEn" hidden>
+      <h3>How to play</h3>
+      <p>The central <b>a–i–u vowel chart</b> is the main interaction: <b>press and drag inside the trapezoid</b>. The dot blends the three corner vowels a (low, wide open), i (front high, spread lips) and u (back high, rounded lips). The sagittal profile (mouth cavity), the cavity bars and spectrum below, the hearing curves on the right, and the synthesized voice all follow instantly.</p>
+      <h3>The three corners</h3>
+      <p><code>i</code> front-high tongue, spread lips → short front cavity → highest F2 (≈2300 Hz); small mouth opening → lowest F1 (≈280 Hz).<br/>
+      <code>u</code> back-high tongue, rounded lips → the lip tube lengthens the front cavity → very low F2 (≈650 Hz) and low F1 (≈300 Hz).<br/>
+      <code>a</code> lowest tongue, wide open mouth → highest F1 (≈800 Hz), mid F2 (≈1200 Hz).<br/>
+      Any point inside ≈ a weighted mixture of the three mouth shapes / formant sets (e.g. [ə] lives near the center).</p>
+      <h3>Physiology ↔ acoustics ↔ hearing</h3>
+      <p><b>Physiology</b>: the tongue hump splits the vocal tract into a back cavity (glottis → constriction) and a front cavity (constriction → lips). <b>Acoustics</b>: harmonics of the vibrating vocal folds are selectively amplified/attenuated by these cavities; the energy peaks become formants F1/F2/F3 — the acoustic signature of vowel quality. <b>Hearing</b>: the lower-right plot shows equal-loudness contours (the lower the curve, the more sensitive the ear) over 20–20000 Hz. Vowel formants sit right inside the most sensitive 1–5 kHz band and the 250–4000 Hz speech band, which is why even faint vowels are clearly heard.</p>
+      <h3>Buttons</h3>
+      <p><b>Demo</b> glides the tongue point around the trapezoid (i→u→a→i). <b>Voice</b> synthesizes a real-time hum; with voice on, drag or watch the demo and hear the timbre glide as F1/F2 move (fundamental fixed at 158 Hz so you focus on timbre). Quick-jump to i / u / a with the letter buttons.</p>
+      <h3>Shortcuts</h3>
+      <p>Arrow keys move the tongue point; 1/2/3 jump to i/u/a; Space toggles voice; Esc closes this panel.</p>
+      <h3>Note</h3>
+      <p>Teaching simplification: formants are typical adult-male vowel averages (i 280/2300, u 300/650, a 800/1200 Hz); continuous changes are approximated by three-corner weighting. Not a clinical assessment tool.</p>
+    </div>
+  </div>
+</div>
+
+<script src="../pinyin-anim-common/tract.js"></script>
+<script>
+window.addEventListener('error', function (e) {
+  try {
+    const d = document.createElement('div'); d.id = 'jserr';
+    d.style.cssText = 'position:fixed;top:0;left:0;z-index:999;color:#ff6b6b;background:#000;font-size:11px;white-space:pre-wrap;max-width:100vw;max-height:40vh;overflow:auto;';
+    d.textContent = 'JSERR: ' + (e.message || e.error) + '\n' + (e.filename || '') + ':' + (e.lineno || '') + ':' + (e.colno || '') + '\n' + (e.error && e.error.stack ? e.error.stack : '');
+    document.body.appendChild(d);
+  } catch (_) {}
+});
+
+let APP_LANG = 'zh';
+const T = PinyinTract;
+const W = T.W, H = T.H;
+const lerp = T.lerp;
+const F0 = 158;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp3 = (a, b, c, wi, wu, wa) => a * wi + b * wu + c * wa;
+
+/* ---------- 三角图几何（逻辑坐标 360x330） ---------- */
+const CW = 360, CH = 330;
+const VTX = {
+  i: { x: 96, y: 58 },
+  u: { x: 254, y: 82 },
+  a: { x: 174, y: 258 }
+};
+const CHART_ZONE = [
+  { x: 62, y: 38 }, { x: 292, y: 70 },
+  { x: 250, y: 232 }, { x: 70, y: 292 }
+];
+
+/* ---------- 三个典型元音的发音姿态（舌面6点、口形、共振峰） ---------- */
+const SURF = {
+  i: [[214, 398], [240, 366], [280, 316], [340, 286], [420, 334], [470, 406]],
+  u: [[206, 402], [236, 392], [276, 374], [336, 334], [430, 286], [468, 400]],
+  a: [[212, 432], [240, 426], [280, 414], [340, 400], [432, 388], [472, 420]]
+};
+const LIP = {
+  i: { g: 6,  round: 0,   w: 38, h: 8,  name: '展唇' },
+  u: { g: 6,  round: 1,   w: 16, h: 12, name: '圆唇' },
+  a: { g: 14, round: 0,   w: 46, h: 32, name: '自然张口' }
+};
+const FMTS = {
+  i: { f1: 280,  f2: 2300, f3: 3000 },
+  u: { f1: 300,  f2: 650,  f3: 2400 },
+  a: { f1: 800,  f2: 1200, f3: 2500 }
+};
+
+/* 声道横截面积示意（24 点，从声门 → 双唇），仅用于可视化 */
+const AREA = {
+  i: [0.55,0.75,0.92,1.0,1.0,0.95,0.9,0.86,0.82,0.78,0.7,0.6,0.46,0.3,0.16,0.1,0.13,0.2,0.3,0.42,0.52,0.58,0.5,0.42],
+  u: [0.5,0.68,0.82,0.94,1.0,0.98,0.9,0.78,0.62,0.46,0.3,0.18,0.13,0.16,0.3,0.5,0.72,0.9,1.0,0.92,0.72,0.48,0.26,0.14],
+  a: [0.5,0.66,0.8,0.9,0.96,1.0,1.0,0.97,0.94,0.92,0.9,0.9,0.91,0.93,0.96,1.0,1.0,0.97,0.92,0.88,0.86,0.9,0.95,1.0]
+};
+
+let ZOOM = 1;
+let state = { x: VTX.a.x, y: VTX.a.y, demo: true, voice: false, labels: true, t: 0, dirty: true };
+let lastInfoKey = '';
+let lastInfoTime = 0;
+
+/* ---------- 三角内插 ---------- */
+function cross(ax, ay, bx, by) { return ax * by - ay * bx; }
+function bary(p) {
+  const A = VTX.i, B = VTX.u, C = VTX.a;
+  const v0x = B.x - A.x, v0y = B.y - A.y, v1x = C.x - A.x, v1y = C.y - A.y, v2x = p.x - A.x, v2y = p.y - A.y;
+  const d00 = v0x * v0x + v0y * v0y, d01 = v0x * v1x + v0y * v1y;
+  const d11 = v1x * v1x + v1y * v1y, d20 = v2x * v0x + v2y * v0y, d21 = v2x * v1x + v2y * v1y;
+  const den = d00 * d11 - d01 * d01 || 1e-9;
+  let wu = (d11 * d20 - d01 * d21) / den;
+  let wa = (d00 * d21 - d01 * d20) / den;
+  let wi = 1 - wu - wa;
+  if (wi < 0 || wu < 0 || wa < 0) { wi = Math.max(0, wi); wu = Math.max(0, wu); wa = Math.max(0, wa); const s = wi + wu + wa || 1; wi /= s; wu /= s; wa /= s; }
+  return { wi: wi, wu: wu, wa: wa };
+}
+function weightsAt(x, y) {
+  const bounded = clampToChartZone({ x: x, y: y });
+  x = bounded.x; y = bounded.y;
+  const w = bary({ x: x, y: y });
+  state.x = x; state.y = y;
+  return w;
+}
+function cornerPos(k) { state.x = VTX[k].x; state.y = VTX[k].y; }
+function insideChartZone(p) {
+  let inside = false;
+  for (let i = 0, j = CHART_ZONE.length - 1; i < CHART_ZONE.length; j = i++) {
+    const a = CHART_ZONE[i], b = CHART_ZONE[j];
+    if ((a.y > p.y) !== (b.y > p.y) && p.x < (b.x - a.x) * (p.y - a.y) / ((b.y - a.y) || 1e-9) + a.x) inside = !inside;
+  }
+  return inside;
+}
+function closestOnSegment(p, a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const t = clamp(((p.x - a.x) * dx + (p.y - a.y) * dy) / (dx * dx + dy * dy || 1), 0, 1);
+  return { x: a.x + t * dx, y: a.y + t * dy };
+}
+function clampToChartZone(p) {
+  if (insideChartZone(p)) return { x: p.x, y: p.y };
+  let best = null, bestD = Infinity;
+  for (let i = 0; i < CHART_ZONE.length; i++) {
+    const q = closestOnSegment(p, CHART_ZONE[i], CHART_ZONE[(i + 1) % CHART_ZONE.length]);
+    const d = (q.x - p.x) ** 2 + (q.y - p.y) ** 2;
+    if (d < bestD) { bestD = d; best = q; }
+  }
+  return best;
+}
+
+/* 当前综合参数 */
+function currentMix() {
+  const w = bary({ x: state.x, y: state.y });
+  const surf = [];
+  for (let i = 0; i < SURF.i.length; i++) {
+    surf.push([
+      lerp3(SURF.i[i][0], SURF.u[i][0], SURF.a[i][0], w.wi, w.wu, w.wa),
+      lerp3(SURF.i[i][1], SURF.u[i][1], SURF.a[i][1], w.wi, w.wu, w.wa)
+    ]);
+  }
+  const g = lerp3(LIP.i.g, LIP.u.g, LIP.a.g, w.wi, w.wu, w.wa);
+  const round = lerp3(LIP.i.round, LIP.u.round, LIP.a.round, w.wi, w.wu, w.wa);
+  const fm = {
+    f1: lerp3(FMTS.i.f1, FMTS.u.f1, FMTS.a.f1, w.wi, w.wu, w.wa),
+    f2: lerp3(FMTS.i.f2, FMTS.u.f2, FMTS.a.f2, w.wi, w.wu, w.wa),
+    f3: lerp3(FMTS.i.f3, FMTS.u.f3, FMTS.a.f3, w.wi, w.wu, w.wa)
+  };
+  const area = [];
+  for (let i = 0; i < AREA.i.length; i++) {
+    area.push(lerp3(AREA.i[i], AREA.u[i], AREA.a[i], w.wi, w.wu, w.wa));
+  }
+  return {
+    wi: w.wi, wu: w.wu, wa: w.wa, surf: surf,
+    lip: { g: g, round: round, w: lerp3(LIP.i.w, LIP.u.w, LIP.a.w, w.wi, w.wu, w.wa), h: lerp3(LIP.i.h, LIP.u.h, LIP.a.h, w.wi, w.wu, w.wa) },
+    fm: fm, area: area
+  };
+}
+
+/* ---------- 绘制：生理剖面 ---------- */
+function drawTract(mix) {
+  const cv = document.getElementById('mainCv');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  if (cv.width !== W * dpr) { cv.width = W * dpr; cv.height = H * dpr; }
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const jaw = clamp((mix.lip.g - 5) / 10, 0, 1);
+  T.drawScene(ctx, {
+    inv: T.invFor(cv, ZOOM),
+    time: state.t,
+    tongueSurf: mix.surf,
+    vel: T.VEL_UP,
+    lip: { g: mix.lip.g, raise: 0, round: mix.lip.round, jaw: jaw },
+    voicedOn: true,
+    labels: state.labels,
+    lang: APP_LANG,
+    phaseName: '',
+    footerLeft: APP_LANG === 'en' ? 'Voiced · airflow through the mouth' : '浊音 · 气流经口腔 ｜ 舌位点连续变化',
+    footerRight: 'F1 ' + Math.round(mix.fm.f1) + ' · F2 ' + Math.round(mix.fm.f2) + ' · F3 ' + Math.round(mix.fm.f3)
+  });
+}
+
+function drawFront(mix) {
+  const cv = document.getElementById('frontCv');
+  const ctx = cv.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = 230 * dpr; cv.height = 190 * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  T.drawFrontView(ctx, 230, 190, { w: mix.lip.w, h: mix.lip.h, round: mix.lip.round }, 1, '', null, APP_LANG);
+}
+
+/* ---------- 绘制：舌位图 ---------- */
+function drawChart(mix) {
+  const cv = document.getElementById('chartCv');
+  const ctx = cv.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = CW * dpr; cv.height = CH * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const bg = ctx.createRadialGradient(CW / 2, CH / 2, 10, CW / 2, CH / 2, 200);
+  bg.addColorStop(0, '#161322'); bg.addColorStop(1, '#0b0a10');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, CW, CH);
+
+  const zone = CHART_ZONE;
+  ctx.strokeStyle = 'rgba(139,124,178,.85)'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(zone[0].x, zone[0].y);
+  for (let zi = 1; zi < zone.length; zi++) ctx.lineTo(zone[zi].x, zone[zi].y);
+  ctx.closePath(); ctx.stroke();
+  ctx.fillStyle = 'rgba(139,124,178,.10)';
+  ctx.fill();
+
+  /* 高度/前后参考虚线（教学网格） */
+  ctx.strokeStyle = 'rgba(139,124,178,.22)'; ctx.lineWidth = 1;
+  ctx.setLineDash([3, 4]);
+  for (let k = 1; k < 4; k++) {
+    const t = k / 4;
+    const L = { x: lerp(VTX.i.x, VTX.a.x, t), y: lerp(VTX.i.y, VTX.a.y, t) };
+    const R = { x: lerp(VTX.u.x, VTX.a.x, t), y: lerp(VTX.u.y, VTX.a.y, t) };
+    ctx.beginPath(); ctx.moveTo(L.x, L.y); ctx.lineTo(R.x, R.y); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  /* 顶角标签 */
+  const meta = {
+    i: { sym: 'i', sub: APP_LANG === 'en' ? 'front · high · spread' : '前高 · 展唇', c: '#7fd8ff', dx: -8, dy: -8 },
+    u: { sym: 'u', sub: APP_LANG === 'en' ? 'back · high · rounded' : '后高 · 圆唇', c: '#ff7aa8', dx: 8, dy: -8 },
+    a: { sym: 'a', sub: APP_LANG === 'en' ? 'low · mouth wide' : '低 · 口张大', c: '#ffb86b', dx: 0, dy: 16 }
+  };
+  Object.keys(meta).forEach(function (k) {
+    const m = meta[k], v = VTX[k];
+    ctx.textAlign = k === 'u' ? 'right' : k === 'i' ? 'left' : 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = m.c;
+    ctx.font = '700 26px "Charis SIL","Doulos SIL","Segoe UI",serif';
+    ctx.fillText(m.sym, v.x + m.dx, v.y + m.dy);
+    ctx.fillStyle = 'rgba(200,190,220,.92)';
+    ctx.font = '9.5px "Segoe UI","PingFang SC",sans-serif';
+    ctx.fillText(m.sub, v.x + m.dx * 1.8, v.y + m.dy + 16);
+    ctx.fillStyle = m.c;
+    ctx.beginPath(); ctx.arc(v.x, v.y, 3.4, 0, 6.283); ctx.fill();
+  });
+
+  /* 方向标注 */
+  ctx.font = '10px "Segoe UI","PingFang SC",sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(154,144,173,.8)';
+  const topMidX = (zone[0].x + zone[1].x) / 2;
+  ctx.fillText(APP_LANG === 'en' ? 'high' : '高（上）', topMidX, 20);
+  ctx.fillText(APP_LANG === 'en' ? 'front' : '前', 22, (zone[0].y + zone[3].y) / 2);
+  ctx.fillText(APP_LANG === 'en' ? 'back' : '后', CW - 22, (zone[1].y + zone[2].y) / 2);
+  ctx.textAlign = 'left';
+  ctx.fillText(APP_LANG === 'en' ? 'drag anywhere inside' : '按住拖动 · 任意点 = 三色加权混合', 10, CH - 10);
+
+  /* 舌位点 */
+  const px = state.x, py = state.y;
+  const pulse = 0.7 + 0.3 * Math.sin(state.t * 7);
+  const gg = ctx.createRadialGradient(px, py, 1, px, py, 15);
+  gg.addColorStop(0, 'rgba(255,209,102,' + (0.75 * pulse) + ')');
+  gg.addColorStop(1, 'rgba(255,209,102,0)');
+  ctx.fillStyle = gg;
+  ctx.beginPath(); ctx.arc(px, py, 15, 0, 6.283); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,209,102,.9)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(px, py, 7, 0, 6.283); ctx.stroke();
+  ctx.fillStyle = '#ffd166';
+  ctx.beginPath(); ctx.arc(px, py, 3.2, 0, 6.283); ctx.fill();
+
+  /* 点到三个顶点的连线（权重可视化） */
+  const w = bary({ x: px, y: py });
+  const cols = { i: 'rgba(127,216,255,.4)', u: 'rgba(255,122,168,.4)', a: 'rgba(255,184,107,.4)' };
+  Object.keys(cols).forEach(function (k) {
+    ctx.strokeStyle = cols[k]; ctx.lineWidth = 1.2; ctx.setLineDash([2, 4]);
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(VTX[k].x, VTX[k].y); ctx.stroke();
+  });
+  ctx.setLineDash([]);
+}
+
+/* ---------- 绘制：声道横截面积 ---------- */
+function drawCavity(mix) {
+  const cv = document.getElementById('cavCv');
+  const ctx = cv.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const cw = 620, chh = 210;
+  cv.width = cw * dpr; cv.height = chh * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cw, chh);
+  const bg = ctx.createLinearGradient(0, 0, 0, chh);
+  bg.addColorStop(0, '#161322'); bg.addColorStop(1, '#0b0a10');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, cw, chh);
+
+  const padL = 44, padR = 40, top = 20, bot = chh - 32;
+  const midY = (top + bot) / 2;
+  const n = mix.area.length;
+  const step = (cw - padL - padR) / (n - 1);
+
+  /* 后腔/前腔分界：最窄点（舌位收窄） */
+  let iMin = 0;
+  for (let i = 1; i < n; i++) if (mix.area[i] < mix.area[iMin]) iMin = i;
+
+  ctx.font = '10px "Segoe UI","PingFang SC",sans-serif';
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = 'rgba(154,144,173,.85)';
+  ctx.fillText(APP_LANG === 'en' ? 'lips' : '双唇', padL - 6, midY);
+  ctx.textAlign = 'right';
+  ctx.fillText(APP_LANG === 'en' ? 'glottis' : '声门', cw - padR + 6, midY);
+
+  /* 区域底色：后腔(琥珀) / 前腔(青) */
+  ctx.globalAlpha = 0.16;
+  ctx.fillStyle = '#7fd8ff';
+  ctx.fillRect(padL, top, xOf(iMin) - padL, bot - top);
+  ctx.fillStyle = '#ffb86b';
+  ctx.fillRect(xOf(iMin), top, cw - padR - xOf(iMin), bot - top);
+  ctx.globalAlpha = 1;
+
+  /* 中央轴线 */
+  ctx.strokeStyle = 'rgba(154,144,173,.35)'; ctx.lineWidth = 1;
+  ctx.setLineDash([4, 5]);
+  ctx.beginPath(); ctx.moveTo(padL, midY); ctx.lineTo(cw - padR, midY); ctx.stroke();
+  ctx.setLineDash([]);
+
+  /* 声道管壁：上下镜像面积曲线 */
+  function xOf(i) { return cw - padR - step * i; }
+  const maxR = (bot - top) / 2 - 2;
+  const grad = ctx.createLinearGradient(padL, 0, cw - padR, 0);
+  grad.addColorStop(0, 'rgba(127,216,255,.9)');
+  grad.addColorStop(0.5, 'rgba(232,226,239,.85)');
+  grad.addColorStop(1, 'rgba(255,184,107,.85)');
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) {
+    const r = mix.area[i] * maxR;
+    const x = xOf(i);
+    if (i === 0) ctx.moveTo(x, midY - r); else ctx.lineTo(x, midY - r);
+  }
+  for (let i = n - 1; i >= 0; i--) {
+    const r = mix.area[i] * maxR;
+    ctx.lineTo(xOf(i), midY + r);
+  }
+  ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+  ctx.strokeStyle = 'rgba(232,226,239,.5)'; ctx.lineWidth = 1.4; ctx.stroke();
+
+  /* 最窄点（收窄/舌位高点） */
+  const nx = xOf(iMin);
+  ctx.strokeStyle = 'rgba(255,209,102,.85)'; ctx.lineWidth = 1.6;
+  ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(nx, top); ctx.lineTo(nx, bot); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#ffd166';
+  ctx.beginPath(); ctx.arc(nx, midY, 3, 0, 6.283); ctx.fill();
+  ctx.textAlign = 'center';
+  ctx.fillText(APP_LANG === 'en' ? 'tongue constriction (hump)' : '舌位收窄点（舌体最高点）', nx, bot + 12);
+
+  /* 腔体文字 */
+  ctx.fillStyle = 'rgba(127,216,255,.95)';
+  ctx.textAlign = 'left';
+  ctx.fillText(APP_LANG === 'en' ? 'front cavity → F2' : '前腔 → 主要定 F2', padL + 8, top + 10);
+  ctx.fillStyle = 'rgba(255,184,107,.95)';
+  ctx.textAlign = 'right';
+  ctx.fillText(APP_LANG === 'en' ? 'back cavity → F1' : '后腔 → 主要定 F1', cw - padR - 8, top + 10);
+  ctx.textAlign = 'left';
+  ctx.fillStyle = 'rgba(154,144,173,.8)';
+  ctx.fillText(APP_LANG === 'en' ? 'tube width = cross-sectional area · shape changes = cavity changes' : '管子粗细 = 截面积（形状连续变化即共振腔在变形）', padL + 8, chh - 10);
+}
+
+/* ---------- 绘制：声源—滤波频谱 ---------- */
+function drawAcou(mix) {
+  const cv = document.getElementById('acouCv');
+  const ctx = cv.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const cw = 620, chh = 215;
+  cv.width = cw * dpr; cv.height = chh * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cw, chh);
+  const bg = ctx.createLinearGradient(0, 0, 0, chh);
+  bg.addColorStop(0, '#161322'); bg.addColorStop(1, '#0b0a10');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, cw, chh);
+
+  const padL = 40, padR = 14, hudH = 20, top = 6 + hudH, bot = chh - 16;
+  const FMAX = 5000;
+  const fm = mix.fm;
+  const xOf = f => padL + (Math.max(0, Math.min(FMAX, f)) / FMAX) * (cw - padL - padR);
+  const nBar = Math.floor(FMAX / F0);
+
+  ctx.font = '10px "Segoe UI","PingFang SC",sans-serif';
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
+  let hx = 8;
+  const chips = [
+    ['F1', fm.f1, '#ffb86b'], ['F2', fm.f2, '#7fd8ff'], ['F3', fm.f3, '#ff7aa8']
+  ];
+  chips.forEach(function (c) {
+    ctx.fillStyle = c[2];
+    ctx.beginPath(); ctx.arc(hx + 4, 12, 3.2, 0, 6.283); ctx.fill();
+    ctx.fillText(c[0] + ' ' + Math.round(c[1]) + ' Hz', hx + 10, 12);
+    hx += ctx.measureText(c[0] + ' ' + Math.round(c[1]) + ' Hz').width + 24;
+  });
+  ctx.textAlign = 'right';
+  ctx.fillStyle = 'rgba(154,144,173,.9)';
+  ctx.fillText('f0 ' + F0 + ' Hz · ' + (APP_LANG === 'en' ? 'harmonics = source' : '竖线谐波＝声源'), cw - padR, 12);
+
+  /* 声源包络（灰虚线，1/n 衰减） */
+  ctx.strokeStyle = 'rgba(154,144,173,.4)'; ctx.lineWidth = 1.2;
+  ctx.setLineDash([3, 4]);
+  ctx.beginPath();
+  for (let i = 1; i <= nBar; i++) {
+    const f = i * F0;
+    const a = 1 / Math.pow(i, 1.35);
+    const x = xOf(f), y = bot - a * (bot - top);
+    if (i === 1) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+
+  /* 声道传输函数：三个高斯共振峰包络 */
+  function env(f) {
+    function gauss(Fn, A, bw) {
+      const x = (f - Fn) / bw;
+      return A * Math.exp(-0.5 * x * x);
+    }
+    return gauss(fm.f1, 1, 120) + gauss(fm.f2, 0.95, 160) + gauss(fm.f3, 0.8, 240);
+  }
+  let eMax = 0.001;
+  const N = 200;
+  for (let i = 0; i <= N; i++) {
+    const f = FMAX * i / N; const e = env(f); if (e > eMax) eMax = e;
+  }
+  /* 输出 = 声源 × 腔体 */
+  const barH = bot - top;
+  for (let i = 1; i <= nBar; i++) {
+    const f = i * F0;
+    const src = 1 / Math.pow(i, 1.35);
+    const out = src * env(f) / eMax;
+    const bh = out * barH;
+    const x = xOf(f);
+    const col = out > 0.35 ? 'rgba(255,122,168,' + (0.55 + 0.45 * Math.min(1, out)).toFixed(3) + ')' : 'rgba(127,216,255,' + (0.3 + 0.6 * out).toFixed(3) + ')';
+    ctx.fillStyle = col;
+    ctx.fillRect(x - 2, bot - bh, 4, Math.max(1, bh));
+  }
+  /* 包络曲线（白） */
+  ctx.beginPath();
+  for (let i = 0; i <= N; i++) {
+    const f = FMAX * i / N;
+    const e = env(f) / eMax;
+    const x = xOf(f), y = bot - e * barH;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.strokeStyle = 'rgba(232,226,239,.9)'; ctx.lineWidth = 1.8; ctx.stroke();
+
+  /* 峰值竖线 */
+  chips.forEach(function (c) {
+    const x = xOf(c[1]);
+    ctx.strokeStyle = c[2]; ctx.globalAlpha = 0.55; ctx.lineWidth = 1.2;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bot); ctx.stroke();
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
+  });
+
+  /* 轴 */
+  ctx.fillStyle = 'rgba(154,144,173,.7)';
+  ctx.font = '9px "Segoe UI",sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  for (let f = 0; f <= FMAX; f += 1000) {
+    ctx.fillText(f === 0 ? '0' : (f / 1000) + 'k', xOf(f), bot + 2);
+  }
+  ctx.textAlign = 'right';
+  ctx.fillText('Hz', cw - padR, bot + 2);
+  ctx.textAlign = 'left';
+  ctx.fillStyle = 'rgba(154,144,173,.8)';
+  ctx.font = '10px "Segoe UI","PingFang SC",sans-serif';
+  ctx.fillText(APP_LANG === 'en' ? 'output spectrum = source × cavity (vowel colour)' : '输出频谱（彩条）＝ 声源 × 腔体 —— 能量集中处即元音音色', padL, top - 14);
+}
+
+/* ---------- 等响曲线数据（示意，dB SPL） ---------- */
+const HF = [20, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000, 12500, 16000, 20000];
+const THR = [74, 64, 54, 44, 36, 29, 22, 17, 13, 9, 6, 4, 3, 2, 2, 2, 2, 2, 2, 2, 1, 0, -1, -2, -1, 1, 5, 9, 15, 24, 38];
+const P40 = [101, 91, 83, 74, 66, 58, 51, 46, 42, 38, 35, 33, 31, 30, 29, 29, 30, 40, 37, 33, 29, 24, 20, 18, 21, 27, 34, 41, 49, 58, 68];
+const P70 = [121, 112, 104, 96, 89, 82, 76, 71, 67, 63, 60, 58, 56, 55, 54, 55, 57, 70, 65, 60, 55, 50, 47, 46, 49, 55, 62, 68, 75, 83, 92];
+function splAt(arr, f) {
+  if (f <= HF[0]) return arr[0];
+  for (let i = 1; i < HF.length; i++) {
+    if (f <= HF[i]) {
+      const t = (Math.log(f) - Math.log(HF[i - 1])) / (Math.log(HF[i]) - Math.log(HF[i - 1]));
+      return arr[i - 1] + (arr[i] - arr[i - 1]) * t;
+    }
+  }
+  return arr[arr.length - 1];
+}
+
+/* ---------- 绘制：听觉敏感度 ---------- */
+function drawHear(mix) {
+  const cv = document.getElementById('hearCv');
+  const ctx = cv.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const cw = 620, chh = 300;
+  cv.width = cw * dpr; cv.height = chh * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cw, chh);
+  const bg = ctx.createLinearGradient(0, 0, 0, chh);
+  bg.addColorStop(0, '#161322'); bg.addColorStop(1, '#0b0a10');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, cw, chh);
+
+  const padL = 42, padR = 14, top = 16, bot = chh - 26;
+  const fMin = 20, fMax = 20000, dBMax = 125;
+  const xOf = f => padL + (Math.log(f / fMin) / Math.log(fMax / fMin)) * (cw - padL - padR);
+  const yOf = dB => bot - (Math.max(0, Math.min(dBMax, dB)) / dBMax) * (bot - top);
+
+  /* 可听区底色（听阈之上） */
+  ctx.beginPath();
+  for (let i = 0; i < HF.length; i++) {
+    const x = xOf(HF[i]), y = yOf(Math.max(-2, THR[i]));
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.lineTo(xOf(fMax), top); ctx.lineTo(xOf(fMin), top);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(127,216,255,.06)'; ctx.fill();
+
+  /* 语音频带 & 最敏感区 */
+  ctx.fillStyle = 'rgba(154,144,173,.10)';
+  ctx.fillRect(xOf(250), top, xOf(4000) - xOf(250), bot - top);
+  ctx.fillStyle = 'rgba(255,209,102,.10)';
+  ctx.fillRect(xOf(1000), top, xOf(5000) - xOf(1000), bot - top);
+
+  /* 网格 */
+  ctx.strokeStyle = 'rgba(154,144,173,.14)'; ctx.lineWidth = 1;
+  ctx.font = '9px "Segoe UI",sans-serif';
+  ctx.textBaseline = 'top';
+  [100, 1000, 10000].forEach(function (f) {
+    ctx.beginPath(); ctx.moveTo(xOf(f), top); ctx.lineTo(xOf(f), bot); ctx.stroke();
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(154,144,173,.55)';
+    ctx.fillText(f >= 1000 ? (f / 1000) + 'k' : String(f), xOf(f), bot + 3);
+  });
+  ctx.fillStyle = 'rgba(154,144,173,.55)';
+  ctx.textAlign = 'left'; ctx.fillText('20', xOf(20), bot + 3);
+  ctx.textAlign = 'right'; ctx.fillText('20k', xOf(20000), bot + 3);
+  ctx.fillStyle = 'rgba(154,144,173,.35)';
+  ctx.textAlign = 'right'; ctx.fillText('Hz', cw - padR, bot + 3);
+  [0, 40, 80, 120].forEach(function (db) {
+    const y = yOf(db);
+    ctx.strokeStyle = 'rgba(154,144,173,.14)';
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(cw - padR, y); ctx.stroke();
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(154,144,173,.55)';
+    ctx.fillText(db, padL - 6, y);
+  });
+
+  function drawCurve(arr, color, dash, lw) {
+    ctx.beginPath();
+    for (let i = 0; i < HF.length; i++) {
+      const x = xOf(HF[i]), y = yOf(arr[i]);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = color; ctx.lineWidth = lw || 1.6;
+    if (dash) ctx.setLineDash(dash);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  drawCurve(THR, 'rgba(232,226,239,.95)', null, 2);
+  drawCurve(P40, '#c9b8ff', null, 1.5);
+  drawCurve(P70, '#c9b8ff', [5, 4], 1.2);
+
+  /* 曲线标注 */
+  ctx.font = '10px "Segoe UI","PingFang SC",sans-serif';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(232,226,239,.9)';
+  ctx.textAlign = 'left';
+  ctx.fillText(APP_LANG === 'en' ? 'threshold' : '听阈', xOf(90) + 4, yOf(14) - 2);
+  ctx.fillStyle = '#c9b8ff';
+  ctx.fillText('40 phon', xOf(130) + 2, yOf(splAt(P40, 150)) - 8);
+  ctx.fillText('70 phon', xOf(70) + 2, yOf(splAt(P70, 100)) - 10);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(154,144,173,.85)';
+  ctx.fillText(APP_LANG === 'en' ? 'speech band' : '语音频带', xOf(1100), top + 8);
+  ctx.fillStyle = 'rgba(255,209,102,.9)';
+  ctx.fillText(APP_LANG === 'en' ? 'most sensitive' : '最敏感区', xOf(2400), top + 8);
+
+  /* 60 dB 言语声级参考线 */
+  const y60 = yOf(60);
+  ctx.strokeStyle = 'rgba(255,184,107,.35)'; ctx.lineWidth = 1;
+  ctx.setLineDash([2, 5]);
+  ctx.beginPath(); ctx.moveTo(padL, y60); ctx.lineTo(cw - padR, y60); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.textAlign = 'right';
+  ctx.fillStyle = 'rgba(255,184,107,.8)';
+  ctx.fillText(APP_LANG === 'en' ? '≈60 dB speech level' : '≈60 dB 言语声级', cw - padR, y60 - 4);
+
+  /* 当前元音 F1/F2/F3 */
+  const fm = mix.fm;
+  const fmCols = [
+    ['F1', fm.f1, '#ffb86b'], ['F2', fm.f2, '#7fd8ff'], ['F3', fm.f3, '#ff7aa8']
+  ];
+  fmCols.forEach(function (c) {
+    const x = xOf(c[1]);
+    ctx.strokeStyle = c[2]; ctx.globalAlpha = 0.85; ctx.lineWidth = 1.4;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bot); ctx.stroke();
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
+    ctx.fillStyle = c[2];
+    ctx.beginPath(); ctx.arc(x, y60, 4, 0, 6.283); ctx.fill();
+    ctx.fillStyle = c[2];
+    ctx.font = '600 10px "Segoe UI","Charis SIL",serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText(c[0] + ' ' + Math.round(c[1]), x, top - 2);
+  });
+
+  /* 标题区 */
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#e8e2ef';
+  ctx.font = '600 11px "Segoe UI","PingFang SC",sans-serif';
+  ctx.fillText(APP_LANG === 'en' ? 'Hearing: equal-loudness (dB SPL vs frequency, log)' : '听觉：等响曲线（纵轴声压级 dB，横轴频率·对数）', padL, 10);
+}
+
+/* ---------- 信息面板 ---------- */
+function heightWord(w) {
+  const wa = w.wa;
+  if (wa < 0.08) return APP_LANG === 'en' ? 'high' : '高';
+  if (wa < 0.3) return APP_LANG === 'en' ? 'high-mid' : '半高';
+  if (wa < 0.55) return APP_LANG === 'en' ? 'mid' : '中';
+  if (wa < 0.78) return APP_LANG === 'en' ? 'low-mid' : '半低';
+  return APP_LANG === 'en' ? 'low' : '低';
+}
+function frontWord(w) {
+  const f = (w.wi - w.wu) / (w.wi + w.wu + 1e-9);
+  if (f > 0.5) return APP_LANG === 'en' ? 'front' : '前';
+  if (f > 0.15) return APP_LANG === 'en' ? 'front-mid' : '偏前';
+  if (f > -0.15) return APP_LANG === 'en' ? 'central' : '央';
+  if (f > -0.5) return APP_LANG === 'en' ? 'back-mid' : '偏后';
+  return APP_LANG === 'en' ? 'back' : '后';
+}
+function roundWord(w) {
+  const r = w.wu;
+  if (r > 0.6) return APP_LANG === 'en' ? 'rounded' : '圆唇';
+  if (r > 0.25) return APP_LANG === 'en' ? 'slightly rounded' : '略圆';
+  return APP_LANG === 'en' ? 'spread / open' : '展唇·自然';
+}
+function openWord(g) {
+  if (g > 11) return APP_LANG === 'en' ? 'wide' : '大开口';
+  if (g > 8) return APP_LANG === 'en' ? 'medium' : '中开口';
+  return APP_LANG === 'en' ? 'small' : '小开口';
+}
+
+function updateInfo(mix, force) {
+  const key = [mix.wi, mix.wu, mix.wa].map(x => Math.round(x * 100)).join(',');
+  const now = performance.now();
+  if (!force && key === lastInfoKey && now - lastInfoTime < 250) return;
+  lastInfoKey = key;
+  lastInfoTime = now;
+
+  const pct = v => Math.round(v * 100) + '%';
+  document.getElementById('mixI').style.width = pct(mix.wi);
+  document.getElementById('mixU').style.width = pct(mix.wu);
+  document.getElementById('mixA').style.width = pct(mix.wa);
+  document.getElementById('mixIV').textContent = pct(mix.wi);
+  document.getElementById('mixUV').textContent = pct(mix.wu);
+  document.getElementById('mixAV').textContent = pct(mix.wa);
+
+  const chips = document.getElementById('chips');
+  chips.innerHTML = '';
+  const tags = [];
+  const dom = (mix.wi > mix.wu && mix.wi > mix.wa) ? 'i' : (mix.wu > mix.wa ? 'u' : 'a');
+  tags.push((APP_LANG === 'en' ? 'dominant: ' : '主导顶点：') + dom.toUpperCase());
+  tags.push((APP_LANG === 'en' ? 'tongue ' : '舌位') + heightWord(mix));
+  tags.push((APP_LANG === 'en' ? 'tongue ' : '舌位') + frontWord(mix));
+  tags.push(roundWord(mix));
+  tags.push(openWord(mix.lip.g));
+  tags.forEach(function (t) {
+    const c = document.createElement('span');
+    c.className = 'chip' + (/dominant|主导/.test(t) ? ' hot' : '');
+    c.textContent = t; chips.appendChild(c);
+  });
+
+  const f = mix.fm;
+  const fmChips = [
+    ['F1 ' + Math.round(f.f1) + ' Hz', 'f1'], ['F2 ' + Math.round(f.f2) + ' Hz', 'f2'], ['F3 ' + Math.round(f.f3) + ' Hz', 'f3']
+  ];
+  fmChips.forEach(function (c) {
+    const s = document.createElement('span');
+    s.className = 'chip ' + c[1];
+    s.textContent = c[0]; chips.appendChild(s);
+  });
+
+  const en = APP_LANG === 'en';
+  const d = document.getElementById('desc');
+  const hi = heightWord(mix), fr = frontWord(mix), rw = roundWord(mix), ow = openWord(mix);
+  d.innerHTML = en
+    ? 'Now speaking a vowel between <b>i/u/a</b> with the tongue <b>' + hi + ' · ' + fr + '</b>, lips <b>' + rw + '</b>, mouth <b>' + ow + '</b>. The two cavities share the space: <b>back cavity</b> mostly sets F1 (' + Math.round(f.f1) + ' Hz), <b>front cavity + lip shape</b> sets F2 (' + Math.round(f.f2) + ' Hz).'
+    : '当前发出介于 <b>i / u / a</b> 之间的元音：舌位<b>' + hi + '·' + fr + '</b>，唇形<b>' + rw + '</b>，<b>' + ow + '</b>。两个共振腔在「抢」声道空间：<b>后腔</b>主要定 F1（' + Math.round(f.f1) + ' Hz），<b>前腔与唇形</b>定 F2（' + Math.round(f.f2) + ' Hz）。';
+  const tip = document.getElementById('tip');
+  tip.textContent = en
+    ? 'Rule of thumb — F1 ↓ when the tongue rises & mouth closes (i, u); F1 ↑ when the mouth opens (a). F2 ↑ when the tongue moves forward & lips spread (i); F2 ↓ when the tongue retracts & lips round (u).'
+    : '口诀 —— 舌位越高、口越闭 → F1 越低（i、u）；口张得越大 → F1 越高（a）。舌位越前、唇越展 → F2 越高（i）；舌位越后、唇越圆 → F2 越低（u）。';
+  document.getElementById('hearTip').textContent = en
+    ? 'The current formants F1–F3 (' + Math.round(f.f1) + '/' + Math.round(f.f2) + '/' + Math.round(f.f3) + ' Hz) all fall inside the speech band and the ear\u2019s most sensitive region \u2014 the auditory reason this exact mouth shape is so clearly perceived.'
+    : '当前共振峰 F1–F3（' + Math.round(f.f1) + '/' + Math.round(f.f2) + '/' + Math.round(f.f3) + ' Hz）全部落在语音频带与听觉最敏感区之内 —— 这正是这种口腔形状能被我们清楚感知的听觉基础。';
+  document.getElementById('backTxt').textContent = en
+    ? (f.f1 < 400 ? 'small → F1 low' : f.f1 < 620 ? 'medium' : 'large → F1 high')
+    : (f.f1 < 400 ? '小 → F1 低' : f.f1 < 620 ? '中' : '大 → F1 高');
+  document.getElementById('frontTxt').textContent = en
+    ? (f.f2 > 1800 ? 'short → F2 high' : f.f2 > 1000 ? 'medium' : 'long → F2 low')
+    : (f.f2 > 1800 ? '短 → F2 高' : f.f2 > 1000 ? '中' : '长 → F2 低');
+  document.getElementById('backBar').style.width = Math.round(clamp((f.f1 - 250) / 600, 0.12, 1) * 100) + '%';
+  document.getElementById('frontBar').style.width = Math.round(clamp((2600 - f.f2) / 2000, 0.12, 1) * 100) + '%';
+  const sb = document.getElementById('stageBadge');
+  sb.textContent = 'i ' + pct(mix.wi) + ' · u ' + pct(mix.wu) + ' · a ' + pct(mix.wa);
+}
+
+/* ---------- 实时嗓音合成（Web Audio） ---------- */
+let actx = null, master = null, osc = null, f1f = null, f2f = null, f3f = null;
+function glottalPulse(p) {
+  const OQ = 0.5;
+  if (p < OQ) return 0.5 - 0.5 * Math.cos(2 * Math.PI * p / OQ);
+  return 0;
+}
+function buildGlottalWave() {
+  if (!actx || !osc || !actx.createPeriodicWave) return;
+  try {
+    const real = new Float32Array(64), imag = new Float32Array(64);
+    const N = 512;
+    for (let k = 1; k < 64; k++) {
+      let re = 0, im = 0;
+      for (let i = 0; i < N; i++) {
+        const p = i / N;
+        const v = glottalPulse(p);
+        const th = 2 * Math.PI * k * i / N;
+        re += v * Math.cos(th); im += v * Math.sin(th);
+      }
+      real[k] = re / N; imag[k] = im / N;
+    }
+    osc.setPeriodicWave(actx.createPeriodicWave(real, imag));
+  } catch (e) { /* 保持默认波形 */ }
+}
+function ensureAudio() {
+  if (actx) return true;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return false;
+  actx = new AC();
+  master = actx.createGain(); master.gain.value = 0; master.connect(actx.destination);
+  osc = actx.createOscillator(); osc.type = 'triangle'; osc.frequency.value = F0;
+  buildGlottalWave();
+  f1f = actx.createBiquadFilter(); f1f.type = 'peaking'; f1f.frequency.value = 500; f1f.Q.value = 6; f1f.gain.value = 10;
+  f2f = actx.createBiquadFilter(); f2f.type = 'peaking'; f2f.frequency.value = 1500; f2f.Q.value = 8; f2f.gain.value = 7;
+  f3f = actx.createBiquadFilter(); f3f.type = 'peaking'; f3f.frequency.value = 2500; f3f.Q.value = 7; f3f.gain.value = 5;
+  osc.connect(f1f); f1f.connect(f2f); f2f.connect(f3f); f3f.connect(master);
+  osc.start();
+  return true;
+}
+function applyFormants(fm) {
+  if (!actx) return;
+  const now = actx.currentTime;
+  f1f.frequency.setTargetAtTime(fm.f1, now, 0.04);
+  f2f.frequency.setTargetAtTime(fm.f2, now, 0.04);
+  f3f.frequency.setTargetAtTime(fm.f3, now, 0.04);
+}
+function setVoice(on) {
+  if (on && !ensureAudio()) return false;
+  if (!actx) return false;
+  if (actx.state === 'suspended') actx.resume();
+  master.gain.setTargetAtTime(on ? 0.55 : 0, actx.currentTime, 0.05);
+  state.voice = on;
+  const b = document.getElementById('btnVoice');
+  b.classList.toggle('on', on);
+  b.textContent = on ? (APP_LANG === 'en' ? '🔇 Mute' : '🔇 静音') : (APP_LANG === 'en' ? '🔊 Voice' : '🔊 发声');
+  return true;
+}
+
+/* ---------- 示范动画 ---------- */
+function demoPos(t) {
+  const edges = [['i', 'u'], ['u', 'a'], ['a', 'i']];
+  const seg = Math.floor(t * 3);
+  const u = easeInOut((t * 3 - seg));
+  const a = edges[seg][0], b = edges[seg][1];
+  cornerPos(a);
+  const x = lerp(VTX[a].x, VTX[b].x, u);
+  const y = lerp(VTX[a].y, VTX[b].y, u);
+  weightsAt(x, y);
+}
+function easeInOut(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+
+/* ---------- 事件 ---------- */
+const chartCv = document.getElementById('chartCv');
+function evtPos(e) {
+  const r = chartCv.getBoundingClientRect();
+  return { x: (e.clientX - r.left) / r.width * CW, y: (e.clientY - r.top) / r.height * CH };
+}
+chartCv.addEventListener('pointerdown', function (e) {
+  e.preventDefault();
+  chartCv.setPointerCapture(e.pointerId);
+  state.demo = false;
+  demoBtnSync();
+  const p = evtPos(e);
+  weightsAt(p.x, p.y);
+  state.dirty = true;
+});
+chartCv.addEventListener('pointermove', function (e) {
+  if (e.buttons !== 1) return;
+  const p = evtPos(e);
+  weightsAt(p.x, p.y);
+  state.dirty = true;
+});
+chartCv.addEventListener('pointerup', function () { state.dirty = true; });
+document.querySelectorAll('.vowel-btn').forEach(function (b) {
+  b.addEventListener('click', function () {
+    state.demo = false;
+    demoBtnSync();
+    cornerPos(b.dataset.v);
+    state.dirty = true;
+  });
+});
+document.getElementById('btnDemo').addEventListener('click', function () {
+  state.demo = !state.demo;
+  demoBtnSync();
+});
+document.getElementById('btnVoice').addEventListener('click', function () {
+  const ok = setVoice(!state.voice);
+  if (!ok) {
+    this.textContent = '⚠️ ' + (APP_LANG === 'en' ? 'audio unavailable' : '音频不可用');
+    this.disabled = true;
+  }
+});
+document.getElementById('lblToggle').addEventListener('change', function (e) {
+  state.labels = e.target.checked;
+});
+document.getElementById('fontSize').addEventListener('input', function (e) {
+  ZOOM = parseFloat(e.target.value);
+  document.documentElement.style.setProperty('--zoom', ZOOM);
+  document.getElementById('fontSizeVal').textContent = ZOOM.toFixed(2) + '×';
+});
+
+document.addEventListener('keydown', function (e) {
+  const tag = (e.target && e.target.tagName) || '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+  const step = 14;
+  let moved = false;
+  if (e.key === 'ArrowLeft') { weightsAt(state.x - step, state.y); moved = true; e.preventDefault(); }
+  else if (e.key === 'ArrowRight') { weightsAt(state.x + step, state.y); moved = true; e.preventDefault(); }
+  else if (e.key === 'ArrowUp') { weightsAt(state.x, state.y - step); moved = true; e.preventDefault(); }
+  else if (e.key === 'ArrowDown') { weightsAt(state.x, state.y + step); moved = true; e.preventDefault(); }
+  else if (e.key === '1') { cornerPos('i'); moved = true; }
+  else if (e.key === '2') { cornerPos('u'); moved = true; }
+  else if (e.key === '3') { cornerPos('a'); moved = true; }
+  else if (e.key === ' ' || e.code === 'Space') { document.getElementById('btnVoice').click(); e.preventDefault(); }
+  if (moved) { state.demo = false; demoBtnSync(); state.dirty = true; }
+});
+
+/* ---------- 中英文 ---------- */
+const UI_TEXT = {
+  zh: { title: '元音发音动态图', sub: '同一个声音，三个视角：生理（共振腔形状）→ 声学（共振峰与音色）→ 听觉（人耳敏感区间）。在舌位图上按住拖动，三张图同时变化。', help: '使用说明', lang: 'EN', ariaLang: '切换到英文' },
+  en: { title: 'Vowel Production · Physiology–Acoustics–Hearing', sub: 'One sound, three views: <b>physiology</b> (resonance cavities) → <b>acoustics</b> (formants & timbre) → <b>hearing</b> (ear sensitivity). Press and drag inside the vowel triangle — all three panels update together.', help: 'Help', lang: '中文', ariaLang: '切换到中文' }
+};
+function applyLanguage() {
+  const en = APP_LANG === 'en';
+  const t = UI_TEXT[APP_LANG];
+  document.documentElement.lang = en ? 'en' : 'zh-CN';
+  document.title = en ? 'Vowel Production Dynamic Chart' : '元音发音动态图 · 生理—声学—听觉';
+  document.querySelector('header h1').textContent = t.title;
+  document.querySelector('header p').innerHTML = t.sub;
+  document.getElementById('btnHelp').textContent = t.help;
+  document.getElementById('btnLang').textContent = t.lang;
+  document.getElementById('btnLang').setAttribute('aria-label', t.ariaLang);
+  document.getElementById('helpTitle').textContent = en ? 'Help' : '帮助';
+  document.getElementById('helpZh').hidden = en;
+  document.getElementById('helpEn').hidden = !en;
+  document.getElementById('helpClose').setAttribute('aria-label', en ? 'Close help' : '关闭帮助');
+
+  const Z = {
+    c1hint: ['口腔共振腔随舌位连续变形；双唇、下颌、声带联动', 'the mouth cavity reshapes continuously with the tongue; lips, jaw and folds follow'],
+    c2hint: ['按住鼠标拖动舌位点：口腔形状、共振峰、音色实时联动', 'press and drag the tongue dot: mouth shape, formants and timbre update live'],
+    c3hint: ['上：声道横截面积；下：声源谐波被共振腔滤波成元音频谱', 'top: vocal-tract cross-section; bottom: source harmonics filtered into the vowel spectrum'],
+    c4hint: ['等响曲线示意：曲线越低表示人耳越敏感', 'equal-loudness contours: lower curve = more sensitive ear'],
+    paneLips: ['口型前视图', 'Lips · front view'],
+    note1: ['<b>前腔与后腔</b>：舌位把声道分成两个共振腔——收窄点后面的<b>后腔</b>主要决定 F1，收窄点前面的<b>前腔</b>和唇形主要决定 F2（见下「声学」卡）。', '<b>Front &amp; back cavities</b>: the tongue divides the tract into two resonators — the <b>back cavity</b> behind the constriction mainly sets F1, the <b>front cavity</b> ahead of it (plus lip shape) sets F2 (see card ③).'],
+    note2: ['元音都是浊音：<b>声带</b>持续振动，气流平稳通过口腔，软腭上抬、鼻腔关闭。', 'Vowels are voiced: the <b>vocal folds</b> vibrate steadily while air flows through the mouth; the velum is raised and the nose is closed.'],
+    note3: ['黄色圆点是舌体最高点；口型前视图中的圆孔会随<b>圆唇/展唇</b>变化。', 'The yellow dot is the highest point of the tongue; the opening in the lip front view changes with <b>rounding / spreading</b>.'],
+    chartHint: ['👆 在梯形范围内按住并移动鼠标（或点下方 a / i / u 跳到典型元音）', '👆 press and move inside the trapezoid (or click a / i / u below to jump to a typical vowel)'],
+    capJump: ['跳到典型元音', 'Jump to a typical vowel'],
+    voiceNote: ['发声 = 用声道共振峰实时合成嗓音（基频恒为 158 Hz）。拖舌位或点示范循环，可听到音色随 F1/F2 滑移。第一次发声需点击浏览器允许音频。', 'Voice = real-time formant synthesis (fundamental fixed at 158 Hz). Drag the tongue point or run the demo with voice on to hear the timbre glide with F1/F2. Browsers may ask permission for audio on first click.'],
+    fl1: ['声门声源（谐波，振幅随频率下降）', 'glottal source (harmonics falling with frequency)'],
+    fl2: ['共振腔滤波（F1 F2 F3 峰）', 'cavity filtering (F1 F2 F3 peaks)'],
+    fl3: ['口唇辐射＝元音音色', 'lip radiation = vowel colour'],
+    cav1t: ['后腔（收窄点 → 声门）· 主要定 F1', 'back cavity (constriction → glottis) · mostly sets F1'],
+    cav1s: ['体积小 → F1 低（i、u）', 'small → low F1 (i, u)'],
+    cav2t: ['前腔（收窄点 → 双唇）· 主要定 F2', 'front cavity (constriction → lips) · mostly sets F2'],
+    cav2s: ['腔短/口开 → F2 高（i）；圆唇加长 → F2 低（u）', 'short / open → high F2 (i); lengthened by rounding → low F2 (u)'],
+    cavNote: ['示意：下方横条从左前到右后用「体积」表示两腔大小——舌体收窄点前后滑动时两腔此消彼长，共振峰随之移动（教学简化模型）。', 'Schematic: the bars show each cavity "volume" — as the tongue constriction slides forward/back the two cavities trade space and the formants move (simplified teaching model).'],
+    lg0: ['听阈', 'threshold'],
+    lg1: ['40 phon', '40 phon'],
+    lg2: ['70 phon', '70 phon'],
+    lg3: ['语音频带 250–4000 Hz', 'speech band 250–4000 Hz'],
+    lg4: ['最敏感区 ≈1–5 kHz', 'most sensitive ≈1–5 kHz'],
+    lg5: ['当前 F1', 'current F1'],
+    lg6: ['当前 F2', 'current F2'],
+    lg7: ['当前 F3', 'current F3'],
+    kTitle: ['三者如何连起来', 'How the three connect'],
+    kHint: ['拖动舌位图即可验证下面每一句话', 'drag the vowel chart to verify every sentence'],
+    k1: ['<div class="t">生理（共振腔形状）</div>舌高点前后、高低与双唇圆展构成两个可变共振腔：<b>后腔</b>与<b>前腔</b>。舌位前、圆唇少 → 前腔短而开口大；舌位后、圆唇 → 前腔被唇「延长」。', '<div class="t">Physiology (cavity shape)</div>The front–back position and height of the tongue hump, together with the lips, make two variable resonators: the <b>back</b> and <b>front</b> cavities. Front tongue, less rounding → short, wide-open front cavity; back tongue with rounding → the lips “lengthen” the front cavity.'],
+    k2: ['<div class="t">声学（共振峰与音色）</div>声带谐波经共振腔滤波，能量集中处成为共振峰：<b>F1 低</b> ← 开口小/舌位高（i、u）；<b>F1 高</b> ← 口张大（a）；<b>F2 高</b> ← 舌位前、展唇（i）；<b>F2 低</b> ← 舌位后、圆唇（u）。峰的位置（Hz）＝元音「音色」的声学签名。', '<div class="t">Acoustics (formants &amp; timbre)</div>Glottal harmonics are filtered by the cavities; the energy peaks become formants: <b>low F1</b> ← small opening / high tongue (i, u); <b>high F1</b> ← wide mouth (a); <b>high F2</b> ← front tongue, spread lips (i); <b>low F2</b> ← back tongue, rounded lips (u). Peak frequencies (Hz) are the acoustic signature of vowel quality.'],
+    k3: ['<div class="t">听觉（感知）</div>人耳可听 20–20000 Hz，但绝非一样灵：对约 <b>1–5 kHz</b> 最敏感，且语音能量集中在 <b>250–4000 Hz</b>。a / i / u 的 F1–F3 恰好都在这一高敏感区，所以只需很小的声能即可清晰辨别。', '<div class="t">Hearing (perception)</div>The ear covers 20–20000 Hz but is not equally sensitive: it is most sensitive around <b>1–5 kHz</b>, and speech energy concentrates in <b>250–4000 Hz</b>. The F1–F3 of a / i / u all fall inside this high-sensitivity zone, so even faint vowels are clearly distinguished.'],
+    kNote: ['模型为教学简化：舌位图内任意点由 a/i/u 三顶点的「口形 + 共振峰」平滑混合而成；真实发音还受个人声道尺寸、语速与语境影响。', 'Simplified teaching model: any point in the triangle smoothly mixes the mouth shape + formants of the three corners a / i / u; real speech also depends on individual tract size, rate and context.'],
+    f0: ['F1（开口度/舌高）', 'F1 (opening / tongue height)'],
+    f1: ['F2（舌位前后/唇形）', 'F2 (front–back / lip shape)'],
+    f2: ['F3（次要听感）', 'F3 (secondary cue)'],
+    f3: ['舌位点', 'tongue dot'],
+    f4: ['舌体', 'tongue body'],
+    f5: ['声带振动', 'vocal-fold vibration'],
+    lblText: ['显示器官标注', 'Show anatomy labels'],
+    aria1: ['发音器官剖面动态图', 'Articulation profile animation'],
+    aria2: ['a i u 元音舌位图，可拖动', 'a i u vowel triangle chart, draggable'],
+    aria3: ['口型前视图', 'Lip front view'],
+    aria4: ['声道横截面积示意', 'Vocal-tract cross-section schematic'],
+    aria5: ['声源滤波频谱图', 'Source-filter spectrum chart'],
+    aria6: ['人耳等响敏感度曲线与元音共振峰位置', 'Equal-loudness curves with vowel formant positions']
+  };
+  Object.keys(Z).forEach(function (k) {
+    const el = document.getElementById(k);
+    if (el) el.innerHTML = en ? Z[k][1] : Z[k][0];
+  });
+  const cards = document.querySelectorAll('.card-title');
+  const zhT = ['① 生理 · 发音器官剖面 ', '② 舌位图 · a / i / u ', '③ 声学 · 共振腔形状 → 共振峰 → 元音音色 ', '④ 听觉 · 人耳敏感度与元音的听觉区间 ', '📎 '];
+  const enT = ['① Physiology · articulation profile ', '② Vowel triangle · a / i / u ', '③ Acoustics · cavity shape → formants → vowel colour ', '④ Hearing · ear sensitivity & where vowels sit ', '📎 '];
+  for (let i = 0; i < cards.length; i++) {
+    if (i < zhT.length && cards[i].firstChild && cards[i].firstChild.nodeType === 3) {
+      cards[i].firstChild.nodeValue = en ? enT[i] : zhT[i];
+    }
+  }
+  document.getElementById('mainCv').setAttribute('aria-label', en ? Z.aria1[1] : Z.aria1[0]);
+  document.getElementById('chartCv').setAttribute('aria-label', en ? Z.aria2[1] : Z.aria2[0]);
+  document.getElementById('frontCv').setAttribute('aria-label', en ? Z.aria3[1] : Z.aria3[0]);
+  document.getElementById('cavCv').setAttribute('aria-label', en ? Z.aria4[1] : Z.aria4[0]);
+  document.getElementById('acouCv').setAttribute('aria-label', en ? Z.aria5[1] : Z.aria5[0]);
+  document.getElementById('hearCv').setAttribute('aria-label', en ? Z.aria6[1] : Z.aria6[0]);
+
+  const bd = document.getElementById('btnDemo');
+  bd.textContent = state.demo ? (en ? '⏸ Demo' : '⏸ 示范') : (en ? '▶ Demo' : '▶ 示范');
+  const bv = document.getElementById('btnVoice');
+  if (!bv.disabled) bv.textContent = state.voice ? (en ? '🔇 Mute' : '🔇 静音') : (en ? '🔊 Voice' : '🔊 发声');
+  state.dirty = true;
+}
+function demoBtnSync() {
+  const bd = document.getElementById('btnDemo');
+  bd.classList.toggle('on', state.demo);
+  bd.textContent = state.demo ? (APP_LANG === 'en' ? '⏸ Demo' : '⏸ 示范') : (APP_LANG === 'en' ? '▶ Demo' : '▶ 示范');
+}
+document.getElementById('btnLang').addEventListener('click', function () {
+  APP_LANG = APP_LANG === 'zh' ? 'en' : 'zh';
+  applyLanguage();
+  updateInfo(currentMix(), true);
+});
+T.bindHelp('helpOverlay', 'btnHelp', 'helpClose');
+
+/* ---------- 主循环 ---------- */
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  if (!document.hidden) {
+    state.t += dt;
+    if (state.demo) demoPos((state.t * 0.09) % 1);
+    const mix = currentMix();
+    drawTract(mix);
+    drawFront(mix);
+    drawChart(mix);
+    drawCavity(mix);
+    drawAcou(mix);
+    drawHear(mix);
+    if (state.voice) applyFormants(mix.fm);
+    updateInfo(mix);
+  }
+  requestAnimationFrame(loop);
+}
+
+cornerPos('a');
+applyLanguage();
+updateInfo(currentMix(), true);
+requestAnimationFrame(loop);
+
+window.YY = {
+  getState: function () { const m = currentMix(); return { x: state.x, y: state.y, f1: Math.round(m.fm.f1), f2: Math.round(m.fm.f2), f3: Math.round(m.fm.f3), wi: +m.wi.toFixed(2), wu: +m.wu.toFixed(2), wa: +m.wa.toFixed(2) }; },
+  jump: function (k) { if (VTX[k]) { state.demo = false; cornerPos(k); state.dirty = true; return true; } return false; },
+  setXY: function (x, y) { state.demo = false; weightsAt(+x, +y); state.dirty = true; return this.getState(); },
+  setDemo: function (on) { state.demo = !!on; demoBtnSync(); return state.demo; },
+  setVoice: function (on) { return setVoice(!!on); }
+};
+
+/* ---------- 自检模式（headless / ?autotest=1） ---------- */
+(function () {
+  try {
+    if (!/autotest/.test(location.search)) return;
+    state.demo = false;
+    const pre = document.createElement('pre');
+    pre.id = 'autotestResult';
+    pre.style.cssText = 'position:fixed;bottom:0;left:0;z-index:99999;background:#000;color:#7f7;font-size:10px;white-space:pre-wrap;max-width:100vw;max-height:50vh;overflow:auto;';
+    document.body.appendChild(pre);
+    function sample(cv) {
+      const ctx = cv.getContext('2d');
+      const d = ctx.getImageData(0, 0, Math.min(60, cv.width), Math.min(60, cv.height)).data;
+      let sum = 0, nonZero = 0;
+      for (let i = 0; i < d.length; i += 4) { sum += d[i] + d[i + 1] + d[i + 2]; if (d[i + 3] > 0) nonZero++; }
+      return Math.round(sum / Math.max(1, d.length / 4)) + '|' + Math.round(nonZero / Math.max(1, d.length / 4) * 100) + '%';
+    }
+    setTimeout(function () {
+      const out = {};
+      out.jsErr = (document.getElementById('jserr') || {}).textContent || null;
+      out.painted = {};
+      ['mainCv', 'frontCv', 'chartCv', 'cavCv', 'acouCv', 'hearCv'].forEach(function (id) {
+        try { out.painted[id] = sample(document.getElementById(id)); } catch (e) { out.painted[id] = 'ERR ' + e.message; }
+      });
+      const Y = window.YY;
+      Y.jump('u'); out.u = Y.getState();
+      Y.jump('i'); out.i = Y.getState();
+      Y.jump('a'); out.a = Y.getState();
+      Y.setXY(138, 160); out.mid = Y.getState();
+      const m1 = parseFloat(document.getElementById('mixI').style.width), m2 = parseFloat(document.getElementById('mixU').style.width), m3 = parseFloat(document.getElementById('mixA').style.width);
+      out.mixbarSum = Math.round(m1 + m2 + m3);
+      let voiceOk = null;
+      try { voiceOk = Y.setVoice(true); voiceOk = voiceOk && !(document.getElementById('jserr')); Y.setVoice(false); } catch (e) { voiceOk = 'ERR ' + e.message; }
+      out.voiceOk = voiceOk;
+      if (document.getElementById('btnLang').textContent === 'EN') document.getElementById('btnLang').click();
+      setTimeout(function () {
+        out.langEn = document.documentElement.lang;
+        out.note1En = document.getElementById('note1').textContent.indexOf('front cavity') >= 0;
+        out.c1hintEn = document.getElementById('c1hint').textContent.indexOf('cavity reshapes') >= 0;
+        out.titleEn = document.title;
+        document.getElementById('btnLang').click();
+        setTimeout(function () {
+          out.langBack = document.documentElement.lang;
+          out.jsErr2 = (document.getElementById('jserr') || {}).textContent || null;
+          pre.textContent = JSON.stringify(out);
+        }, 150);
+      }, 200);
+    }, 900);
+  } catch (e) {
+    const pre = document.createElement('pre');
+    pre.id = 'autotestResult';
+    pre.textContent = 'SELFTEST-FAIL ' + (e && e.message ? e.message : e);
+    document.body.appendChild(pre);
+  }
+})();
+</script>
+</body>
+</html>
