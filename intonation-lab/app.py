@@ -85,6 +85,7 @@ SS.setdefault("comp_orig_hash", None)
 SS.setdefault("comp_edit_hash", None)
 SS.setdefault("comp_audio_epoch", None)
 SS.setdefault("dur_factors", [])
+SS.setdefault("dur_applied_factors", None)
 SS.setdefault("dur_apply_msg", None)
 
 # 从 .txt 导入的对齐文本：须在“对齐”输入框实例化之前写入（否则不能修改已实例化控件）
@@ -99,6 +100,10 @@ def _snapshot() -> dict:
         "points": [list(p) for p in SS["edit_points"]],
         "layers": _layers_deep(),
         "dur_factors": list(SS.get("dur_factors", [])),
+        "dur_applied_factors": (
+            list(SS["dur_applied_factors"])
+            if isinstance(SS.get("dur_applied_factors"), list) else None
+        ),
         "pitch_dirty": bool(SS.get("pitch_dirty", False)),
     }
 
@@ -148,6 +153,7 @@ def _sync_dur_factors() -> None:
 def _reset_dur_factors() -> None:
     """把时长因子全部重置为 1×（并保持与音节数一致）。"""
     SS["dur_factors"] = [1.0] * len(SS.get("syllables", []))
+    SS["dur_applied_factors"] = None
 
 
 def _push_history() -> None:
@@ -169,6 +175,7 @@ def _undo() -> None:
     SS["edit_points"] = entry.get("points", [])
     SS["layers"] = entry.get("layers", [])
     SS["dur_factors"] = list(entry.get("dur_factors", []))
+    SS["dur_applied_factors"] = entry.get("dur_applied_factors")
     SS["pitch_dirty"] = bool(entry.get("pitch_dirty", False))
     _sync_layers()
     _sync_dur_factors()
@@ -185,6 +192,7 @@ def _redo() -> None:
     SS["edit_points"] = entry.get("points", [])
     SS["layers"] = entry.get("layers", [])
     SS["dur_factors"] = list(entry.get("dur_factors", []))
+    SS["dur_applied_factors"] = entry.get("dur_applied_factors")
     SS["pitch_dirty"] = bool(entry.get("pitch_dirty", False))
     _sync_layers()
     _sync_dur_factors()
@@ -203,6 +211,7 @@ def _set_audio(data: bytes, name: str) -> bool:
     SS["syllables"] = []
     SS["layers"] = []
     SS["dur_factors"] = []
+    SS["dur_applied_factors"] = None
     SS["edit_history"] = []
     SS["redo_history"] = []
     SS["analysis_key"] = None
@@ -329,6 +338,7 @@ with st.sidebar:
                 SS["syllables"] = []
                 SS["layers"] = []
                 SS["dur_factors"] = []
+                SS["dur_applied_factors"] = None
                 SS["edit_history"] = []
                 SS["redo_history"] = []
                 SS["analysis_key"] = None
@@ -504,7 +514,11 @@ with st.sidebar:
             _cur_f = (SS.get("dur_factors") or [1.0] * _n_syl)
             _cur_f = [float(v) if v is not None else 1.0 for v in _cur_f]
             _cur_f = _cur_f + [1.0] * (_n_syl - len(_cur_f))
-            _changed = any(abs(_cur_f[i] - 1.0) > 1e-9 for i in range(_n_syl))
+            _applied_f = SS.get("dur_applied_factors")
+            if isinstance(_applied_f, list) and len(_applied_f) == _n_syl:
+                _changed = any(abs(_cur_f[i] - float(_applied_f[i])) > 1e-9 for i in range(_n_syl))
+            else:
+                _changed = any(abs(_cur_f[i] - 1.0) > 1e-9 for i in range(_n_syl))
             st.caption(tr("在图下方「时长带」上下拖动各音节调音长（0.5×–2×），"
                           "应用后按时长因子重合成（保持音高），生成的新音频自动载入、标注按时间映射迁移。"))
             if SS.get("dur_apply_msg"):
@@ -574,7 +588,9 @@ with st.sidebar:
                     SS["comp_audio_epoch"] = None
                     SS["layers"] = _new_layers
                     _sync_layers()
-                    _reset_dur_factors()
+                    # 保留已应用的倍率用于显示；相同倍率再次点击不会重复拉伸。
+                    SS["dur_factors"] = [float(v) for v in _fac[:len(_syls)]]
+                    SS["dur_applied_factors"] = list(SS["dur_factors"])
                     SS["dur_apply_msg"] = trf(
                         "✅ 已应用时长：新音频 {0} s（标注已按时间映射迁移，撤销已重置）",
                         round(len(_new) / _sr, 2),

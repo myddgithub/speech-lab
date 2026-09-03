@@ -79,7 +79,11 @@ class AppSmokeTests(unittest.TestCase):
         self.assertNotEqual(new_audio, old_audio)
         self.assertGreater(new_length, old_length)
         self.assertEqual(app.session_state["component_epoch"], old_epoch + 1)
-        self.assertEqual(app.session_state["dur_factors"], [1.0] * len(app.session_state["syllables"]))
+        self.assertEqual(app.session_state["dur_factors"], [1.5, 1.0, 1.0])
+        self.assertEqual(app.session_state["dur_applied_factors"], [1.5, 1.0, 1.0])
+        self.assertTrue(next(
+            button for button in app.button if button.label == "🕐 应用时长（重合成）"
+        ).disabled)
         self.assertTrue(app.session_state["dur_apply_msg"])
         self.assertEqual(len(app.exception), 0)
 
