@@ -61,7 +61,7 @@ class AppSmokeTests(unittest.TestCase):
         app.query_params["demo"] = "1"
         app.run(timeout=60)
 
-        auto_segment = next(button for button in app.button if button.label == "🧩 自动切分音节")
+        auto_segment = next(button for button in app.button if button.label == "音节自动切分")
         auto_segment.click().run(timeout=60)
         self.assertGreater(len(app.session_state["syllables"]), 0)
 
@@ -72,7 +72,7 @@ class AppSmokeTests(unittest.TestCase):
         app.run(timeout=60)
 
         apply_duration = next(
-            button for button in app.button if button.label == "🕐 应用时长（重合成）"
+            button for button in app.button if button.label == "应用"
         )
         self.assertFalse(apply_duration.disabled)
         apply_duration.click().run(timeout=60)
@@ -85,7 +85,7 @@ class AppSmokeTests(unittest.TestCase):
         self.assertEqual(app.session_state["dur_factors"], [1.5, 1.0, 1.0])
         self.assertEqual(app.session_state["dur_applied_factors"], [1.5, 1.0, 1.0])
         self.assertTrue(next(
-            button for button in app.button if button.label == "🕐 应用时长（重合成）"
+            button for button in app.button if button.label == "应用"
         ).disabled)
         self.assertTrue(app.session_state["dur_apply_msg"])
         self.assertEqual(len(app.exception), 0)
@@ -95,7 +95,7 @@ class AppSmokeTests(unittest.TestCase):
         app.query_params["demo"] = "1"
         app.run(timeout=60)
 
-        auto_segment = next(button for button in app.button if button.label == "🧩 自动切分音节")
+        auto_segment = next(button for button in app.button if button.label == "音节自动切分")
         auto_segment.click().run(timeout=60)
         samples, sample_rate, _ = core.load_audio_bytes(app.session_state["audio_bytes"])
         textgrid = core.textgrid_export(
@@ -113,7 +113,7 @@ class AppSmokeTests(unittest.TestCase):
         app.session_state["dur_factors"] = factors
         app.run(timeout=60)
         apply_duration = next(
-            button for button in app.button if button.label == "🕐 应用时长（重合成）"
+            button for button in app.button if button.label == "应用"
         )
         apply_duration.click().run(timeout=60)
 
@@ -122,6 +122,23 @@ class AppSmokeTests(unittest.TestCase):
         self.assertEqual(app.session_state["dur_factors"], factors)
         self.assertEqual(app.session_state["dur_applied_factors"], factors)
         self.assertEqual(len(app.exception), 0)
+
+    def test_save_row_lists_pitchtier_beside_textgrid_and_zip(self) -> None:
+        # PitchTier 下载钮紧跟 TextGrid 右侧；一键 ZIP 也包含 PitchTier
+        app = AppTest.from_file(APP_PATH)
+        app.query_params["demo"] = "1"
+        app.run(timeout=60)
+
+        self.assertEqual(len(app.exception), 0)
+        labels = [dl.label for dl in app.download_button]
+        self.assertEqual(
+            labels,
+            ["⬇️ 原始 WAV", "⬇️ 编辑后 WAV", "⬇️ TextGrid", "⬇️ PitchTier", "📦 一键保存全部"],
+        )
+        zip_help = next(
+            dl for dl in app.download_button if dl.label == "📦 一键保存全部"
+        ).help
+        self.assertIn("PitchTier", zip_help)
 
 
 if __name__ == "__main__":

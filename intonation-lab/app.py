@@ -510,6 +510,26 @@ with st.sidebar:
     frame_period = float(SS.setdefault("frame_period", 10))
 
     if SS["audio_bytes"] is not None:
+        if st.button(
+            tr("音节自动切分"), use_container_width=True,
+            help=tr("按浊音段自动生成连续音节框（可再手动微调）"),
+        ):
+            _push_history()
+            hh = core.bytes_hash(SS["audio_bytes"])
+            _s, _sr, _fmt = _load_only(hh, SS["audio_bytes"])
+            _t, _f = _analyze(hh, SS["audio_bytes"], f0_floor, f0_ceil, frame_period)
+            _set_syl(core.auto_segment_syllables(_s, _sr, _t, _f))
+            _reset_dur_factors()
+        n_syl = len(SS.get("syllables", []))
+        if st.button(
+            tr("按声调提取特征点"), use_container_width=True,
+            disabled=n_syl == 0,
+            help=tr("对每个标注音节按声调提取特征点"),
+        ):
+            _push_history()
+            SS["edit_points"] = core.extract_tone_feature_points(SS["edit_points"], SS["syllables"])
+            SS["pitch_dirty"] = True
+
         with st.expander(tr("📚 标注层"), expanded=False):
             _sync_layers()
             for i, lyr in enumerate(SS["layers"]):
@@ -541,18 +561,6 @@ with st.sidebar:
                 else:
                     st.warning(tr("请先填写新层名称。"))
 
-        with st.expander(tr("🎬 音节自动切分"), expanded=False):
-            if st.button(
-                "🧩 " + tr("自动切分音节"), use_container_width=True,
-                help=tr("按浊音段自动生成连续音节框（可再手动微调）"),
-            ):
-                _push_history()
-                hh = core.bytes_hash(SS["audio_bytes"])
-                _s, _sr, _fmt = _load_only(hh, SS["audio_bytes"])
-                _t, _f = _analyze(hh, SS["audio_bytes"], f0_floor, f0_ceil, frame_period)
-                _set_syl(core.auto_segment_syllables(_s, _sr, _t, _f))
-                _reset_dur_factors()
-
         with st.expander(tr("🎯 特征点"), expanded=False):
             stylize_tol = st.select_slider(
                 tr("容差（半音）"),
@@ -568,17 +576,6 @@ with st.sidebar:
                 SS["edit_points"] = core.stylize_points(SS["edit_points"], stylize_tol)
                 SS["pitch_dirty"] = True
 
-        with st.expander(tr("🎵 按声调提取特征点"), expanded=False):
-            n_syl = len(SS.get("syllables", []))
-            if st.button(
-                tr("🎶 应用声调特征点"), use_container_width=True,
-                disabled=n_syl == 0,
-                help=tr("对每个标注音节按声调提取特征点"),
-            ):
-                _push_history()
-                SS["edit_points"] = core.extract_tone_feature_points(SS["edit_points"], SS["syllables"])
-                SS["pitch_dirty"] = True
-
         with st.expander(tr("⏱ 时长调节"), expanded=False):
             _n_syl = len(SS.get("syllables", []))
             _cur_f = [float(v) if v is not None else 1.0 for v in (SS.get("dur_factors") or [1.0] * _n_syl)]
@@ -588,12 +585,10 @@ with st.sidebar:
                 _changed = any(abs(_cur_f[i] - float(_applied_f[i])) > 1e-9 for i in range(_n_syl))
             else:
                 _changed = any(abs(_cur_f[i] - 1.0) > 1e-9 for i in range(_n_syl))
-            if SS.get("dur_apply_msg"):
-                st.success(SS["dur_apply_msg"])
             _dc1, _dc2 = st.columns(2)
             with _dc1:
                 if st.button(
-                    tr("🕐 应用时长（重合成）"), width="stretch",
+                    tr("应用"), width="stretch",
                     disabled=(_n_syl == 0 or not _changed),
                     help=tr("按时长带因子重合成并载入新音频；因子未变则无需再点"),
                 ):
@@ -608,8 +603,6 @@ with st.sidebar:
                         _push_history()
                     _reset_dur_factors()
                     st.rerun()
-            if _n_syl:
-                st.caption("，".join(f"{i + 1}:{_cur_f[i]:.2f}×" for i in range(_n_syl)))
 
         with st.expander(tr("✏️ 音高编辑操作"), expanded=False):
             col_a, col_b = st.columns(2)
@@ -916,7 +909,7 @@ elif clicked_reset:
 elif align_clicked:
     syls, input_fmt = core.split_syllable_text(align_input)
     if n_box == 0:
-        align_err = tr("还没有音节框：请先用侧边栏“🧩 自动切分音节”或手动标注。")
+        align_err = tr("还没有音节框：请先用侧边栏“音节自动切分”或手动标注。")
     elif not syls:
         align_err = tr("未能解析出音节。汉字直接输入；拼音需写全字母并带声调数字（如 wo3）。")
     elif len(syls) != n_box:
@@ -1099,7 +1092,7 @@ st.caption(
 _HELP_HOW = {
     "zh": """**5 步上手**
 1. **导入 / 录音 / 示例**（左侧 🎛️ 音频输入）→ 自动提取 F0 音高曲线；
-2. **切分音节**：点「🧩 自动切分音节」把第 0 层 **PY** 铺满音节框，或开启 **📝 标注音节** 手动拖框；
+2. **切分音节**：点「音节自动切分」把第 0 层 **PY** 铺满音节框，或开启 **📝 标注音节** 手动拖框；
 3. **填拼音**：点选音节框后在右侧输入框填 `liu4`（末尾数字 = 声调）；整段文本可一次 **🔤 对齐** 填入；
 4. **调语调**：拖拽圆点改音高；A/双击加点、Delete 删点；侧边栏可整体升降半音 / 平滑 / 提取特征点；
 5. **保存**：💾 保存结果 下载 **原始 WAV / 编辑后 WAV / TextGrid / PitchTier**（📦 一键打包 ZIP）。
@@ -1113,7 +1106,7 @@ _HELP_HOW = {
   到段尾**精确停止**，不会连播后面的内容；
 - **任意段试听**：在顶部**波形图**上按住左右**拖拽框选**任意时间范围（出现蓝色选区），再点
   **▶ 播放选中·编辑后 / ·原始** 只播这一段；点选音节/区间段或重新框选会切换播放范围；
-- **时长调节（实验性）**：在图下方「时长带」把每个音节拖到 0.25×–3.0× 调音长，点「🕐 应用时长（重合成）」
+- **时长调节（实验性）**：在图下方「时长带」把每个音节拖到 0.25×–3.0× 调音长，点「应用」
   生成新音频（保持音高；自然语音可能带轻微音色变化，请用「🎧 试听对比」左栏“应用时长前”对照）。
   应用后按钮变灰 = 已应用；再次拖动因子即可再次应用；「因子重置 1×」还原；
 - **保存音高编辑**：调好的音高控制点/特征点曲线可点「💾 保存结果」下的 **“⬇️ PitchTier”**
@@ -1122,7 +1115,7 @@ _HELP_HOW = {
 - 界面语言：页面右上角 **中文 | English** 随时切换；帮助内容随语言切换。""",
     "en": """**5 steps to start**
 1. **Import / Record / Sample** (🎛️ Audio input on the left) → F0 curve is extracted automatically;
-2. **Segment syllables**: click “🧩 Auto-segment” to fill the **PY** tier (layer 0) with syllable boxes, or enable **📝 Annotate** to draw boxes by hand;
+2. **Segment syllables**: click “Auto-segment syllables” to fill the **PY** tier (layer 0) with syllable boxes, or enable **📝 Annotate** to draw boxes by hand;
 3. **Fill pinyin**: select a box and type `liu4` (trailing digit = tone) in the text box; a whole sentence can be **🔤 Aligned** into the boxes at once;
 4. **Adjust intonation**: drag the handles; A / double-click adds a point, Delete removes one; the sidebar can shift semitones / smooth / extract feature points globally;
 5. **Save**: in “💾 Save results” download **Original WAV / Edited WAV / TextGrid / PitchTier** (📦 or pack all as ZIP).
@@ -1133,7 +1126,7 @@ _HELP_HOW = {
 - For tiers 2..n use PY as a reference: **click a PY boundary** (red dashed line) → press **B** — interval tiers get a boundary, point tiers (TextTier) get a point at that instant;
 - **Play selection**: click any interval segment (a PY box or a tier like “word”) then use **▶ Play selection (edited / original)** to audition just that span — playback stops exactly at the segment end;
 - **Play an arbitrary range**: **drag horizontally on the waveform** at the top to select any time range (blue overlay), then use **▶ Play selection (edited / original)**; clicking a syllable/segment or re-dragging switches the range;
-- **Duration (experimental)**: in the “duration strip” below the chart drag each syllable to 0.25×–3.0× to change its length, then click **🕐 Apply durations (resynth.)** to produce a new audio (pitch kept; natural speech may colour slightly — compare with “before applying” on the left of 🎧 Compare). The grey button means it is already applied; drag a factor again to re-apply; “Reset factors to 1×” restores;
+- **Duration (experimental)**: in the “duration strip” below the chart drag each syllable to 0.25×–3.0× to change its length, then click **Apply** to produce a new audio (pitch kept; natural speech may colour slightly — compare with “before applying” on the left of 🎧 Compare). The grey button means it is already applied; drag a factor again to re-apply; “Reset factors to 1×” restores;
 - **Keep pitch edits**: your tuned pitch control / feature points can be saved under “💾 Save results” via **“⬇️ PitchTier”** (next to TextGrid) as a Praat PitchTier text file; or turn them into audio with **“💾 Freeze pitch into new audio”** in “✏️ Pitch editing”;
 - To align word by word: **double-click** a syllable box to split it first;
 - Language: switch **中文 | English** at the top-right of the page at any time.""",
