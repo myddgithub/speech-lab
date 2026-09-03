@@ -318,7 +318,7 @@ const AREA = {
 };
 
 let ZOOM = 1;
-let state = { x: VTX.a.x, y: VTX.a.y, demo: true, voice: false, rhotic: false, labels: true, t: 0, dirty: true };
+let state = { x: VTX.a.x, y: VTX.a.y, demo: true, voice: false, rhotic: false, labels: true, t: 0, dirty: true, renderSurf: null };
 let lastInfoKey = '';
 let lastInfoTime = 0;
 
@@ -414,7 +414,10 @@ function drawTract(mix) {
   T.drawScene(ctx, {
     inv: T.invFor(cv, ZOOM),
     time: state.t,
-    tongueSurf: mix.surf,
+    tongueSurf: (state.renderSurf = state.renderSurf || mix.surf.map(function (p) { return p.slice(); }),
+      state.renderSurf = state.renderSurf.map(function (p, i) {
+        return [p[0] + (mix.surf[i][0] - p[0]) * 0.20, p[1] + (mix.surf[i][1] - p[1]) * 0.20];
+      })),
     vel: T.VEL_UP,
     lip: { g: mix.lip.g, raise: 0, round: mix.lip.round, jaw: jaw },
     voicedOn: true,
@@ -899,6 +902,14 @@ function openWord(g) {
   return APP_LANG === 'en' ? 'small' : '小开口';
 }
 
+function syncRhoticButton() {
+  const rb = document.getElementById('btnRhotic');
+  if (!rb) return;
+  const en = APP_LANG === 'en';
+  rb.textContent = state.rhotic ? (en ? '↩ Rhotic: on' : '↩ 卷舌：开') : (en ? '↩ Rhotic: off' : '↩ 卷舌：关');
+  rb.classList.toggle('active', state.rhotic);
+  rb.setAttribute('aria-pressed', state.rhotic ? 'true' : 'false');
+}
 function updateInfo(mix, force) {
   const key = [mix.wi, mix.wu, mix.wa, mix.rhotic ? 1 : 0].map(x => Math.round(x * 100)).join(',');
   const now = performance.now();
@@ -1199,10 +1210,7 @@ function applyLanguage() {
   const bd = document.getElementById('btnDemo');
   bd.textContent = state.demo ? (en ? '⏸ Demo' : '⏸ 示范') : (en ? '▶ Demo' : '▶ 示范');
   const bv = document.getElementById('btnVoice');
-  const rb = document.getElementById('btnRhotic');
-  rb.textContent = state.rhotic ? (en ? '↩ Rhotic: on' : '↩ 卷舌：开') : (en ? '↩ Rhotic: off' : '↩ 卷舌：关');
-  rb.classList.toggle('active', state.rhotic);
-  rb.setAttribute('aria-pressed', state.rhotic ? 'true' : 'false');
+  syncRhoticButton();
   if (!bv.disabled) bv.textContent = state.voice ? (en ? '🔇 Mute' : '🔇 静音') : (en ? '🔊 Voice' : '🔊 发声');
   state.dirty = true;
 }
