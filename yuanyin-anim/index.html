@@ -153,7 +153,7 @@
         <button id="btnDemo" class="on">⏸ 示范</button>
         <button id="btnVoice">🔊 发声</button>
       </div>
-      <div class="audio-note" id="voiceNote">发声 = 用声道共振峰实时合成嗓音（基频恒为 158 Hz）。拖舌位或点示范循环，可听到音色随 F1/F2 滑移。第一次发声需点击浏览器允许音频。</div>
+      <div class="audio-note" id="voiceNote">发声 = 用声道共振峰实时合成嗓音（基频恒为 158 Hz）。拖舌位或点示范循环，可听到音色随 F1/F2 滑移；打开卷舌后可听到 F3 与前腔变化。第一次发声需点击浏览器允许音频。</div>
     </div>
   </div>
 
@@ -399,7 +399,7 @@ function currentMix() {
     f2: lerp3(FMTS.i.f2, FMTS.u.f2, FMTS.a.f2, w.wi, w.wu, w.wa),
     f3: lerp3(FMTS.i.f3, FMTS.u.f3, FMTS.a.f3, w.wi, w.wu, w.wa)
   };
-  if (state.rhotic) { fm.f1 += 25; fm.f2 -= 110; fm.f3 = Math.max(1700, fm.f3 - 520); }
+  if (state.rhotic) { fm.f1 += 55; fm.f2 -= 220; fm.f3 = Math.max(1500, fm.f3 - 850); }
   const area = [];
   for (let i = 0; i < AREA.i.length; i++) {
     area.push(lerp3(AREA.i[i], AREA.u[i], AREA.a[i], w.wi, w.wu, w.wa));
@@ -1060,12 +1060,14 @@ function ensureAudio() {
   osc.start();
   return true;
 }
-function applyFormants(fm) {
+function applyFormants(fm, rhotic) {
   if (!actx) return;
   const now = actx.currentTime;
   f1f.frequency.setTargetAtTime(fm.f1, now, 0.04);
   f2f.frequency.setTargetAtTime(fm.f2, now, 0.04);
   f3f.frequency.setTargetAtTime(fm.f3, now, 0.04);
+  f2f.gain.setTargetAtTime(rhotic ? 5 : 7, now, 0.04);
+  f3f.gain.setTargetAtTime(rhotic ? 9 : 5, now, 0.04);
 }
 function setVoice(on) {
   if (on && !ensureAudio()) return false;
@@ -1195,7 +1197,7 @@ function applyLanguage() {
     note3: ['黄色圆点是舌体最高点；口型前视图中的圆孔会随<b>圆唇/展唇</b>变化。', 'The yellow dot is the highest point of the tongue; the opening in the lip front view changes with <b>rounding / spreading</b>.'],
     chartHint: ['👆 在梯形范围内按住并移动鼠标（或点下方 a / i / u 跳到典型元音）', '👆 press and move inside the trapezoid (or click a / i / u below to jump to a typical vowel)'],
     capJump: ['跳到典型元音', 'Jump to a typical vowel'],
-    voiceNote: ['发声 = 用声道共振峰实时合成嗓音（基频恒为 158 Hz）。拖舌位或点示范循环，可听到音色随 F1/F2 滑移。第一次发声需点击浏览器允许音频。', 'Voice = real-time formant synthesis (fundamental fixed at 158 Hz). Drag the tongue point or run the demo with voice on to hear the timbre glide with F1/F2. Browsers may ask permission for audio on first click.'],
+    voiceNote: ['发声 = 用声道共振峰实时合成嗓音（基频恒为 158 Hz）。拖舌位或点示范循环，可听到音色随 F1/F2 滑移；打开卷舌后可听到 F3 与前腔变化。第一次发声需点击浏览器允许音频。', 'Voice = real-time formant synthesis (fundamental fixed at 158 Hz). Drag the tongue point or run the demo with voice on to hear the timbre glide with F1/F2. Browsers may ask permission for audio on first click.'],
     fl1: ['声门声源（谐波，振幅随频率下降）', 'glottal source (harmonics falling with frequency)'],
     fl2: ['共振腔滤波（F1 F2 F3 峰）', 'cavity filtering (F1 F2 F3 peaks)'],
     fl3: ['口唇辐射＝元音音色', 'lip radiation = vowel colour'],
@@ -1285,7 +1287,7 @@ function loop(now) {
     drawCavity(mix);
     drawAcou(mix);
     drawHear(mix);
-    if (state.voice) applyFormants(mix.fm);
+    if (state.voice) applyFormants(mix.fm, mix.rhotic);
     updateInfo(mix);
   }
   requestAnimationFrame(loop);
