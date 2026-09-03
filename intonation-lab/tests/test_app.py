@@ -90,6 +90,39 @@ class AppSmokeTests(unittest.TestCase):
         self.assertTrue(app.session_state["dur_apply_msg"])
         self.assertEqual(len(app.exception), 0)
 
+    def test_duration_apply_does_not_rearm_uploaded_textgrid(self) -> None:
+        app = AppTest.from_file(APP_PATH)
+        app.query_params["demo"] = "1"
+        app.run(timeout=60)
+
+        auto_segment = next(button for button in app.button if button.label == "🧩 自动切分音节")
+        auto_segment.click().run(timeout=60)
+        samples, sample_rate, _ = core.load_audio_bytes(app.session_state["audio_bytes"])
+        textgrid = core.textgrid_export(
+            app.session_state["syllables"], len(samples) / sample_rate, "PY"
+        ).encode("utf-8")
+
+        # 最后一个上传控件是侧栏的 TextGrid。保持它有值，复现真实页面在
+        # st.rerun 后仍会再次看到同一个 UploadedFile 的行为。
+        app.file_uploader[-1].upload("duration.TextGrid", textgrid, "text/plain").run(timeout=60)
+        seen_hash = core.bytes_hash(textgrid)
+        self.assertEqual(app.session_state["textgrid_seen_hash"], seen_hash)
+        self.assertIsNone(app.session_state["textgrid_pending"])
+
+        factors = [1.5] + [2.0] * (len(app.session_state["syllables"]) - 1)
+        app.session_state["dur_factors"] = factors
+        app.run(timeout=60)
+        apply_duration = next(
+            button for button in app.button if button.label == "🕐 应用时长（重合成）"
+        )
+        apply_duration.click().run(timeout=60)
+
+        self.assertEqual(app.session_state["textgrid_seen_hash"], seen_hash)
+        self.assertIsNone(app.session_state["textgrid_pending"])
+        self.assertEqual(app.session_state["dur_factors"], factors)
+        self.assertEqual(app.session_state["dur_applied_factors"], factors)
+        self.assertEqual(len(app.exception), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

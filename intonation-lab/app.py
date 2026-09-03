@@ -578,7 +578,8 @@ with st.sidebar:
                     SS["align_applied"] = None
                     SS["align_msg"] = None
                     SS["textgrid_pending"] = None
-                    SS["textgrid_seen_hash"] = None
+                    # 保留已上传 TextGrid 的已处理标记。若在这里清空，上传控件仍持有
+                    # 同一文件时，下一轮会把旧时间轴的 TextGrid 再导入并把倍率重置为 1×。
                     SS["textgrid_notice"] = None
                     SS["pitch_dirty"] = False
                     SS["last_seq"] = -1
