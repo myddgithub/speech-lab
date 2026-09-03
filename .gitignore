@@ -15,3 +15,7 @@ Thumbs.db
 .DS_Store
 .idea/
 .vscode/
+
+# Chrome CDP temp profiles
+.cdp-*/
+tools/.cdp-*/

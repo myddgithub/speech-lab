@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="dark" />
+<title>波动实验室 · 声波 / 水波 / 电波 / 地震波</title>
+<style>
+  :root{
+    --bg:#0b0d15; --panel:#131724; --panel2:#1a2030; --line:#2a3248; --text:#e9eef7;
+    --muted:#8b96ad; --cyan:#58c7ff; --warm:#ffb45e; --magenta:#ff7ad9; --green:#69e0a2;
+    --red:#ff8d6b; --accent:#6ee7ff;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:radial-gradient(1200px 640px at 50% -12%, #1c2440 0%, var(--bg) 60%);
+    color:var(--text);
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    min-height:100vh; padding:64px 18px 40px; line-height:1.6;
+  }
+  .wrap{max-width:1180px; margin:0 auto;}
+  header{text-align:center; margin-bottom:22px;}
+  header h1{font-size:26px; font-weight:700; letter-spacing:1px;}
+  header p{color:var(--muted); font-size:13.5px; margin-top:8px; max-width:860px; margin-left:auto; margin-right:auto;}
+  .topbtns{position:fixed; top:14px; right:16px; z-index:50; display:flex; gap:8px;}
+  .topbtn{padding:7px 14px; border-radius:999px; font-size:13px;}
+  .card{
+    background:linear-gradient(180deg,var(--panel2),var(--panel));
+    border:1px solid var(--line); border-radius:16px; padding:16px;
+    box-shadow:0 16px 44px rgba(0,0,0,.42); margin-bottom:18px;
+  }
+  .card-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:10px;}
+  .card-title{font-size:17px; font-weight:700; letter-spacing:.5px;}
+  .card-tag{font-size:12.5px; color:var(--cyan); opacity:.9;}
+  .cv{width:100%; border-radius:12px; overflow:hidden; border:1px solid var(--line); background:#07090f;}
+  canvas{display:block; width:100%; height:auto;}
+  .legend{display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; font-size:12.5px; color:var(--muted); align-items:center;}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .dot{width:11px; height:11px; border-radius:50%; flex:none;}
+  .bars{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px;}
+  .bars label{font-size:12.5px; color:var(--muted); flex:none;}
+  .bars input[type=range]{width:150px; accent-color:var(--accent);}
+  .bars input[type=range].wide{width:210px;}
+  .bars .val{font-size:13px; color:var(--accent); min-width:46px; font-variant-numeric:tabular-nums;}
+  .btn{
+    background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:9px;
+    padding:6px 13px; font-size:13px; cursor:pointer; transition:all .15s; font-family:inherit;
+  }
+  .btn:hover{border-color:var(--accent); color:#fff;}
+  .btn.on{background:linear-gradient(135deg,#1d3a5c,#14233d); border-color:var(--cyan); color:#fff;}
+  ul.bullets{margin-top:12px; padding-left:18px; color:#cfd7e6; font-size:13.5px;}
+  ul.bullets li{margin:5px 0;}
+  ul.bullets b{color:var(--warm);}
+  .grid3{display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:18px;}
+  .note{margin-top:8px; font-size:12px; color:var(--muted); border-left:3px solid var(--line); padding-left:10px;}
+  table{width:100%; border-collapse:collapse; margin-top:8px; font-size:13px;}
+  th{font-size:12.5px; color:var(--muted); font-weight:600; text-align:left; padding:8px 10px; border-bottom:1px solid var(--line);}
+  td{padding:8px 10px; border-bottom:1px solid rgba(42,50,72,.5); vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  .take{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:10px; margin-top:14px;}
+  .take div{background:rgba(255,255,255,.025); border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-size:12.8px; color:#c6cfdf;}
+  .take b{color:var(--accent);}
+  footer{text-align:center; color:var(--muted); font-size:12px; margin-top:8px;}
+  .hidden{display:none;}
+  #scrim{position:fixed; inset:0; background:rgba(5,7,14,.6); z-index:60; opacity:0; pointer-events:none; transition:opacity .22s;}
+  #scrim.show{opacity:1; pointer-events:auto;}
+  #helpPanel{
+    position:fixed; top:0; right:0; height:100%; width:min(460px,94vw); z-index:61;
+    background:linear-gradient(180deg,#1c2438,#111726); border-left:1px solid var(--line);
+    transform:translateX(105%); transition:transform .25s ease; display:flex; flex-direction:column;
+    box-shadow:-16px 0 40px rgba(0,0,0,.5);
+  }
+  #helpPanel.show{transform:none;}
+  .hHead{display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); font-weight:700;}
+  .hHead button{background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; line-height:1;}
+  .hHead button:hover{color:#fff;}
+  .hBody{overflow-y:auto; padding:14px 20px 30px; font-size:13px; color:#d4dbe9;}
+  .hBody h3{font-size:14.5px; margin:16px 0 6px; color:var(--accent);}
+  .hBody h3:first-child{margin-top:0;}
+  .kbd{display:inline-block; background:#0d1119; border:1px solid var(--line); border-radius:5px; padding:0 6px; font-size:11.5px; color:var(--accent);}
+  @media(max-width:700px){
+    body{padding-top:64px;}
+    .topbtn{padding:6px 11px;}
+    .bars input[type=range]{width:110px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 data-i18n="pageTitle">🌊 波动实验室 · 四种波的动态对比</h1>
+    <p data-i18n="sub">对比声波、水波、电波与地震波的传播：谁在振动、沿着什么方向传、速度差多少。</p>
+  </header>
+
+  <div class="topbtns">
+    <button class="topbtn" id="btnLang" type="button">EN</button>
+    <button class="topbtn" id="btnHelp" type="button" data-i18n="btnHelp">📖 帮助</button>
+  </div>
+
+  <!-- 主演示：声波在空气中传播 -->
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title"><span class="em">🔊</span> <span data-i18n="s1Title">声波在空气中的传播（主演示）</span></div>
+      <div class="card-tag" data-i18n="s1Tag">纵波 · 机械波 · 需要空气介质 · 示意慢放</div>
+    </div>
+    <div class="cv"><canvas id="cvSound" width="1240" height="700" role="img" aria-label="声波在空气中传播的纵波动画"></canvas></div>
+    <div class="legend">
+      <span><i class="dot" style="background:#ffb45e"></i><span data-i18n="legDense">密部 · 压强大</span></span>
+      <span><i class="dot" style="background:#58c7ff"></i><span data-i18n="legSparse">疏部 · 压强小</span></span>
+      <span><i class="dot" style="background:#dff3ff"></i><span data-i18n="legMol">空气分子（只在平衡位置附近振动）</span></span>
+      <span style="margin-left:auto"><span data-i18n="legTrack">黄点 = 单个分子振动范围</span></span>
+    </div>
+    <div class="bars">
+      <button class="btn" id="pauseBtn" type="button" data-i18n="pauseLbl">⏸ 暂停</button>
+      <label data-i18n="spdLbl">播放速度</label>
+      <input type="range" id="spdS" min="0.2" max="3" step="0.1" value="1" />
+      <span class="val" id="spdV">1.0×</span>
+      <label data-i18n="fLbl">声源频率 f</label>
+      <input type="range" class="wide" id="fS" min="100" max="1000" step="1" value="440" />
+      <span class="val" id="fV">440 Hz</span>
+      <label data-i18n="wvLbl">屏内波数 nλ</label>
+      <input type="range" id="cycS" min="1.5" max="4.5" step="0.1" value="2.4" />
+      <span class="val" id="cycV">2.4</span>
+      <button class="btn" id="toneBtn" type="button">🔊 <span data-i18n="toneLbl">试听声</span></button>
+      <button class="btn" id="annotBtn" type="button" title="wave annotations">🏷 标注：关</button>
+    </div>
+    <div class="note" id="lamNote"></div>
+    <ul class="bullets">
+      <li><b data-i18n="sL1">① 疏密波：</b><span data-i18n="sB1">振源左右往复振动，不断推挤、放开相邻空气分子，形成以声速向外传播的密部—疏部—密部。</span></li>
+      <li><b data-i18n="sL2">② 分子不随波走：</b><span data-i18n="sB2">每个空气分子只在平衡位置附近往返振动（黄点标记），传出去的是能量与扰动。</span></li>
+      <li><b data-i18n="sL3">③ 颜色：</b><span data-i18n="sB3">暖色 = 密部（压强大），冷色 = 疏部（压强小）；下方曲线为压强沿距离的变化 Δp。</span></li>
+      <li><b data-i18n="sL4">④ 波长：</b><span data-i18n="sB4">相邻两个密部（或疏部）的间距 = 一个波长 λ；满足 v = f·λ，空气中 v≈343 m/s。</span></li>
+      <li><b data-i18n="sL5">⑤ 波形读法：</b><span data-i18n="sB5">把 Δp 画成正弦波便于量参数：波峰=压强大（密部）、波谷=压强小（疏部）、振幅=压强变化幅度；纵波没有上下“峰谷”，这只是把疏密画成波形的记法。</span></li>
+    </ul>
+  </section>
+
+  <h2 style="font-size:19px; margin:26px 0 12px;">⚖ <span data-i18n="sec2">与其它波的对比</span></h2>
+  <div class="grid3">
+
+    <section class="card">
+      <div class="card-head">
+        <div class="card-title"><span class="em">🌊</span> <span data-i18n="wTitle">水波（表面波）</span></div>
+        <div class="card-tag" data-i18n="wTag">能量集中在水面附近</div>
+      </div>
+      <div class="cv"><canvas id="cvWater" width="640" height="460" role="img" aria-label="水波表面波动画"></canvas></div>
+      <ul class="bullets">
+        <li><b data-i18n="wL0">⚠️ 常见误区：水波不是“纯横波”。</b><span data-i18n="wB0">水面轮廓看似只是上下起伏，但真实水粒子同时在做水平来回运动（深水中水平、垂直振幅一样大）。</span></li>
+        <li><b data-i18n="wL1">表面波：</b><span data-i18n="wB1">水粒子沿近似圆/椭圆的轨道运动：波峰处向前、波谷处向后，只在小范围内打转，不随波远去。</span></li>
+        <li><b data-i18n="wL2">深度衰减：</b><span data-i18n="wB2">轨道半径随深度按指数减小，约一个波长深度以下几乎静止（深水潜艇很稳）。</span></li>
+        <li><b data-i18n="wL3">慢且色散：</b><span data-i18n="wB3">波速约 1~10 m/s 量级，与波长、水深有关；长波跑得比短波快。</span></li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div class="card-title"><span class="em">📡</span> <span data-i18n="eTitle">电波（电磁波）</span></div>
+        <div class="card-tag" data-i18n="eTag">横波 · 无需介质</div>
+      </div>
+      <div class="cv"><canvas id="cvEm" width="640" height="460" role="img" aria-label="电磁波电场磁场动画"></canvas></div>
+      <ul class="bullets">
+        <li><b data-i18n="eL1">自持传播：</b><span data-i18n="eB1">变化的电场激发磁场、变化的磁场再激发电场，两种场相互推进，不需要任何介质。</span></li>
+        <li><b data-i18n="eL2">横波：</b><span data-i18n="eB2">电场 E、磁场 B 与传播方向两两垂直；真空中速度恒为光速 c≈3.0×10⁸ m/s。</span></li>
+        <li><b data-i18n="eL3">波长 = c / f：</b><span data-i18n="eB3">FM≈100 MHz → λ≈3 m；4G≈1.8 GHz → λ≈17 cm。无线电只是电磁波谱低频（长波）的一段。</span></li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div class="card-title"><span class="em">🌍</span> <span data-i18n="qTitle">地震波</span></div>
+        <div class="card-tag" data-i18n="qTag">P 纵波先到 · S 横波后到</div>
+      </div>
+      <div class="cv"><canvas id="cvSeis" width="640" height="460" role="img" aria-label="地震波P波S波动画"></canvas></div>
+      <ul class="bullets">
+        <li><b data-i18n="qL1">P 波（纵·推拉）：</b><span data-i18n="qB1">最快，约 6~7 km/s，固体、液体、气体中都能通过，最先到达台站。</span></li>
+        <li><b data-i18n="qL2">S 波（横·剪切）：</b><span data-i18n="qB2">较慢，约 3.5~4 km/s；剪切波不能穿过液体，因此无法穿过液态外核（S 波影区）。</span></li>
+        <li><b data-i18n="qL3">P–S 到时差 Δt：</b><span data-i18n="qB3">震中距越大 Δt 越大；用多个台站的 Δt 交会即可定位震源。</span></li>
+      </ul>
+    </section>
+  </div>
+
+  <!-- 对比总表 -->
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title">📋 <span data-i18n="tblTitle">四种波 · 快速对比</span></div>
+    </div>
+    <table>
+      <thead><tr>
+        <th data-i18n="th1">波</th>
+        <th data-i18n="th2">波的类别</th>
+        <th data-i18n="th3">需要介质？</th>
+        <th data-i18n="th4">典型速度</th>
+        <th data-i18n="th5">真空中可否传播</th>
+      </tr></thead>
+      <tbody>
+        <tr><td><b data-i18n="tdName1">🔊 声波</b></td><td data-i18n="td1a">纵波（机械波，分子疏密振动）</td><td data-i18n="td1b">是：空气 / 水 / 固体</td><td data-i18n="td1c">≈343 m/s（空气中）</td><td data-i18n="td1d">否</td></tr>
+        <tr><td><b data-i18n="tdName2">🌊 水波</b></td><td data-i18n="td2a">表面波（粒子做圆/椭圆运动）</td><td data-i18n="td2b">是：水体</td><td data-i18n="td2c">约 1~10 m/s（与水深/波长有关）</td><td data-i18n="td2d">否</td></tr>
+        <tr><td><b data-i18n="tdName3">📡 电波</b></td><td data-i18n="td3a">横波（E、B 互相垂直且垂直传播方向）</td><td data-i18n="td3b">否：真空可传播</td><td data-i18n="td3c">c ≈ 3.0×10⁸ m/s</td><td data-i18n="td3d">是（波速最快）</td></tr>
+        <tr><td><b data-i18n="tdName4">🌍 地震波</b></td><td data-i18n="td4a">P 纵波 + S 横波 + 面波</td><td data-i18n="td4b">是：地壳/地幔固体</td><td data-i18n="td4c">约 3~8 km/s（P 最快）</td><td data-i18n="td4d">否</td></tr>
+      </tbody>
+    </table>
+    <div class="take">
+      <div><b data-i18n="tkt1">🔑 介质决定能否传播与速度：</b><span data-i18n="tk1">声/水/地震是机械波，必须有介质，波速由介质性质决定；电磁波由场自持传播，在真空中最快。</span></div>
+      <div><b data-i18n="tkt2">🔑 一切波都满足 v = f·λ：</b><span data-i18n="tk2">波传递的是能量与信号，介质质点自身只在平衡位置附近运动。</span></div>
+      <div><b data-i18n="tkt3">🔑 横波 / 纵波看振动 vs 传播方向：</b><span data-i18n="tk3">平行 = 纵波（声波、P 波）；垂直 = 横波（电波、S 波、拨动的弦）。</span></div>
+    </div>
+  </section>
+
+  <footer data-i18n="foot">教学示意动画：分子振动幅度、波速、波长比例均经过放大或压缩，用于概念演示。</footer>
+</div>
+
+<!-- 帮助面板 -->
+<div id="scrim"></div>
+<aside id="helpPanel" role="dialog" aria-modal="true" aria-label="帮助">
+  <div class="hHead"><span id="helpTitle">📖 怎么读这张图</span><button id="helpClose" type="button" aria-label="close">✕</button></div>
+  <div class="hBody">
+    <div id="helpZh">
+      <h3>① 声波主图（上）</h3>
+      <p>左侧振膜左右振动，把“推挤”传给空气。<b>暖色条带 = 密部（分子挤在一起，压强大）</b>，<b>冷色条带 = 疏部（分子散开，压强小）</b>，条带以声速向右移动，这就是“疏密波 / 纵波”。</p>
+      <p>注意每个空气分子只在自己的<b>平衡位置</b>附近小幅往返（黄色标记是振动范围），分子并不会跟着波跑到右侧——被传递的是<b>能量</b>。</p>
+      <p>下方曲线是压强 Δp 沿传播距离的分布：密部处压强大（曲线向上），疏部处压强小（曲线向下）；<b>相邻两个密部/疏部间距 = 波长 λ</b>。曲线上的标注沿用了正弦波叫法：波峰=压强大（密部）、波谷=压强小（疏部）、振幅=压强变化幅度（纵波并无上下峰谷，这是把疏密画成波形的记法）。</p>
+      <h3>② 三个对比图</h3>
+      <p><b>水波：</b>看水面下的小球——它们沿圆形/椭圆轨道打转，越深轨道越小（指数衰减），而波形本身向右传播。注意：这正说明水波<b>不是纯横波</b>（粒子同时前后摆动），它是上下+水平混合的“表面波”。</p>
+      <p><b>电波：</b>青色波形是电场 E，洋红色的 ⊙/⊗ 符号表示磁场 B 垂直指向纸外/纸内，两者大小同步变化且都与传播方向 k 垂直——横波、无需介质。</p>
+      <p><b>地震波：</b>震源发出两圈波：绿色 P 波（纵波，快）先到台站，红色 S 波（横波，慢）后到；记录纸显示“P 先到、S 后到且幅度更大”，Δt = 到时差。</p>
+      <h3>③ 控件</h3>
+      <p><b>播放速度</b>控制所有动画快慢；<b>声源频率 f</b> 只影响<b>试听</b>音调与 λ=v/f 的真实数值，画面疏密间距请用<b>屏内波数</b>滑杆调整。</p>
+      <p><b>试听声</b>：播放 f 对应的纯正弦音。画面为慢放示意（真实声波每秒振动成百上千次，肉眼无法分辨）。</p>
+      <p><b>🏷 标注按钮</b>：一键显示 / 隐藏波形上的文字标注（疏部密部、波峰波谷、振幅、波长、频率、压强等说明文字）。</p>
+      <p style="margin-top:12px; color:var(--muted); font-size:12px">空格键：暂停 / 继续。</p>
+    </div>
+    <div id="helpEn" class="hidden">
+      <h3>① Main sound figure (top)</h3>
+      <p>The diaphragm oscillates left/right. <b>Warm bands = compressions</b> (molecules bunched, high pressure), <b>cool bands = rarefactions</b> (spread out, low pressure). The bands travel right at the speed of sound — a longitudinal compression wave.</p>
+      <p>Each air molecule only oscillates about its own <b>equilibrium</b> (yellow mark = travel range); molecules do not drift — <b>energy</b> travels.</p>
+      <p>The lower graph plots pressure Δp along the path: high at compressions, low at rarefactions; <b>distance between neighbouring compressions/rarefactions = wavelength λ</b>. Labels borrow sine-wave terms: crest = high pressure (compression), trough = low pressure (rarefaction), amplitude = pressure swing (longitudinal waves have no physical up/down crests — this is a drawing convention).</p>
+      <h3>② The three comparisons</h3>
+      <p><b>Water:</b> watch particles below the surface — circular/elliptical orbits that shrink exponentially with depth while the wave shape travels on. This shows water waves are <b>not purely transverse</b> (particles also move back-and-forth); they are “surface waves” mixing vertical and horizontal motion.</p>
+      <p><b>Radio (EM):</b> the cyan wave is E; the magenta ⊙/⊗ marks are B pointing out of / into the page. Both oscillate in step and are perpendicular to the travel direction k — transverse, no medium.</p>
+      <p><b>Seismic:</b> the source emits two fronts — green P (longitudinal, fast) arrives first, red S (transverse, slower) later; the recorder shows “P first, S later & larger”. Δt = arrival gap.</p>
+      <h3>③ Controls</h3>
+      <p><b>Speed</b> changes every animation. <b>Source frequency f</b> affects only the tone you <b>hear</b> and the real λ=v/f value; use the <b>waves-per-screen</b> slider to change spacing on screen.</p>
+      <p><b>Hear tone</b>: plays a pure sine at f. The figure is a slow-motion schematic — real sound oscillates hundreds of times per second.</p>
+      <p><b>🏷 Labels button</b>: one click shows / hides the text annotations on the wave (compressions/rarefactions, crest/trough, amplitude, wavelength, frequency, pressure notes).</p>
+      <p style="margin-top:12px; color:var(--muted); font-size:12px">Space key: pause / resume.</p>
+    </div>
+  </div>
+</aside>
+
+
+<script>
+"use strict";
+window.__errs = [];
+window.onerror = function (m, s, l, c, e) { window.__errs.push(String(m) + " @" + l + ":" + c); };
+window.__boot = false;
+window.__frames = 0;
+/* ================= 双语字典 ================= */
+const I18N = {
+  zh: {
+    sub:"动态演示：声波如何在空气中传播；并与水波、电波、地震波对比。",
+    pageTitle:"🌊 波动实验室 · 四种波的动态对比",
+    s1Title:"声波在空气中的传播（主演示）",
+    s1Tag:"纵波 · 机械波 · 需要空气介质 · 示意慢放",
+    wTitle:"水波（表面波）", wTag:"能量集中在水面附近 · 质点在圆/椭圆轨道上运动",
+    eTitle:"电波（电磁波）", eTag:"横波 · 无需介质 · 真空中光速传播",
+    qTitle:"地震波", qTag:"P 纵波先到 · S 横波后到",
+    sec2:"与其它波的对比", tblTitle:"四种波 · 快速对比", foot:"教学示意动画：质点振幅与波速均经放大/压缩以便观察，非真实比例。",
+    legDense:"密部 · 压强大", legSparse:"疏部 · 压强小", legMol:"空气分子（绕平衡位置振动）",
+    legTrack:"黄色 = 一个分子的振动范围（不随波迁移）",
+    pauseLbl:"⏸ 暂停", resumeLbl:"▶ 播放", spdLbl:"播放速度", fLbl:"声源频率 f", wvLbl:"屏内波数 nλ",
+    toneLbl:"🔊 试听声", toneOffLbl:"🔇 关闭声音", annotOnLbl:"🏷 标注：开", annotOffLbl:"🏷 标注：关",
+    btnHelp:"📖 帮助",
+    sL1:"① 疏密波：", sL2:"② 分子不随波走：", sL3:"③ 颜色：", sL4:"④ 波长：", sL5:"⑤ 波形读法：",
+    wL0:"⚠️ 常见误区：水波不是“纯横波”。", wL1:"表面波：", wL2:"深度衰减：", wL3:"慢且色散：",
+    eL1:"自持传播：", eL2:"横波：", eL3:"波长 = c / f：",
+    qL1:"P 波（纵·推拉）：", qL2:"S 波（横·剪切）：", qL3:"P–S 到时差 Δt：",
+    tdName1:"🔊 声波", tdName2:"🌊 水波", tdName3:"📡 电波", tdName4:"🌍 地震波",
+    tkt1:"🔑 介质决定能否传播与速度：", tkt2:"🔑 一切波都满足 v = f·λ：", tkt3:"🔑 横波 / 纵波看振动 vs 传播方向：",
+    sB1:"振源（振膜）左右往复振动，不断推挤与放开相邻空气分子，形成疏密相间、以声速向外传播的纵波。",
+    sB2:"空气分子只在各自的平衡位置附近做小幅往返振动（见黄色范围），并不随波迁移；被传递的是能量与扰动。",
+    sB3:"暖色=密部（分子密集、压强大），冷色=疏部（分子稀疏、压强小）。下方曲线是压强沿距离的变化 Δp。",
+    sB4:"相邻两个密部（或疏部）的间距 = 波长 λ；v = f·λ，空气中 v≈343 m/s。",
+    sB5:"把 Δp 画成正弦波便于量参数：波峰=压强大（密部）、波谷=压强小（疏部）、振幅=压强变化幅度；纵波没有上下峰谷，这只是把疏密画成波形的记法。",
+    wB0:"水面轮廓看似只是上下起伏，但真实水粒子同时在做水平来回运动（深水中水平与垂直振幅一样大）——所以水波不是纯横波。",
+    wB1:"水面粒子沿近似圆/椭圆的轨道运动：波峰处向前、波谷处向后，只在小范围内打转，不随波远去。",
+    wB2:"轨道半径随深度按指数规律快速衰减：约一个波长的深度以下，水的运动已几乎可忽略。",
+    wB3:"波速低（约 1~10 m/s，随波长与水深变化）且有色散：长波跑得比短波快。",
+    eB1:"变化的电场激发磁场，变化的磁场又激发电场——两种场互相“推进”，无需介质即可传播。",
+    eB2:"E、B 均垂直于传播方向 k，且 E⊥B（横波）；真空中速度恒为 c≈3.0×10⁸ m/s。",
+    eB3:"波长 λ = c / f：FM≈100 MHz → λ≈3 m；4G≈1.8 GHz → λ≈17 cm。无线电只是电磁波谱低频长波段。",
+    qB1:"P 波（纵波·推拉）：最快，约 6~7 km/s，固体液体气体都能通过，最先到达台站。",
+    qB2:"S 波（横波·剪切）：较慢，约 3.5~4 km/s；剪切波不能穿过液体，因此无法穿过液态外核（形成 S 波影区）。",
+    qB3:"同一台站 P、S 到时差 Δt 随震中距增大而增大：多个台站的 Δt 可用来定位震源。",
+    th1:"波", th2:"波的类别", th3:"需要介质？", th4:"典型速度", th5:"真空中可否传播",
+    td1a:"纵波（机械波）", td1b:"是（空气/水/固体）", td1c:"≈343 m/s（空气中）", td1d:"否",
+    td2a:"表面波（质点做圆/椭圆运动）", td2b:"是（水体）", td2c:"约 1~10 m/s（随水深/波长）", td2d:"否",
+    td3a:"横波（E、B 互相垂直且垂直传播方向）", td3b:"否（真空中可传播）", td3c:"≈3.0×10⁸ m/s", td3d:"是（最快）",
+    td4a:"P 纵波 + S 横波 + 面波", td4b:"是（地壳/地幔等固体）", td4c:"约 3~8 km/s（P 最快）", td4d:"否",
+    tk1:"声/水/地震是机械波，必须有介质且速度由介质决定；电磁波由“场”自持传播，在真空中最快。",
+    tk2:"所有波都满足 v = f·λ：波传递能量与信息，介质质点本身只绕平衡位置运动。",
+    tk3:"纵波=振动方向与传播方向平行（声波、P 波）；横波=垂直（电波、S 波、拨动的弦）。",
+    cDir:"传播方向", cSrc:"声源", cDense:"密部", cSparse:"疏部", cLambda:"λ",
+    cVn:"v≈343 m/s（空气·示意）", cPnote:"压强 Δp（上密下疏）", cWl:"相邻两个密部 = 波长 λ", cCrest:"波峰（压强大·密部）", cTrough:"波谷（压强小·疏部）", cAmp:"振幅（Δp 最大变化）", cF:"频率 f：每秒通过固定点的完整波形数（调节 f 滑杆·试听）",
+    cHz:"λ = v/f ≈ ", mUnit:"m", helpTitle:"📖 怎么读这张图",
+    wDir:"水波传播方向", wCrest:"波峰", wTrough:"波谷", wDepth:"轨道随深度迅速减小",
+    eE:"电场 E", eB:"磁场 B（⊙出纸 / ⊗入纸）", ePerp:"E ⊥ B ⊥ k", eLambda:"λ（一个完整波形）",
+    qP:"P（纵·先到）", qS:"S（横·后到）", qRec:"记录纸：P 先到、S 后到且幅度更大", qSeismo:"台站记录（示意）"
+  },
+  en: {
+    sub:"How sound propagates in air, compared with water, radio and seismic waves.",
+    pageTitle:"🌊 Wave Lab · Four waves compared",
+    s1Title:"Sound wave in air (main demo)",
+    s1Tag:"Longitudinal · mechanical · needs a medium · slow motion",
+    wTitle:"Water waves (surface waves)", wTag:"Energy near surface · circular/elliptical orbits",
+    eTitle:"Radio waves (EM waves)", eTag:"Transverse · no medium · speed of light in vacuum",
+    qTitle:"Seismic waves", qTag:"P (longitudinal) first · S (transverse) later",
+    sec2:"Compare with other waves", tblTitle:"Quick comparison", foot:"Teaching schematics: amplitudes & speeds are exaggerated/slow-motion, not to scale.",
+    legDense:"Compression · high pressure", legSparse:"Rarefaction · low pressure", legMol:"Air molecules (oscillate about equilibrium)",
+    legTrack:"Yellow = one molecule\u2019s oscillation range",
+    pauseLbl:"⏸ Pause", resumeLbl:"▶ Play", spdLbl:"Speed", fLbl:"Source f", wvLbl:"Waves on screen",
+    toneLbl:"🔊 Hear tone", toneOffLbl:"🔇 Stop tone", annotOnLbl:"🏷 Labels: on", annotOffLbl:"🏷 Labels: off",
+    btnHelp:"📖 Help",
+    sL1:"① A compression wave:", sL2:"② Molecules stay put:", sL3:"③ Colours:", sL4:"④ Wavelength:", sL5:"⑤ Reading the waveform:",
+    wL0:"⚠️ Common misconception — not a pure transverse wave:", wL1:"Surface wave:", wL2:"Depth decay:", wL3:"Slow & dispersive:",
+    eL1:"Self-sustaining:", eL2:"Transverse:", eL3:"Wavelength = c / f:",
+    qL1:"P wave (longitudinal):", qL2:"S wave (transverse):", qL3:"P–S arrival gap Δt:",
+    tdName1:"🔊 Sound", tdName2:"🌊 Water", tdName3:"📡 Radio", tdName4:"🌍 Seismic",
+    tkt1:"🔑 A medium decides whether & how fast:", tkt2:"🔑 Every wave obeys v = f·λ:", tkt3:"🔑 Transverse vs longitudinal:",
+    sB1:"The vibrating source pushes and releases neighbouring air molecules, sending alternating compressions/rarefactions outward as a longitudinal wave.",
+    sB2:"Air molecules only oscillate about their own equilibrium (yellow range); they do not travel with the wave — energy does.",
+    sB3:"Warm = compression (dense, high pressure); cool = rarefaction (sparse, low pressure). The curve below shows pressure Δp along distance.",
+    sB4:"Distance between two compressions (or rarefactions) = wavelength λ; v = f·λ, with v≈343 m/s in air.",
+    sB5:"Reading the waveform: Δp is drawn as a sine so you can measure it — its “crest” = high pressure (compression), “trough” = low pressure (rarefaction), “amplitude” = pressure swing. (Sound is longitudinal; the up/down look is a drawing convention.)",
+    wB0:"The surface profile looks like it only bobs up and down, but real water particles also move back-and-forth horizontally (in deep water the horizontal and vertical amplitudes are equal) — so water waves are not purely transverse.",
+    wB1:"Surface particles follow near-circular/elliptical orbits: forward at crests, backward at troughs; they stay in place while the wave travels.",
+    wB2:"Orbit radius decays exponentially with depth: below ~one wavelength the water hardly moves.",
+    wB3:"Slow (≈1–10 m/s, depends on wavelength & depth) and dispersive: longer waves travel faster.",
+    eB1:"A changing E induces B and a changing B induces E — the two fields sustain each other; no medium is needed.",
+    eB2:"E and B are each perpendicular to travel direction k and to each other (transverse); speed in vacuum is always c≈3.0×10⁸ m/s.",
+    eB3:"λ = c / f: FM≈100 MHz → λ≈3 m; 4G≈1.8 GHz → λ≈17 cm. Radio sits at the low-frequency end of the EM spectrum.",
+    qB1:"P wave (longitudinal): fastest, ~6–7 km/s; passes solids, liquids and gases; arrives first.",
+    qB2:"S wave (transverse): slower, ~3.5–4 km/s; shear cannot cross liquids, so it cannot pass the liquid outer core (S shadow zone).",
+    qB3:"The P–S arrival gap Δt grows with epicentral distance; triangulating Δt from several stations locates the source.",
+    th1:"Wave", th2:"Type", th3:"Medium?", th4:"Typical speed", th5:"In vacuum?",
+    td1a:"Longitudinal (mechanical)", td1b:"Yes (air/water/solid)", td1c:"≈343 m/s (in air)", td1d:"No",
+    td2a:"Surface wave (circular/elliptical orbits)", td2b:"Yes (water)", td2c:"≈1–10 m/s (depth/λ dependent)", td2d:"No",
+    td3a:"Transverse (E ⊥ B ⊥ k)", td3b:"No (works in vacuum)", td3c:"≈3.0×10⁸ m/s", td3d:"Yes (fastest)",
+    td4a:"P longitudinal + S transverse + surface", td4b:"Yes (crust/mantle rock)", td4c:"≈3–8 km/s (P fastest)", td4d:"No",
+    tk1:"Sound/water/seismic are mechanical waves needing a medium that sets their speed; EM waves are self-sustaining and fastest in vacuum.",
+    tk2:"All waves obey v = f·λ; they carry energy/information while matter only oscillates about equilibrium.",
+    tk3:"Longitudinal = oscillation parallel to travel (sound, P); transverse = perpendicular (radio, S, string).",
+    cDir:"Propagation", cSrc:"Source", cDense:"Compression", cSparse:"Rarefaction", cLambda:"λ",
+    cVn:"v≈343 m/s (air · schematic)", cPnote:"Pressure Δp", cWl:"two compressions = one λ", cCrest:"Crest (high pressure · compression)", cTrough:"Trough (low pressure · rarefaction)", cAmp:"Amplitude (max Δp swing)", cF:"Frequency f: full waves passing a fixed point per second (use f slider & listen)",
+    cHz:"λ = v/f ≈ ", mUnit:"m", helpTitle:"📖 How to read this page",
+    wDir:"Wave travel", wCrest:"Crest", wTrough:"Trough", wDepth:"orbits shrink fast with depth",
+    eE:"Electric E", eB:"Magnetic B (⊙ out / ⊗ into page)", ePerp:"E ⊥ B ⊥ k", eLambda:"λ (one full cycle)",
+    qP:"P (longitudinal · first)", qS:"S (transverse · later)", qRec:"Paper: P first, S later & bigger", qSeismo:"Seismogram (schematic)"
+  }
+};
+
+/* ================= 状态 ================= */
+let LANG = "zh";
+const P = { running: true, speed: 1, f: 440, waves: 2.4, tone: false, annot: false };
+let ACtx = null, osc = null, gNode = null, animT = 0, lastTs = 0, running = true;
+const $ = id => document.getElementById(id);
+const t = k => (I18N[LANG] && I18N[LANG][k] !== undefined) ? I18N[LANG][k] : (I18N.zh[k] || k);
+
+/* ================= 画布工具 ================= */
+function setupCanvas(id) {
+  const cv = $(id);
+  if (!cv) return null;
+  const host = cv.parentElement;
+  const cssW = host.clientWidth;
+  if (!(cssW > 1)) return null;
+  const dpr = Math.min(3, window.devicePixelRatio || 1);
+  const lw = +cv.getAttribute("data-lw"), lh = +cv.getAttribute("data-lh");
+  const bw = Math.max(2, Math.round(cssW * dpr));
+  const bh = Math.max(2, Math.round(cssW * lh / lw * dpr));
+  if (cv.width !== bw || cv.height !== bh) { cv.width = bw; cv.height = bh; }
+  const k = cssW / lw;
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(k * dpr, 0, 0, k * dpr, 0, 0);
+  return ctx;
+}
+function rrect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+const FNT = '"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+function ctxText(ctx, s, x, y, size, color, weight, align) {
+  ctx.font = (weight || 500) + " " + size + "px " + FNT;
+  ctx.fillStyle = color || "#e9eef7";
+  ctx.textAlign = align || "left";
+  ctx.textBaseline = "middle";
+  ctx.fillText(s, x, y);
+}
+function chip(ctx, cx, cy, text, color) {
+  ctx.font = "600 14px " + FNT;
+  const w = ctx.measureText(text).width + 20;
+  const h = 24;
+  ctx.fillStyle = "rgba(7,10,18,.86)";
+  rrect(ctx, cx - w / 2, cy - h / 2, w, h, 9); ctx.fill();
+  ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.stroke();
+  ctx.fillStyle = color;
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(text, cx, cy + 1);
+  return w;
+}
+function arrow(ctx, x1, y1, x2, y2, color, w, head) {
+  ctx.strokeStyle = color; ctx.lineWidth = w || 2;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  const a = Math.atan2(y2 - y1, x2 - x1);
+  const h = head || 8;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - h * Math.cos(a - 0.45), y2 - h * Math.sin(a - 0.45));
+  ctx.lineTo(x2 - h * Math.cos(a + 0.45), y2 - h * Math.sin(a + 0.45));
+  ctx.closePath(); ctx.fill();
+}
+function fillBg(ctx, W, H, top, bottom) {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, top); g.addColorStop(1, bottom);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+
+/* ================ 主场景：声波在空气中的传播（纵波） ================ */
+function drawSound(ctx, time) {
+  const W = 1240, H = 700;
+  fillBg(ctx, W, H, "#11151f", "#0a0d15");
+
+  const xL = 170, xR = 1170;          // 空气区间
+  const width = xR - xL;              // 1000 px
+  const k = (2 * Math.PI * P.waves) / width;   // 波数：屏内 P.waves 个完整波长
+  const omega = k * 150 * P.speed;    // 相位随时间（慢放）
+  const A = 5.2;                      // 质点振幅
+  const rows = [252, 298, 344];       // 三行分子
+  const yBandT = 224, yBandB = 372;   // 疏密色带范围
+  const Xs = xL, Xe = xR;
+
+  // 1) 疏密色带（分子密度变化）：密度 ∝ -du/dx ∝ cos(kx-wt) 取负则分子靠拢=密
+  for (let x = xL; x < xR; x += 5) {
+    const ph = k * (x - xL) - omega * time;
+    const dens = -Math.cos(ph);            // >0 压缩（密）
+    const a = Math.min(0.34, Math.abs(dens) * 0.5);
+    ctx.fillStyle = dens > 0 ? "rgba(255,150,60," + a.toFixed(3) + ")" : "rgba(90,200,255," + a.toFixed(3) + ")";
+    ctx.fillRect(x, yBandT, 5, yBandB - yBandT);
+  }
+
+  // 2) 平衡参考点（浅）与振动分子
+  const gap = 14;
+  const mols = [];
+  for (let yy = 0; yy < rows.length; yy++) {
+    for (let x = xL + gap / 2; x <= xR; x += gap) {
+      const ph = k * (x - xL) - omega * time;
+      const u = A * Math.sin(ph);
+      mols.push([x, rows[yy], u]);
+    }
+  }
+  for (const m of mols) {
+    ctx.fillStyle = "rgba(255,255,255,0.07)";
+    ctx.beginPath(); ctx.arc(m[0], m[1], 2.6, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.fillStyle = "#eaf7ff";
+  for (const m of mols) {
+    ctx.beginPath(); ctx.arc(m[0] + m[2], m[1], 2.6, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // 3) 高亮一个分子：显示“只振动，不随波迁移”
+  const hi = mols[Math.round(mols.length * 0.5)];
+  ctx.strokeStyle = "#ffd166"; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(hi[0] - A - 7, hi[1]);
+  ctx.lineTo(hi[0] + A + 7, hi[1]);
+  ctx.stroke();
+  ctx.fillStyle = "#ffd166";
+  ctx.beginPath(); ctx.arc(hi[0], hi[1], 4.5, 0, Math.PI * 2); ctx.fill();
+  if (P.annot) {
+    ctxText(ctx, t("legTrack"), hi[0] + A + 12, hi[1] - 26, 11.5, "#ffd166", 600);
+    ctx.strokeStyle = "rgba(255,209,102,.25)"; ctx.lineWidth = 1; ctx.setLineDash([2, 5]);
+    ctx.beginPath(); ctx.moveTo(hi[0], hi[1] - 3); ctx.lineTo(hi[0], hi[1] - 60); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // 4) 声源（振膜 + 扬声器）
+  const srcX = 96, cy = 298;
+  ctx.fillStyle = "#1c2233"; rrect(ctx, srcX - 66, cy - 40, 62, 80, 12); ctx.fill();
+  ctx.strokeStyle = "#38445f"; ctx.stroke();
+  if (P.annot) ctxText(ctx, t("cSrc"), srcX - 35, cy - 66, 13, "#9fb6d4", 600, "center");
+  const disp = A * Math.sin(omega * time);
+  ctx.fillStyle = "#2b3552";
+  ctx.beginPath();
+  ctx.moveTo(srcX - 6, cy - 36);
+  ctx.lineTo(srcX + 30 + disp, cy);
+  ctx.lineTo(srcX - 6, cy + 36);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = "#ffd166"; ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(srcX + 30 + disp, cy - 30);
+  ctx.lineTo(srcX + 30 + disp, cy + 30);
+  ctx.stroke();
+  for (let i = 1; i <= 3; i++) {
+    const r0 = i * 26 + (time * 120) % 26;
+    ctx.strokeStyle = "rgba(140,225,255," + Math.max(0, 0.5 - r0 / 150).toFixed(2) + ")";
+    ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.arc(srcX + 40 + disp, cy, r0, -1.1, 1.1); ctx.stroke();
+  }
+
+  // 5) 传播方向箭头
+  arrow(ctx, 320, 120, 1110, 120, "#9fd0ff", 2, 12);
+  if (P.annot) ctxText(ctx, t("cDir"), 1120, 120, 15, "#9fd0ff", 600);
+
+  // 6) 密部 / 疏部游标：压缩中心 cos=-1（kx-wt=π），稀疏中心 cos=+1（kx-wt=0）
+  const comps = [];
+  const nMin = Math.floor(((xL - xL) * k - omega * time - 2 * Math.PI) / (2 * Math.PI));
+  for (let n = nMin; n < nMin + 8; n++) {
+    const xc = xL + (Math.PI + 2 * Math.PI * n + omega * time) / k;
+    const xr = xL + (0 + 2 * Math.PI * n + omega * time) / k;
+    if (xc > xL && xc < xR) comps.push({ x: xc, t: "c" });
+    if (xr > xL && xr < xR) comps.push({ x: xr, t: "r" });
+  }
+  comps.sort((a, b) => a.x - b.x);
+  if (P.annot) {
+    for (let i = 0; i < comps.length; i++) {
+      const m = comps[i];
+      const col = m.t === "c" ? "#ffb45e" : "#7fd8ff";
+      if (i > 0 && m.x - comps[i - 1].x < 90) continue;   // 防叠
+      line2(ctx, m.x, yBandB + 2, m.x, yBandB + 12, col, 2);
+      chip(ctx, m.x, yBandT - 34, m.t === "c" ? t("cDense") : t("cSparse"), col);
+    }
+  }
+  function line2(c, x1, y1, x2, y2, col, w) { c.strokeStyle = col; c.lineWidth = w || 1; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
+
+  // 7) 下方压强曲线（y 向上为正压）
+  const gY = 486, gAmp = 66;
+  ctx.strokeStyle = "rgba(255,255,255,0.14)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(xL, gY); ctx.lineTo(xR, gY); ctx.stroke();
+  ctx.lineWidth = 2.6;
+  ctx.beginPath();
+  for (let x = xL; x <= xR; x += 4) {
+    const p = -Math.cos(k * (x - xL) - omega * time);   // 压缩=>正压
+    const y = gY - p * gAmp;
+    if (x === xL) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.strokeStyle = "#ffd9a0"; ctx.stroke();
+  ctx.globalAlpha = 0.22;
+  for (let x = xL; x <= xR; x += 4) {
+    const p = -Math.cos(k * (x - xL) - omega * time);
+    ctx.fillStyle = p > 0 ? "#ffb45e" : "#7fd8ff";
+    ctx.fillRect(x, p > 0 ? gY - p * gAmp : gY, 4, Math.abs(p) * gAmp);
+  }
+  ctx.globalAlpha = 1;
+  if (P.annot) {
+    ctxText(ctx, t("cPnote"), xL + 4, gY + 30, 13, "#9fb0c9", 600);
+    ctxText(ctx, t("cVn"), xR - 4, gY + 30, 13, "#9fb0c9", 500, "right");
+  }
+
+  // 7b) 波形参数标注：波峰 / 波谷 / 振幅（Δp 正弦的常用记法）
+  if (P.annot) {
+  const gCx = (xL + xR) / 2;
+  let pPeak = null, pTrough = null, aPeak = null;
+  for (const c of comps) {
+    if (c.t === "c") {
+      if (!pPeak || Math.abs(c.x - gCx) < Math.abs(pPeak.x - gCx)) pPeak = c;
+      if (!aPeak || Math.abs(c.x - (xL + 300)) < Math.abs(aPeak.x - (xL + 300))) aPeak = c;
+    } else {
+      if (!pTrough || Math.abs(c.x - gCx) < Math.abs(pTrough.x - gCx)) pTrough = c;
+    }
+  }
+  const yTop = gY - gAmp, yBot = gY + gAmp;
+  function tagMark(cx, cy, dotY, col, key) {
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(cx, dotY, 3.4, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.globalAlpha = 0.8; ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(cx, dotY + (dotY > gY ? 4 : -4));
+    ctx.lineTo(cx, cy + (dotY > gY ? -10 : 10)); ctx.stroke();
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
+    chip(ctx, cx, cy, key, col);
+  }
+  if (pPeak && pPeak.x > xL + 130 && pPeak.x < xR - 130) tagMark(pPeak.x, yTop - 40, yTop, "#ffb45e", t("cCrest"));
+  if (pTrough && pTrough.x > xL + 130 && pTrough.x < xR - 130) tagMark(pTrough.x, yBot + 40, yBot, "#7fd8ff", t("cTrough"));
+  if (aPeak && aPeak.x > xL + 170 && aPeak.x < xR - 170) {
+    const ax = aPeak.x - 30;
+    ctx.strokeStyle = "#ffe3b8"; ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.moveTo(ax, gY); ctx.lineTo(ax, yTop); ctx.stroke();
+    line2(ctx, ax - 6, gY, ax + 6, gY, "#ffe3b8", 1.6);
+    line2(ctx, ax - 6, yTop, ax + 6, yTop, "#ffe3b8", 1.6);
+    chip(ctx, aPeak.x + 78, (gY + yTop) / 2, t("cAmp"), "#ffe3b8");
+  }
+  }
+
+  // 8) 波长标尺
+  if (P.annot) {
+    const lamb = width / P.waves;
+    const lx1 = 460, lx2 = Math.min(lx1 + lamb, xR - 20);
+    ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1.5;
+    arrow(ctx, lx1, 606, lx2, 606, "#ffffff", 1.5, 8);
+    arrow(ctx, lx2, 606, lx1, 606, "#ffffff", 1.5, 8);
+    ctxText(ctx, t("cLambda"), (lx1 + lx2) / 2, 606 - 16, 20, "#ffffff", 700, "center");
+    ctxText(ctx, t("cWl"), xL + 6, 648, 12.5, "#93a8c6", 500, "left");
+    ctxText(ctx, t("cF"), xR - 6, 678, 12, "#8fa6c6", 500, "right");
+  }
+}
+
+
+const CVS = ["cvSound","cvWater","cvEm","cvSeis"];
+/* assign dict keys regardless of LANG */
+I18N.zh.qSta = "台站";
+I18N.en.qSta = "Station";
+I18N.zh.qHypo = "震源";
+I18N.en.qHypo = "Focus";
+
+/* ================= 水波（表面波） ================= */
+function drawWater(ctx, time) {
+  const W = 640, H = 460;
+  fillBg(ctx, W, H, "#0d1524", "#070b13");
+
+  const xL = 20, xR = 620;
+  const meanY = 158;
+  const k = (2 * Math.PI * 2) / (xR - xL);      // 屏内约 2 个完整波长
+  const omega = k * 95 * P.speed;
+  const A = 11;
+
+  // 水面与水体填充
+  const surPath = function (fill) {
+    ctx.beginPath();
+    ctx.moveTo(xL - 10, H + 4);
+    for (let x = xL - 10; x <= xR + 10; x += 4) {
+      const y = meanY - A * Math.cos(k * (x - xL) - omega * time);
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(xR + 10, H + 4);
+    ctx.closePath();
+  };
+  surPath(true);
+  const wg = ctx.createLinearGradient(0, meanY - A, 0, H);
+  wg.addColorStop(0, "rgba(64,140,230,.85)");
+  wg.addColorStop(0.35, "rgba(34,90,170,.55)");
+  wg.addColorStop(1, "rgba(12,30,70,.75)");
+  ctx.fillStyle = wg; ctx.fill();
+
+  // 水面亮线
+  ctx.strokeStyle = "#9fe4ff"; ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let x = xL; x <= xR; x += 4) {
+    const y = meanY - A * Math.cos(k * (x - xL) - omega * time);
+    if (x === xL) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // 水质点：圆形/椭圆轨道，振幅随深度指数衰减
+  const cols = [110, 220, 330, 440, 550];
+  const depths = [26, 72, 132, 214, 330];
+  for (const x0 of cols) {
+    for (const d of depths) {
+      const r = A * Math.exp(-k * d);
+      if (r < 0.25) continue;
+      const cy0 = meanY + d;
+      const ph = omega * time - k * (x0 - xL);        // 轨道相位
+      const px = x0 + r * Math.sin(ph);
+      const py = cy0 - r * Math.cos(ph);
+      // 轨道参考圆
+      ctx.strokeStyle = "rgba(150,220,255,.13)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(x0, cy0, Math.max(1.2, r), 0, Math.PI * 2); ctx.stroke();
+      // 粒子
+      const lite = 1 - d / 380;
+      ctx.fillStyle = "rgba(160,230,255," + (0.35 + 0.6 * lite).toFixed(2) + ")";
+      ctx.beginPath(); ctx.arc(px, py, Math.max(1.6, 1 + 2.2 * lite), 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  // 传播方向箭头
+  arrow(ctx, 90, 52, 560, 52, "#9fd0ff", 2, 12);
+  ctxText(ctx, t("wDir"), 570, 52, 14, "#9fd0ff", 600);
+
+  // 波峰 / 波谷标记（取中段最近一个）
+  const midx = (xL + xR) / 2;
+  function nearest(phaseBase) {
+    let best = 1e9, bx = midx;
+    for (let n = -3; n <= 3; n++) {
+      const x = xL + (phaseBase + 2 * Math.PI * n + omega * time) / k;
+      if (Math.abs(x - midx) < best) { best = Math.abs(x - midx); bx = x; }
+    }
+    return bx;
+  }
+  const cx0 = nearest(0);                       // 波峰（cos=1）
+  const tx0 = nearest(Math.PI);                 // 波谷（cos=-1）
+  ctxText(ctx, t("wCrest"), cx0, meanY - A - 26, 13, "#ffd9a0", 600, "center");
+  ctxText(ctx, t("wTrough"), tx0, meanY + A + 16, 13, "#7fd8ff", 600, "center");
+
+  // 深度注释
+  ctxText(ctx, t("wDepth"), xR - 4, H - 8, 12, "#8fa6c6", 500, "right");
+}
+
+/* ================= 电波（电磁波） ================= */
+function drawEm(ctx, time) {
+  const W = 640, H = 460;
+  fillBg(ctx, W, H, "#150f22", "#0b0814");
+
+  const x0 = 60, yAxis = 218, bY = 316;
+  const lambdaPx = 150;
+  const k = (2 * Math.PI) / lambdaPx;
+  const omega = k * 150 * P.speed;
+  const Ae = 46;
+
+  // 轴线与传播箭头
+  ctx.strokeStyle = "rgba(255,255,255,.35)"; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(x0 - 14, yAxis); ctx.lineTo(590, yAxis); ctx.stroke();
+  arrow(ctx, x0 - 20, yAxis, 600, yAxis, "#ffffff", 2, 12);
+  ctxText(ctx, "k", 612, yAxis + 2, 15, "#ffffff", 700);
+
+  // E 波（竖直振动）
+  ctx.lineWidth = 2.6;
+  ctx.beginPath();
+  for (let x = x0; x <= 600; x += 4) {
+    const E = Math.sin(k * (x - x0) - omega * time);
+    const y = yAxis - E * Ae;
+    if (x === x0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.strokeStyle = "#58c7ff"; ctx.stroke();
+  // E 包络淡影
+  ctx.globalAlpha = 0.14;
+  ctx.fillStyle = "#58c7ff";
+  for (let x = x0; x <= 600; x += 4) {
+    const E = Math.sin(k * (x - x0) - omega * time);
+    if (E > 0.02) ctx.fillRect(x, yAxis - E * Ae, 4, E * Ae);
+    else if (E < -0.02) ctx.fillRect(x, yAxis, 4, -E * Ae);
+  }
+  ctx.globalAlpha = 1;
+  ctxText(ctx, t("eE"), x0 - 10, yAxis - Ae - 14, 14, "#58c7ff", 700);
+
+  // B 波：⊙/⊗ 垂直纸面（相位与 E 同步）
+  const bStep = 15;
+  ctxText(ctx, t("eB"), x0 - 8, bY + 34, 11.5, "#ff7ad9", 600);
+  for (let x = x0; x <= 598; x += bStep) {
+    const B = Math.sin(k * (x - x0) - omega * time);
+    const r = Math.max(2, 3 + 9 * Math.abs(B));
+    if (B > 0.02) {
+      // ⊙ 出纸面
+      ctx.strokeStyle = "#ff7ad9"; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.arc(x, bY, r, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = "#ff7ad9";
+      ctx.beginPath(); ctx.arc(x, bY, 1.4, 0, Math.PI * 2); ctx.fill();
+    } else if (B < -0.02) {
+      // ⊗ 入纸面
+      ctx.strokeStyle = "#ff7ad9"; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.arc(x, bY, r, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x - r, bY); ctx.lineTo(x + r, bY);
+      ctx.moveTo(x, bY - r); ctx.lineTo(x, bY + r);
+      ctx.stroke();
+    }
+  }
+  // 连接 B 包络的浅色虚曲线（指示波形）
+  ctx.strokeStyle = "rgba(255,122,217,.28)"; ctx.lineWidth = 1.6; ctx.setLineDash([3, 6]);
+  ctx.beginPath();
+  for (let x = x0; x <= 598; x += 4) {
+    const B = Math.sin(k * (x - x0) - omega * time);
+    const y = bY - B * 11;
+    if (x === x0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // E/B 同相校准虚线 + λ 标尺（取两相邻波峰）
+  const crests = [];
+  for (let n = -4; n <= 4; n++) {
+    const x = x0 + (Math.PI / 2 + 2 * Math.PI * n + omega * time) / k;
+    if (x > 130 && x < 560) crests.push(x);
+  }
+  const useC = crests.slice(0, 2);
+  if (useC.length >= 2) {
+    for (const cx of useC) {
+      ctx.strokeStyle = "rgba(255,255,255,.13)"; ctx.lineWidth = 1; ctx.setLineDash([3, 5]);
+      ctx.beginPath(); ctx.moveTo(cx, yAxis - Ae - 26); ctx.lineTo(cx, bY + 18); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1.4;
+    arrow(ctx, useC[0], 52, useC[1], 52, "#ffffff", 1.4, 7);
+    arrow(ctx, useC[1], 52, useC[0], 52, "#ffffff", 1.4, 7);
+    ctxText(ctx, t("cLambda"), (useC[0] + useC[1]) / 2, 40, 15, "#ffffff", 700, "center");
+  }
+
+  // E ⊥ B ⊥ k 图例（左下角）
+  const lx = x0 + 4;
+  ctx.fillStyle = "#58c7ff"; ctx.fillRect(lx, H - 22, 10, 10);
+  ctx.strokeStyle = "#ff7ad9"; ctx.lineWidth = 1.5;
+  ctx.strokeRect(lx + 24, H - 22, 10, 10);
+  ctx.strokeStyle = "rgba(255,255,255,.7)";
+  ctx.beginPath(); ctx.moveTo(lx + 48, H - 17); ctx.lineTo(lx + 92, H - 17); ctx.stroke();
+  ctxText(ctx, t("ePerp"), lx + 98, H - 17, 13, "#cbb2ff", 700);
+  ctxText(ctx, "E", lx + 5, H - 17, 10.5, "#58c7ff", 700);
+  ctxText(ctx, "B", lx + 29, H - 17, 10.5, "#ff7ad9", 700);
+  ctxText(ctx, "k", lx + 55, H - 17, 10.5, "#ffffff", 700);
+}
+
+/* ================= 地震波（P / S） ================= */
+function drawSeis(ctx, time) {
+  const W = 640, H = 460;
+  fillBg(ctx, W, H, "#1a1410", "#0c0a08");
+
+  const groundY = 116;
+  const hypX = 132, hypY = 356;
+
+  // 天空
+  ctx.fillStyle = "rgba(255,255,255,.05)";
+  ctx.fillRect(0, 0, W, groundY);
+
+  // 地层
+  const g = ctx.createLinearGradient(0, groundY, 0, H);
+  g.addColorStop(0, "#3a2f24");
+  g.addColorStop(0.5, "#241c14");
+  g.addColorStop(1, "#120e0a");
+  ctx.fillStyle = g; ctx.fillRect(0, groundY, W, H - groundY);
+  ctx.strokeStyle = "rgba(255,255,255,.05)"; ctx.lineWidth = 1;
+  for (let y = groundY + 40; y < H; y += 42) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  const vP = 120, vS = 76;                 // px / 秒（示意）
+  const period = 6.6;
+  const sTime = time * P.speed;
+  const tt0 = sTime % period;
+
+  // 波前（圆形），裁剪在地层内
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, groundY, W, H - groundY); ctx.clip();
+  const rP = tt0 * vP, rS = tt0 * vS;
+  const drawRing = function (r, col, dash) {
+    ctx.strokeStyle = col; ctx.lineWidth = 3;
+    ctx.setLineDash(dash || []);
+    ctx.beginPath(); ctx.arc(hypX, hypY, r, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+  };
+  drawRing(rP, "#69e0a2");
+  drawRing(rS, "#ff8d6b", [6, 6]);
+  // 波前小箭头（表示运动方向）
+  ctx.fillStyle = "#69e0a2";
+  ctx.beginPath(); ctx.arc(hypX, hypY, 5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#ff8d6b";
+  ctx.beginPath(); ctx.arc(hypX, hypY, 12, 0, Math.PI * 2); ctx.stroke();
+  ctx.restore();
+
+  // 震源标注
+  ctxText(ctx, "P", hypX + rP + 10, hypY - 4, 14, "#69e0a2", 700);
+  ctxText(ctx, "S", hypX + rS + 10, hypY - 4, 14, "#ff8d6b", 700);
+
+  // 台站（记录仪）
+  const stX = 452, stY = groundY;
+  const dSt = Math.hypot(stX - hypX, stY - hypY);
+  const tP = dSt / vP, tS = dSt / vS;
+
+  // 台站三角旗
+  ctx.fillStyle = "#ffd166";
+  ctx.beginPath();
+  ctx.moveTo(stX - 9, stY - 8); ctx.lineTo(stX, stY); ctx.lineTo(stX + 9, stY - 8);
+  ctx.closePath(); ctx.fill();
+  ctxText(ctx, t("qSta"), stX, stY - 22, 12, "#ffd166", 600, "center");
+
+  // 传播到达：P/S 先后来到台站的同心脉冲
+  const arrivals = [
+    { name: "P", at: tP, col: "#69e0a2" },
+    { name: "S", at: tS, col: "#ff8d6b" }
+  ];
+  for (const a of arrivals) {
+    const since = tt0 - a.at;
+    if (since >= 0 && since < 1.4) {
+      ctx.strokeStyle = a.col; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(stX, stY, since * 130, 0, Math.PI * 2); ctx.stroke();
+    }
+  }
+
+  // 记录纸：横轴为时间
+  const pX0 = 60, pX1 = 596, pY = 396;
+  ctx.fillStyle = "rgba(8,12,16,.75)";
+  rrect(ctx, pX0 - 12, pY - 44, (pX1 - pX0) + 24, 78, 8); ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,.2)"; ctx.stroke();
+  ctx.strokeStyle = "rgba(255,255,255,.22)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pX0, pY); ctx.lineTo(pX1, pY); ctx.stroke();
+
+  // 笔迹：t< tP 平坦；tP 起小幅（P）；tS 起更大（S）
+  ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  for (let tx = 0; tx <= tt0 + 0.01; tx += 0.02) {
+    let u = 0;
+    if (tx >= tP) u += 5 * Math.sin(2 * Math.PI * 2.6 * (tx - tP)) * Math.exp(-(tx - tP) * 1.2);
+    if (tx >= tS) u += 11 * Math.sin(2 * Math.PI * 1.9 * (tx - tS)) * Math.exp(-(tx - tS) * 0.9);
+    const x = pX0 + (tx / period) * (pX1 - pX0);
+    const y = pY - u;
+    if (tx === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  ctxText(ctx, t("qSeismo"), pX0 - 6, pY - 38, 11.5, "#c9a86a", 600, "left");
+
+  // P / S 到时标记
+  const xP = pX0 + (tP / period) * (pX1 - pX0);
+  const xS = pX0 + (tS / period) * (pX1 - pX0);
+  ctx.setLineDash([3, 4]);
+  ctx.strokeStyle = "rgba(255,255,255,.25)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(xP, pY - 40); ctx.lineTo(xP, pY + 28); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(xS, pY - 40); ctx.lineTo(xS, pY + 28); ctx.stroke();
+  ctx.setLineDash([]);
+  ctxText(ctx, t("qP"), xP, pY + 22, 12, "#69e0a2", 700, "center");
+  ctxText(ctx, t("qS"), xS, pY + 22, 12, "#ff8d6b", 700, "center");
+
+  // 到时差 Δt 双箭头
+  ctx.strokeStyle = "#c9a86a"; ctx.lineWidth = 1.3;
+  arrow(ctx, xP, pY - 24, xS, pY - 24, "#c9a86a", 1.3, 7);
+  arrow(ctx, xS, pY - 24, xP, pY - 24, "#c9a86a", 1.3, 7);
+  ctxText(ctx, "Δt", (xP + xS) / 2, pY - 34, 12.5, "#c9a86a", 700, "center");
+
+  // 左上图例
+  chip(ctx, 150, 40, t("qP") + (LANG === "en" ? "" : ""), "#69e0a2");
+  chip(ctx, 300, 40, t("qS") + (LANG === "en" ? "" : ""), "#ff8d6b");
+}
+
+/* ================= 语言 & 控件 ================= */
+function applyLang() {
+  document.documentElement.lang = LANG === "en" ? "en" : "zh-CN";
+  $("btnLang").textContent = LANG === "en" ? "中文" : "EN";
+  document.querySelectorAll("[data-i18n]").forEach(function (el) {
+    const k = el.getAttribute("data-i18n");
+    if (k === "pauseLbl" || k === "toneLbl" || k === "toneOffLbl") return; // 动态按钮单独处理
+    el.textContent = t(k);
+  });
+  $("helpTitle").textContent = t("helpTitle");
+  refreshButtons();
+  document.title = LANG === "en" ? "Wave Lab · Sound / Water / Radio / Seismic" : "波动实验室 · 声波 / 水波 / 电波 / 地震波";
+  $("helpZh").classList.toggle("hidden", LANG !== "zh");
+  $("helpEn").classList.toggle("hidden", LANG !== "en");
+  refreshNote();
+}
+function refreshButtons() {
+  $("pauseBtn").textContent = running ? t("pauseLbl") : t("resumeLbl");
+  const toneTxt = P.tone ? t("toneOffLbl") : t("toneLbl");
+  $("toneBtn").innerHTML = "<span>" + toneTxt + "</span>";
+  const aBtn = $("annotBtn");
+  if (aBtn) {
+    aBtn.textContent = P.annot ? t("annotOnLbl") : t("annotOffLbl");
+    aBtn.classList.toggle("on", P.annot);
+  }
+}
+function refreshNote() {
+  const lam = 343 / P.f;
+  $("fV").textContent = P.f + " Hz";
+  $("cycV").textContent = P.waves.toFixed(1);
+  $("spdV").textContent = (P.speed * 1).toFixed(1) + "\u00d7";
+  $("lamNote").textContent = t("cHz") + lam.toFixed(2) + " " + t("mUnit") + "  (" + P.f + " Hz)";
+}
+function toggleRun() {
+  running = !running;
+  refreshButtons();
+}
+
+/* ---------------- 音频：试听 ---------------- */
+function ensureAC() {
+  if (!ACtx) {
+    try { ACtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch (e) { return null; }
+  }
+  if (ACtx.state === "suspended") { try { ACtx.resume(); } catch (e) {} }
+  return ACtx;
+}
+function startTone() {
+  const ac = ensureAC();
+  if (!ac) return;
+  if (osc) return;
+  osc = ac.createOscillator();
+  gNode = ac.createGain();
+  osc.type = "sine";
+  osc.frequency.value = P.f;
+  gNode.gain.value = 0;
+  osc.connect(gNode); gNode.connect(ac.destination);
+  osc.start();
+  gNode.gain.linearRampToValueAtTime(0.14, ac.currentTime + 0.05);
+  P.tone = true;
+  refreshButtons();
+}
+function stopTone() {
+  const ac = ensureAC();
+  if (ac && gNode && osc) {
+    try {
+      gNode.gain.cancelScheduledValues(ac.currentTime);
+      gNode.gain.setValueAtTime(gNode.gain.value, ac.currentTime);
+      gNode.gain.linearRampToValueAtTime(0.0001, ac.currentTime + 0.12);
+      const o = osc;
+      setTimeout(function () { try { o.stop(); } catch (e) {} }, 200);
+    } catch (e) {}
+  }
+  osc = null; gNode = null; P.tone = false;
+  refreshButtons();
+}
+
+/* ---------------- 主循环 ---------------- */
+function frame(now) {
+  window.__frames++;
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, (now - lastTs) / 1000 || 0.016);
+  lastTs = now;
+  if (running) animT += dt;
+
+  const jobs = [
+    ["cvSound", drawSound],
+    ["cvWater", drawWater],
+    ["cvEm", drawEm],
+    ["cvSeis", drawSeis]
+  ];
+  for (const j of jobs) {
+    const ctx = setupCanvas(j[0]);
+    if (ctx) j[1](ctx, animT);
+  }
+}
+
+/* ---------------- 事件绑定与启动 ---------------- */
+function init() {
+  // 记录逻辑分辨率
+  CVS.forEach(function (id) {
+    const cv = $(id);
+    cv.setAttribute("data-lw", cv.getAttribute("width"));
+    cv.setAttribute("data-lh", cv.getAttribute("height"));
+  });
+
+  $("btnLang").addEventListener("click", function () {
+    LANG = LANG === "zh" ? "en" : "zh";
+    applyLang();
+  });
+  $("btnHelp").addEventListener("click", function () {
+    $("scrim").classList.add("show");
+    $("helpPanel").classList.add("show");
+  });
+  $("helpClose").addEventListener("click", closeHelp);
+  $("scrim").addEventListener("click", closeHelp);
+  function closeHelp() {
+    $("scrim").classList.remove("show");
+    $("helpPanel").classList.remove("show");
+  }
+  document.addEventListener("keydown", function (e) {
+    if (e.code === "Space" && !/INPUT|BUTTON|TEXTAREA/.test(e.target.tagName)) {
+      e.preventDefault(); toggleRun();
+    }
+    if (e.key === "Escape") closeHelp();
+  });
+
+  $("pauseBtn").addEventListener("click", toggleRun);
+  $("spdS").addEventListener("input", function () { P.speed = +this.value; refreshNote(); });
+  $("fS").addEventListener("input", function () {
+    P.f = +this.value;
+    if (osc) { try { osc.frequency.value = P.f; } catch (e) {} }
+    refreshNote();
+  });
+  $("cycS").addEventListener("input", function () { P.waves = +this.value; refreshNote(); });
+  $("toneBtn").addEventListener("click", function () {
+    if (P.tone) stopTone(); else startTone();
+  });
+  $("annotBtn").addEventListener("click", function () {
+    P.annot = !P.annot;
+    refreshButtons();
+  });
+
+  window.addEventListener("resize", function () { lastTs = 0; });
+  applyLang();
+  window.__boot = true;
+  requestAnimationFrame(function (t0) { lastTs = t0; requestAnimationFrame(frame); });
+}
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
+</script>
+</body>
+</html>
+
