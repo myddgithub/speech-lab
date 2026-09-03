@@ -141,6 +141,13 @@ class PitchTests(unittest.TestCase):
         middle = output[int(0.2 * sr):int(1.3 * sr)]
         self.assertAlmostEqual(self.dominant_frequency(middle, sr), 180.0, delta=4.0)
 
+        compressed = core.resynthesize_with_durations(
+            samples, sr, [0.0, 1.0], [0.8], f0, times
+        )
+        self.assertEqual(len(compressed), int(0.8 * sr))
+        mid_fast = compressed[int(0.1 * sr):int(0.7 * sr)]
+        self.assertAlmostEqual(self.dominant_frequency(mid_fast, sr), 180.0, delta=4.0)
+
     def test_tier_is_clipped_and_interpolated_in_semitones(self) -> None:
         times = np.array([0.0, 0.5, 1.0])
         voiced = np.array([100.0, 100.0, 100.0])

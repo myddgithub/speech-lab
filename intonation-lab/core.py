@@ -577,12 +577,13 @@ def _smooth_mask(mask: np.ndarray, sr: float, fade_s: float = 0.008) -> np.ndarr
 
 def _ola_window(out: np.ndarray, wsum: np.ndarray, x: np.ndarray, s: float, a: float, L: int, sr: float) -> None:
     """把源标记 a 处的窗叠加到合成时刻 s；靠近文件头/尾时裁窗，不整窗丢弃。"""
-    n = len(x)
+    n_src = len(x)
+    n_out = len(out)
     half = L // 2
     o0 = int(round(s * sr)) - half
     a0 = int(round(a * sr)) - half
     k0 = max(0, -o0, -a0)
-    k1 = min(L, n - o0, n - a0)
+    k1 = min(L, n_out - o0, n_src - a0)
     if k1 <= k0:
         return
     win = np.hanning(L)[k0:k1]
@@ -815,6 +816,107 @@ def build_duration_warp(
     return bounds, seg_factors
 
 
+def _source_time_at(t_out: float, B: np.ndarray, F: np.ndarray, newB: np.ndarray) -> float:
+    k = int(np.searchsorted(newB, t_out, side="right") - 1)
+    k = min(max(k, 0), len(B) - 2)
+    return float(B[k] + (t_out - newB[k]) / F[k])
+
+
+def _resample_time_map(x: np.ndarray, sr: float, B: np.ndarray, F: np.ndarray, newB: np.ndarray, n2: int) -> np.ndarray:
+    """按时间映射重采样（会改变音高，只用于清音填补或无 F0 回退）。"""
+    t_out = (np.arange(n2, dtype=np.float64) + 0.5) / sr
+    idx = np.clip(np.searchsorted(newB, t_out, side="right") - 1, 0, len(B) - 2)
+    src_t = B[idx] + (t_out - newB[idx]) / F[idx]
+    src_t = np.clip(src_t, 0.0, max(0.0, (len(x) - 1) / sr))
+    return np.interp(src_t * sr, np.arange(len(x), dtype=np.float64), x)
+
+
+def _psola_time_scale(
+    x: np.ndarray,
+    sr: float,
+    B: np.ndarray,
+    F: np.ndarray,
+    newB: np.ndarray,
+    dur_out: float,
+    f0: np.ndarray,
+    times: np.ndarray,
+) -> np.ndarray:
+    """TD-PSOLA 变速：输出窗距 = 源周期（音高不变），源位置按时间映射走。"""
+    n = len(x)
+    n2 = max(2, int(round(dur_out * sr)))
+    marks: list[float] = []
+    for t0, t1 in _voiced_segments(f0, times, min_gap_frames=1):
+        marks.extend(_find_pitch_marks(x, sr, t0, t1, f0, times))
+    out = np.zeros(n2, dtype=np.float64)
+    wsum = np.zeros(n2, dtype=np.float64)
+    s = 0.0
+    j = 0
+    guard = 0
+    max_steps = n2 + 8
+    while s < dur_out and guard < max_steps:
+        src_t = _source_time_at(s, B, F, newB)
+        src_t = float(np.clip(src_t, 0.0, max(0.0, (n - 1) / sr)))
+        f = _interp_f0_at(f0, times, src_t)
+        if not (f > 0):
+            s += 0.005
+            guard += 1
+            continue
+        T = 1.0 / f
+        L = max(8, int(round(2.0 * T * sr)))
+        if L % 2 == 1:
+            L += 1
+        a = src_t
+        if marks:
+            while j + 1 < len(marks) and abs(marks[j + 1] - src_t) <= abs(marks[j] - src_t):
+                j += 1
+            while j > 0 and abs(marks[j - 1] - src_t) < abs(marks[j] - src_t):
+                j -= 1
+            a = marks[j]
+        _ola_window(out, wsum, x, s, a, L, sr)
+        s += T
+        guard += 1
+    y = _resample_time_map(x, sr, B, F, newB, n2)
+    ok = wsum > 1e-6
+    y[ok] = out[ok] / wsum[ok]
+    return y.astype(np.float32)
+
+
+def _wsola_time_scale(
+    x: np.ndarray,
+    sr: float,
+    B: np.ndarray,
+    F: np.ndarray,
+    newB: np.ndarray,
+    dur_out: float,
+) -> np.ndarray:
+    """无 F0 时的 OLA 变速：输出窗距固定，源位置按映射取窗（不拉窗内波形）。"""
+    n = len(x)
+    n2 = max(2, int(round(dur_out * sr)))
+    L = int(round(0.032 * sr))
+    if L % 2:
+        L += 1
+    L = max(16, L)
+    if n < L + 4:
+        return _resample_time_map(x, sr, B, F, newB, n2).astype(np.float32)
+    hop = max(8, L // 2)
+    out = np.zeros(n2, dtype=np.float64)
+    wsum = np.zeros(n2, dtype=np.float64)
+    o = 0
+    last_src = L // 2
+    while o < n2:
+        src_t = _source_time_at(o / sr, B, F, newB)
+        src_i = int(np.clip(round(src_t * sr), L // 2, max(L // 2, n - L // 2 - 1)))
+        last_src = src_i
+        _ola_window(out, wsum, x, o / sr, src_i / sr, L, sr)
+        o += hop
+    if n2 > 1:
+        _ola_window(out, wsum, x, (n2 - 1) / sr, last_src / sr, L, sr)
+    y = np.zeros(n2, dtype=np.float64)
+    ok = wsum > 1e-6
+    y[ok] = out[ok] / wsum[ok]
+    return y.astype(np.float32)
+
+
 def resynthesize_with_durations(
     samples: np.ndarray,
     sr: int,
@@ -826,16 +928,12 @@ def resynthesize_with_durations(
     ceiling: float = 500.0,
     frame_period: float = 10.0,
 ) -> np.ndarray:
-    """变速重合成：把时间轴按段因子拉伸/压缩，同时尽量保持音高。
+    """变速重合成：拉伸/压缩时间轴并保持音高。
 
-    两步法：
-      1. 按分段线性时间映射重采样原音频（时长变为新时长）；
-      2. 在重采样结果上重新分析基频，并把源时刻的原始 F0 作为目标音高做
-         TD-PSOLA 音高还原（重采样会把音高缩放 1/段因子）。
-
-    boundaries 覆盖 [0, dur]（含首尾）；seg_factors 与相邻段一一对应。
-    所有因子 ≈ 1 时原样返回。
+    有基频时用 TD-PSOLA：输出窗距等于源周期（F0 不变），只改变取源速度。
+    无基频时用定窗距 OLA。都不会先把波形重采样（那会把音高乘上 1/因子）。
     """
+    del floor, ceiling, frame_period
     x = np.asarray(samples, dtype=np.float64)
     n = len(x)
     sr = float(sr)
@@ -859,41 +957,14 @@ def resynthesize_with_durations(
     newB[0] = 0.0
     for k in range(len(B) - 1):
         newB[k + 1] = newB[k] + (B[k + 1] - B[k]) * F[k]
-    dur_in = float(B[-1])
     dur_out = float(newB[-1])
     if dur_out <= 0:
         return x.astype(np.float32)
-    # 只能在每一段都为 1× 时原样返回。局部拉长/压缩可能恰好抵消成相同总
-    # 时长，但内部边界仍应移动，绝不能按“总时长相同”跳过。
     if np.allclose(F, 1.0, rtol=0.0, atol=1e-9):
         return x.astype(np.float32)
-    n2 = max(2, int(round(dur_out * sr)))
-    t_out = (np.arange(n2, dtype=np.float64) + 0.5) / sr
-    idx = np.searchsorted(newB, t_out, side="right") - 1
-    idx = np.clip(idx, 0, len(B) - 2)
-    src_t = B[idx] + (t_out - newB[idx]) / F[idx]
-    src_t = np.clip(src_t, 0.0, max(0.0, dur_in - 1.0 / sr))
-    xr = np.interp(src_t * sr, np.arange(n, dtype=np.float64), x)
-
-    # 音高还原
-    if f0_orig is not None and times is not None and len(times) > 1 and np.any(f0_orig > 0):
-        try:
-            t2, f0r = analyze_pitch(xr, int(round(sr)), floor, ceiling, frame_period)
-        except Exception:
-            t2, f0r = None, None
-        if t2 is not None and len(t2) > 1 and np.any(f0r > 0):
-            idx2 = np.searchsorted(newB, t2, side="right") - 1
-            idx2 = np.clip(idx2, 0, len(B) - 2)
-            # 输出时刻 t2 → 源时刻（逆映射）
-            src_t2 = B[idx2] + (t2 - newB[idx2]) / F[idx2]
-            src_t2 = np.clip(src_t2, 0.0, dur_in)
-            fs = np.interp(src_t2, times, f0_orig, left=0.0, right=0.0)
-            # 重采样已把音高缩放为 1/段因子；把原 F0 还原回去即可（无需再乘因子）
-            voiced_ok = (f0r > 0) & (fs > 0)
-            tier = np.where(voiced_ok, np.clip(fs, float(floor), float(ceiling)), 0.0)
-            if np.any(tier > 0):
-                xr = synthesize_with_f0(xr, sr, tier, f0r, t2, float(frame_period))
-    return np.asarray(xr, dtype=np.float32)
+    if f0_orig is not None and times is not None and len(times) > 1 and np.any(np.asarray(f0_orig) > 0):
+        return _psola_time_scale(x, sr, B, F, newB, dur_out, np.asarray(f0_orig, dtype=np.float64), np.asarray(times, dtype=np.float64))
+    return _wsola_time_scale(x, sr, B, F, newB, dur_out)
 
 
 def _sample_voiced_mask(f0: np.ndarray, times: np.ndarray, n: int, sr: float) -> np.ndarray:
@@ -1668,6 +1739,50 @@ def textgrid_export(syllables: list[dict], duration: float, tier_name: str = "�
     return textgrid_export_tiers([{"name": tier_name, "kind": "interval", "items": syllables}], duration)
 
 
+def pitchtier_text(points, duration: float = 0.0) -> str:
+    """把（编辑后的）音高控制点/特征点保存为 Praat PitchTier 文本。
+
+    格式与 Praat “Save as PitchTier text file…” 一致：
+    每个点两行（t、f0），点按时间升序去重。
+    """
+    pts: list[tuple[float, float]] = []
+    seen: set[float] = set()
+    for p in (points or []):
+        try:
+            t = float(p[0])
+            f = float(p[1])
+        except (TypeError, ValueError, IndexError):
+            continue
+        if not (np.isfinite(t) and np.isfinite(f) and f > 0):
+            continue
+        key = round(t, 9)
+        if key in seen:
+            continue
+        seen.add(key)
+        pts.append((t, f))
+    pts.sort(key=lambda x: x[0])
+    dur = 0.0
+    try:
+        dur = max(0.0, float(duration))
+    except (TypeError, ValueError):
+        dur = 0.0
+    if dur <= 0 and pts:
+        dur = max(float(p[0]) for p in pts)
+    parts = [
+        'File type = "ooTextFile"',
+        'Object class = "PitchTier"',
+        "",
+        "xmin = 0",
+        f"xmax = {_tg_num(dur)}",
+        "points [size]:",
+        f"  number = {len(pts)}",
+    ]
+    for t, f in pts:
+        parts.append(f"    {_tg_num(t)}")
+        parts.append(f"    {_tg_num(f)}")
+    return "\n".join(parts) + "\n"
+
+
 def textgrid_parse(content: bytes | str) -> tuple[list[dict], float]:
     """解析 Praat TextGrid（长格式/短格式，含区间层与点层）。
 
@@ -1917,9 +2032,11 @@ def pack_results(
     textgrid: str,
     base: str = "result",
     textgrid_legacy: str | None = None,
+    pitchtier: str | None = None,
 ) -> bytes:
     """一键打包全部结果：原始音频 + 编辑后音频 + TextGrid 文本
-    （应用侧传入短格式；如提供 textgrid_legacy 则额外附带一份变体）-> ZIP 字节。"""
+    （应用侧传入短格式；如提供 textgrid_legacy 则额外附带一份变体；
+    如提供 pitchtier 则附带 Praat PitchTier 音高编辑点文本）-> ZIP 字节。"""
     import zipfile
 
     buf = io.BytesIO()
@@ -1929,4 +2046,6 @@ def pack_results(
         zf.writestr(f"{base}_tiers.TextGrid", textgrid.encode("utf-8"))
         if textgrid_legacy is not None:
             zf.writestr(f"{base}_tiers_legacy.TextGrid", textgrid_legacy.encode("utf-8"))
+        if pitchtier is not None and pitchtier.strip():
+            zf.writestr(f"{base}_pitch.PitchTier", pitchtier.encode("utf-8"))
     return buf.getvalue()
