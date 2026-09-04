@@ -1,0 +1,1924 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="dark" />
+<title>键盘·律制·和声动态图 · 音高对数标度 / 十二平均律 vs 纯律 / 和弦声学</title>
+<style>
+  :root{
+    --bg:#0a0f18; --panel:#0f1a2c; --panel2:#162338; --line:#26344f;
+    --text:#e6eefb; --muted:#8fa3c4; --amber:#ffcf6e; --cyan:#62d7ff;
+    --green:#7be0a0; --red:#ff8b7a; --magenta:#ff9ce0; --violet:#b18cff;
+    --warm:#ffb45e;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scrollbar-gutter:stable;}
+  body{
+    background:radial-gradient(1300px 700px at 50% -12%, #12233f 0%, var(--bg) 58%);
+    color:var(--text);
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    min-height:100vh; padding:64px 16px 46px; line-height:1.6;
+  }
+  .wrap{max-width:1260px; margin:0 auto;}
+  header{text-align:center; margin-bottom:20px;}
+  header h1{font-size:27px; font-weight:700; letter-spacing:1px;}
+  header p{color:var(--muted); font-size:13.5px; margin-top:8px; max-width:1000px; margin-left:auto; margin-right:auto;}
+  header p b{color:var(--amber); font-weight:600;}
+  .topbtns{position:fixed; top:14px; right:16px; z-index:50; display:flex; gap:8px;}
+  .topbtn{padding:7px 15px; border-radius:999px; font-size:13px;}
+  #btnLang{font-size:12px;}
+
+  .card{
+    background:linear-gradient(180deg,var(--panel2),var(--panel));
+    border:1px solid var(--line); border-radius:16px; padding:16px;
+    box-shadow:0 16px 44px rgba(0,0,0,.42); margin-bottom:18px;
+  }
+  .card-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:11px;}
+  .card-title{font-size:17px; font-weight:700; letter-spacing:.5px;}
+  .card-tag{font-size:12.5px; color:var(--cyan); opacity:.92;}
+  .cv{width:100%; border-radius:12px; overflow:hidden; border:1px solid var(--line); background:#070b12;}
+  canvas{display:block; width:100%; height:auto;}
+  .legend{display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; font-size:12.5px; color:var(--muted); align-items:center;}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .dot{width:11px; height:11px; border-radius:50%; flex:none;}
+  .bars{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px; row-gap:8px;}
+  .bars label{font-size:12.5px; color:var(--muted); flex:none;}
+  .bars input[type=range]{width:150px; accent-color:var(--amber);}
+  .bars input[type=range].wide{width:200px;}
+  .bars .val{font-size:13px; color:var(--cyan); min-width:44px; font-variant-numeric:tabular-nums; font-weight:600;}
+  .bars #vnFinger{width:330px;}
+  @media(max-width:860px){ .bars #vnFinger{width:165px;} }
+  .btn{
+    background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:9px;
+    padding:6px 13px; font-size:13px; cursor:pointer; transition:all .15s; font-family:inherit; line-height:1.3;
+  }
+  .btn:hover{border-color:var(--cyan); color:#fff;}
+  .btn.on{background:linear-gradient(135deg,#1e3a5f,#12243d); border-color:var(--cyan); color:#fff;}
+  .btn.warn.on{background:linear-gradient(135deg,#5f3112,#3d210d); border-color:var(--amber);}
+  ul.bullets{margin-top:12px; padding-left:18px; color:#cfd9ea; font-size:13.5px;}
+  ul.bullets li{margin:5px 0;}
+  ul.bullets b{color:var(--warm);}
+  .note{margin-top:8px; font-size:12px; color:var(--muted); border-left:3px solid var(--line); padding-left:10px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  .grid3{display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:18px;}
+  .take{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:10px; margin-top:14px;}
+  .take div{background:rgba(255,255,255,.025); border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-size:12.8px; color:#c7d2e4;}
+  .take b{color:var(--amber);}
+  table{width:100%; border-collapse:collapse; margin-top:10px; font-size:13px;}
+  th{font-size:12.5px; color:var(--muted); font-weight:600; text-align:left; padding:8px 10px; border-bottom:1px solid var(--line);}
+  td{padding:8px 10px; border-bottom:1px solid rgba(38,52,79,.5); vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  .num{font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap;}
+  td.d0{color:var(--muted);} td.dp{color:#7be0a0;} td.dm{color:#ffb45e;}
+  footer{text-align:center; color:var(--muted); font-size:12px; margin-top:8px;}
+  .hidden{display:none;}
+  #scrim{position:fixed; inset:0; background:rgba(5,8,14,.62); z-index:60; opacity:0; pointer-events:none; transition:opacity .22s;}
+  #scrim.show{opacity:1; pointer-events:auto;}
+  #helpPanel{
+    position:fixed; top:0; right:0; height:100%; width:min(490px,95vw); z-index:61;
+    background:linear-gradient(180deg,#1b2c48,#101a2c); border-left:1px solid var(--line);
+    transform:translateX(105%); transition:transform .25s ease; display:flex; flex-direction:column;
+    box-shadow:-16px 0 40px rgba(0,0,0,.5);
+  }
+  #helpPanel.show{transform:none;}
+  .hHead{display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); font-weight:700;}
+  .hHead button{background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; line-height:1;}
+  .hHead button:hover{color:#fff;}
+  .hBody{overflow-y:auto; padding:14px 20px 32px; font-size:13px; color:#d5deee;}
+  .hBody h3{font-size:14.5px; margin:16px 0 6px; color:var(--cyan);}
+  .hBody h3:first-child{margin-top:0;}
+  .hBody p{margin:6px 0;}
+  .hBody code{background:#0d1626; border:1px solid var(--line); padding:1px 5px; border-radius:5px; font-size:12px; color:var(--amber);}
+  .kbd{display:inline-block; background:#0d1626; border:1px solid var(--line); border-bottom-width:2px; border-radius:4px; padding:0 6px; font-size:11.5px; color:var(--amber);}
+  .pads{display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:stretch;}
+  .pad{display:flex; flex-direction:column; gap:10px; min-width:0;}
+  .chips{display:flex; gap:6px; flex-wrap:wrap;}
+  .chips .btn{padding:4px 11px; font-size:12.5px;}
+  .chiprow{margin-top:10px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .chiprow .cl{font-size:12px; color:var(--muted); flex:none; min-width:74px;}
+  .read{font-size:16.5px; font-weight:700; color:#9fe8ff; font-variant-numeric:tabular-nums; letter-spacing:.3px;}
+  .read .rd2{color:var(--muted); font-weight:500; font-size:13px;}
+  .cmpWrap{overflow-x:auto; margin-top:10px;}
+  .cmp{min-width:720px;}
+  .cmp td,.cmp th{text-align:right;}
+  .cmp td:first-child,.cmp th:first-child,.cmp td:nth-child(2),.cmp th:nth-child(2){text-align:left;}
+  @media(max-width:860px){
+    body{padding-top:62px;}
+    .topbtn{padding:6px 11px;}
+    .grid2,.pads{grid-template-columns:1fr;}
+    .bars input[type=range]{width:112px;}
+    .chiprow .cl{min-width:0;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 data-i18n="pageTitle">🎹🎻 键盘 · 琴弦 · 律制 · 和声 动态图</h1>
+    <p data-i18n="sub">演示：<b>音高与频率成对数关系</b>（钢琴键盘 / 小提琴指位）、<b>十二平均律与纯律（自然律）的算法区别</b>、<b>和声 = 谐波列的重合</b>——均可点击、可试听。</p>
+  </header>
+
+  <div class="topbtns">
+    <button class="topbtn btn" id="btnLang" type="button">EN</button>
+    <button class="topbtn btn" id="btnHelp" type="button" data-i18n="btnHelp">📖 帮助</button>
+  </div>
+
+  <!-- ============ ① 钢琴键盘 & 小提琴弦 ============ -->
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title"><span data-i18n="c1Title">① 钢琴键盘 & 小提琴弦：音阶 · 半音 · Hz · 对数标度</span></div>
+      <div class="card-tag" data-i18n="c1Tag">真实感键盘可点击发声 · 琴弦指位与有效弦长 · 线性 / 对数频率标尺</div>
+    </div>
+
+    <div class="grid2">
+      <div class="pad">
+        <div class="cv"><canvas id="cvKB" width="600" height="430" role="img" aria-label="钢琴键盘与音高读数"></canvas></div>
+        <div><span id="kbRead" class="read"></span></div>
+        <div class="bars">
+          <button class="btn warn" id="kbRunBtn" type="button"><span data-i18n="kbRun">▶ 半音阶上行 C4→C5</span></button>
+          <button class="btn on" id="kbHzBtn" type="button"><span data-i18n="kbHzOn">🏷 键下 Hz 标注：开</span></button>
+          <span style="font-size:12px;color:var(--muted)" data-i18n="kbHint">点击白键/黑键发声；相邻键相差一个半音（100 音分）。</span>
+        </div>
+        <div class="legend">
+          <span><i class="dot" style="background:#e8ecf4"></i><span data-i18n="lgWhite">白键 = 自然音级（音阶）</span></span>
+          <span><i class="dot" style="background:#14181f"></i><span data-i18n="lgBlack">黑键 = 半音（变化音）</span></span>
+          <span><i class="dot" style="background:#ffcf6e"></i><span data-i18n="lgOn">当前发音键</span></span>
+        </div>
+      </div>
+
+      <div class="pad">
+        <div class="cv"><canvas id="cvVN" width="600" height="430" role="img" aria-label="小提琴琴弦指位动画"></canvas></div>
+        <div><span id="vnRead" class="read"></span></div>
+        <div class="chiprow"><span class="cl" data-i18n="vnStrL">琴弦</span><span class="chips" id="vnStr"></span></div>
+        <div class="chiprow"><span class="cl" data-i18n="vnPlayL">奏法</span>
+          <button class="btn" id="vnBowBtn" type="button"><span data-i18n="vnBow">🏹 弓奏（持续音）</span></button>
+          <button class="btn" id="vnPluckBtn" type="button"><span data-i18n="vnPluck">👆 拨弦</span></button>
+          <button class="btn warn" id="vnGlissBtn" type="button"><span data-i18n="vnGliss">↗ 自动滑奏（0→12 半音）</span></button>
+        </div>
+        <div class="bars">
+          <label data-i18n="vnFingL">按指位置（半音数 n）</label>
+          <input id="vnFinger" type="range" min="0" max="12" step="0.25" value="0" />
+          <span class="val" id="vnFv">0</span>
+          <button class="btn" id="vnOpenBtn" type="button" data-i18n="vnOpen">↩ 空弦</button>
+        </div>
+        <div class="legend">
+          <span><i class="dot" style="background:#ffcf6e"></i><span data-i18n="lgStr">黄色 = 发音弦</span></span>
+          <span><i class="dot" style="background:#62d7ff"></i><span data-i18n="lgTick">琴枕→琴桥间刻度 = 各半音指位（越靠琴桥越密）</span></span>
+          <span style="font-size:11.5px" data-i18n="vnHint">按住手指的弦段不振动；振动的只有“指尖→琴桥”一段。</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px">
+      <div class="cv"><canvas id="cvLog" width="1240" height="320" role="img" aria-label="线性与对数频率标尺对比"></canvas></div>
+      <div class="bars">
+        <button class="btn warn" id="logDemoBtn" type="button"><span data-i18n="logDemo">▶ 恒速滑奏上行 C2→C7（听感等速）</span></button>
+        <span style="font-size:12px;color:var(--muted)" data-i18n="logHint">点击下方任一带可选取音高并试听；绿点 = 最近一次发音的位置。</span>
+      </div>
+      <div class="note" id="logNote" data-i18n="logNote">读法：上下两条都是“键盘音”的分布。线性轴上频率翻倍 → 距离也翻倍，低音全部挤在左侧；对数轴上每个八度等宽、每个半音等距——与人的听觉一致。</div>
+    </div>
+
+    <ul class="bullets">
+      <li><b data-i18n="c1L1">① 每个键相差同一个“比例”：</b><span data-i18n="c1B1">钢琴相邻键（半音）频率相差 2^(1/12) ≈ 1.0595 倍（约 6%）。从 C4=261.63 Hz 起每上行一个半音就乘一次 1.0595，到高八度 C5 恰好 ×2 = 523.25 Hz——12 个半音 = 一个八度。</span></li>
+      <li><b data-i18n="c1L2">② 耳朵听的是“比例”不是“差值”：</b><span data-i18n="c1B2">C4→D4 相差约 32 Hz，C5→D5 相差约 65 Hz，听感却是同样“一个全音”。音高感知与频率的对数成正比：频率翻倍感觉“高了八度”，加多少 Hz 并不等价。</span></li>
+      <li><b data-i18n="c1L3">③ 小提琴指位越按越密：</b><span data-i18n="c1B3">弦的音高 f ∝ 1/弦长。要升半音就得把弦长乘 2^(−1/12)≈0.944，于是指头位置按比例收窄——靠近琴桥时同样的半音只差几毫米，这正是“对数标度”长在乐器上。</span></li>
+      <li><b data-i18n="c1L4">④ 线性轴 vs 对数轴：</b><span data-i18n="c1B4">下方标尺把同一段音列画两次：线性轴按 Hz 摆、对数轴按音分摆。线性轴上八度越往高越宽、低音被挤成一团；对数轴上每个八度等宽——若把每个八度看成同一“形状”，乐谱/键盘/指法就都说得通了。</span></li>
+      <li><b data-i18n="c1L5">⑤ 试着：</b><span data-i18n="c1B5">先听“半音阶上行”，再按“恒速滑奏”——耳朵觉得上升均匀，而 Hz 读数越走越快；再比较小提琴空弦 G3=196、D4≈294、A4=440、E5≈659 的分布。</span></li>
+    </ul>
+  </section>
+  <!-- ============ ② 十二平均律 vs 纯律 ============ -->
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title"><span data-i18n="c2Title">② 十二平均律 vs 纯律（自然律）：算法与差别</span></div>
+      <div class="card-tag" data-i18n="c2Tag">半音 = 2^(1/12) 等分八度 · 纯律 = 整数比（源自泛音列）· 试听对比两种音阶与和弦</div>
+    </div>
+    <div class="bars">
+      <button class="btn warn" id="tunScaleET" type="button"><span data-i18n="c2RunET">🔊 平均律音阶</span></button>
+      <button class="btn warn" id="tunScaleJI" type="button"><span data-i18n="c2RunJI">🔊 纯律音阶</span></button>
+      <button class="btn" id="tunChordET" type="button"><span data-i18n="c2ChordET">🔊 平均律大三和弦</span></button>
+      <button class="btn" id="tunChordJI" type="button"><span data-i18n="c2ChordJI">🔊 纯律大三和弦</span></button>
+      <span style="font-size:12px;color:var(--muted)" data-i18n="c2Base">国际标准音 A4 = 440 Hz；两行同以 C4 为基准。</span>
+    </div>
+    <div class="cv"><canvas id="cvTune" width="1240" height="640" role="img" aria-label="十二平均律与纯律对比动画"></canvas></div>
+    <div class="cmpWrap">
+      <table class="cmp">
+        <thead><tr>
+          <th data-i18n="cmpD">音级</th>
+          <th data-i18n="cmpETR">平均律 半音数</th>
+          <th data-i18n="cmpETH">平均律 Hz</th>
+          <th data-i18n="cmpETC">平均律 音分</th>
+          <th data-i18n="cmpJIR">纯律 比例</th>
+          <th data-i18n="cmpJIH">纯律 Hz</th>
+          <th data-i18n="cmpJIC">纯律 音分</th>
+          <th data-i18n="cmpDel">差值（纯 − 均）</th>
+        </tr></thead>
+        <tbody id="tunBody"></tbody>
+      </table>
+    </div>
+    <div class="note" id="cmpNote" data-i18n="cmpNote">表中“差值”以音分计（1 半音 = 100 音分）。纯律大三度比平均律低 13.7 音分、纯律五度仅高 2 音分——五度几乎一样，三度差别明显，这就是“平均律听起来‘紧’一点”的原因。</div>
+    <ul class="bullets">
+      <li><b data-i18n="c2L1">① 算法一 · 平均律：</b><span data-i18n="c2B1">把八度（频率比 2:1）切成 12 个相等的“半音”，每个半音都是同一个小比例 r = 2^(1/12) ≈ 1.05946。任一音 fₙ = 440 × 2^((n−69)/12)（n 为 MIDI 号）。任何调都能弹，所以现代钢琴/电子乐器用它。</span></li>
+      <li><b data-i18n="c2L2">② 算法二 · 纯律（自然律）：</b><span data-i18n="c2B2">音程取简单整数比（来自泛音列）：八度 2:1、纯五度 3:2、纯四度 4:3、大三度 5:4、小三度 6:5、大六度 5:3、大七度 15:8。C 大调七个音依次为 1、9/8、5/4、4/3、3/2、5/3、15/8、2 倍 C。</span></li>
+      <li><b data-i18n="c2L3">③ 差多少？</b><span data-i18n="c2B3">纯律与平均律只在 C 上对齐；越往五度圈外走差得越多。上表可见：大三度差 −13.7、小三度 +15.6、五度仅 ±2 音分。小提琴/无品乐器按纯律拉，键盘则被迫取折中。</span></li>
+      <li><b data-i18n="c2L4">④ 听感：</b><span data-i18n="c2B4">先听“平均律音阶”再听“纯律音阶”，再对比两种大三和弦。纯律的和弦“更干净、发亮”，因为 3:2、5:4 使泛音完全重合、无拍频；平均律的音程略“紧/颤”，但换来任何调都可用。</span></li>
+      <li><b data-i18n="c2L5">⑤ 历史：</b><span data-i18n="c2B5">巴赫《十二平均律曲集》推广了它；此前的五度相生律（毕达哥拉斯律，纯五度 3:2 连环相生）转调时会出现“狼音五度”，平均律把误差均摊到每个音上，人人都能接受。</span></li>
+    </ul>
+  </section>
+
+  <!-- ============ ③ 和声原理与和弦声学 ============ -->
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title"><span data-i18n="c3Title">③ 和声原理 & 主要和声的声学特征</span></div>
+      <div class="card-tag" data-i18n="c3Tag">谐波列重合 → 和谐 · 近似重合 → 拍频/粗糙 · 大三 / 小三 / 七和弦频谱示意</div>
+    </div>
+    <div class="chiprow"><span class="cl" data-i18n="ivLbl">音程</span><span class="chips" id="ivChips"></span></div>
+    <div class="chiprow"><span class="cl" data-i18n="chLbl">和弦</span><span class="chips" id="chChips"></span></div>
+    <div class="bars">
+      <span class="cl" style="font-size:12px;color:var(--muted)" data-i18n="sysLbl">试听律制</span>
+      <button class="btn on" id="sysJI" type="button"><span data-i18n="sysJI">纯律（干净）</span></button>
+      <button class="btn" id="sysET" type="button"><span data-i18n="sysET">平均律（键盘实际）</span></button>
+      <button class="btn warn" id="hPlay" type="button"><span data-i18n="hPlayLbl">🔊 播放所选</span></button>
+      <button class="btn" id="hSep" type="button"><span data-i18n="hSepLbl">🎵 逐个听单音</span></button>
+      <button class="btn" id="hBeatPair" type="button"><span data-i18n="hBeatPairLbl">👂 听“拍频对”</span></button>
+      <span style="font-size:12px;color:var(--muted)" data-i18n="hHint">（上方色点区为可播放提示）</span>
+    </div>
+    <div class="cv"><canvas id="cvHarm" width="1240" height="600" role="img" aria-label="和弦谐波重合动画"></canvas></div>
+    <div><span id="hRead" class="read" style="font-size:14px"></span></div>
+
+    <div style="margin-top:18px">
+      <div class="card-title" style="font-size:15px"><span data-i18n="beatT">拍频实验：两个相近频率 = 强弱起伏</span></div>
+      <div class="cv" style="margin-top:10px"><canvas id="cvBeat" width="1240" height="300" role="img" aria-label="拍频动画"></canvas></div>
+      <div class="bars">
+        <label data-i18n="beatDLbl">两音频率差 Δ</label>
+        <input id="beatD" type="range" min="0.1" max="16" step="0.1" value="0.9" />
+        <span class="val" id="beatDv">0.9 Hz</span>
+        <button class="btn warn" id="beatPlay" type="button"><span data-i18n="beatPlayLbl">🔊 同时播放两音</span></button>
+        <span style="font-size:12px;color:var(--muted)" data-i18n="beatHint">261.0 与 261.9 Hz…差值越小“拍”越慢；差值>约15 Hz 就不再是拍而是粗糙感/不谐和。</span>
+      </div>
+      <div class="note" data-i18n="beatNote">拍频是“和声不谐和”的微观机制：纯律的 3:2、5:4 使泛音完全重合（无拍）；平均律把它们错开一点点（如纯五度差约 0.9 Hz、大三度差约 10 Hz），于是产生缓慢或快速的强弱抖动。Δ=0.9 Hz 就接近平均律纯五度那对“几乎重合的泛音”。</div>
+    </div>
+
+    <ul class="bullets">
+      <li><b data-i18n="c3L1">① 和声的原理 = 谐波列（泛音列）：</b><span data-i18n="c3B1">任何一个真实乐音都含一串谐波：f₀, 2f₀, 3f₀…。两个音同时响时，耳朵听的是两串谐波的“对齐程度”：重合的泛音越多 → 越和谐；几乎重合又没完全重合的泛音 → 产生拍频/粗糙 → 越不谐和。</span></li>
+      <li><b data-i18n="c3L2">② 整数比为什么和谐：</b><span data-i18n="c3B2">频率比简单（如 3:2、4:5:6）时两串谐波大量重合（图中绿点/竖线）。纯八度 2:1 重合最多，纯五度次之，接着是纯四度、大小三度——正好构成“协和音程”的梯队；小二度、三全音几乎不重合且互相“打架”，所以刺耳。</span></li>
+      <li><b data-i18n="c3L3">③ 大三和弦 4:5:6：</b><span data-i18n="c3B3">C、E、G 的频率比 4:5:6，恰好是共同基音 C₂（65.4 Hz）的第 4、5、6 次谐波——三串泛音落在同一张“网格”上，听感明亮、稳定、有“根”。</span></li>
+      <li><b data-i18n="c3L4">④ 小三和弦与七和弦：</b><span data-i18n="c3B4">小三和弦 ≈ 1 : 6/5 : 3/2（暗淡柔和）；属七和弦加进 7:4（≈968.8 音分，比平均律的 bB 低 31 音分），含“不干净”的七度张力，需要解决到主和弦——古典和声的发动机。</span></li>
+      <li><b data-i18n="c3L5">⑤ 试着：</b><span data-i18n="c3B5">切到“纯律”听大三和弦（干净无拍），再切“平均律”听（有一点紧/颤）；点“听拍频对”可单独听到使大三度粗糙的那对泛音（相差约 10 Hz）；最后用下方滑块自己制造“拍”。</span></li>
+    </ul>
+  </section>
+
+  <!-- ============ ④ 小结 ============ -->
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title">📋 <span data-i18n="tblTitle">音高 · 律制 · 和声 · 快速对照表</span></div>
+    </div>
+    <div class="cmpWrap">
+      <table class="cmp">
+        <thead><tr>
+          <th data-i18n="th1">概念</th>
+          <th data-i18n="th2">算法 / 数值</th>
+          <th data-i18n="th3">听感与用途</th>
+        </tr></thead>
+        <tbody>
+          <tr><td data-i18n="t1a">音高感知</td><td data-i18n="t1b">频率取对数：八度 = ×2 = +1200 音分</td><td data-i18n="t1c">“差多少 Hz”≠“差多少音”；耳朵按比例听</td></tr>
+          <tr><td data-i18n="t2a">半音（平均律）</td><td data-i18n="t2b">r = 2^(1/12) = 1.059463…（12 个等分）</td><td data-i18n="t2c">键盘上每一键；100 音分</td></tr>
+          <tr><td data-i18n="t3a">八度</td><td data-i18n="t3b">2 : 1，谐波完全重合</td><td data-i18n="t3c">最协和，听感“同一个音更高/更低”</td></tr>
+          <tr><td data-i18n="t4a">纯律（自然律）</td><td data-i18n="t4b">简单整数比：3:2、5:4、6:5…</td><td data-i18n="t4c">泛音重合无拍、纯净；转调要重调律</td></tr>
+          <tr><td data-i18n="t5a">十二平均律</td><td data-i18n="t5b">12 × 100 音分等分八度</td><td data-i18n="t5c">任意调可弹；三度差 ±13~16 音分，略“紧”</td></tr>
+          <tr><td data-i18n="t6a">大三和弦 C·E·G</td><td data-i18n="t6b">4 : 5 : 6（共同基音 C₂ 65.4 Hz）</td><td data-i18n="t6c">明亮稳定，协和梯队顶端</td></tr>
+          <tr><td data-i18n="t7a">小三和弦 C·♭E·G</td><td data-i18n="t7b">1 : 6/5 : 3/2（10:12:15）</td><td data-i18n="t7c">暗淡柔和（根音上方是小三度）</td></tr>
+          <tr><td data-i18n="t8a">属七和弦 C·E·G·♭B</td><td data-i18n="t8b">4 : 5 : 6 : 7（7:4 谐和七度）</td><td data-i18n="t8c">带张力，倾向解决到主和弦</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="take">
+      <div><b data-i18n="tk1">🔑 对数听感：</b><span data-i18n="tkb1">音高 ∝ log(频率)。键盘等距、小提琴指距递减、乐谱上下行——都是同一张“对数频率轴”的不同投影。</span></div>
+      <div><b data-i18n="tk2">🔑 律制取舍：</b><span data-i18n="tkb2">纯律让每一个“此刻的和声”最纯净；平均律让“每一个调”都可用——现代键盘选后者，代价是三度类音程偏离纯律约 10~16 音分。</span></div>
+      <div><b data-i18n="tk3">🔑 和声本质：</b><span data-i18n="tkb3">协和 = 谐波列重合（整数比、共同基音）；不谐和 = 近似重合的泛音产生拍频/粗糙。乐器发声与和声学在这里汇合。</span></div>
+    </div>
+  </section>
+
+  <footer data-i18n="foot">教学示意动画：乐器音色为 WebAudio 按谐波实时近似合成；琴弦振动为慢放/放大示意。频率以 A4=440 Hz 的国际标准音高为准。</footer>
+</div>
+
+<!-- 帮助抽屉 -->
+<div id="scrim"></div>
+<aside id="helpPanel" role="dialog" aria-modal="true" aria-label="帮助">
+  <div class="hHead"><span data-i18n="helpTitle">📖 怎么读这张图</span><button id="helpClose" type="button" aria-label="close">✕</button></div>
+  <div class="hBody">
+    <div id="helpZh">
+      <h3>① 键盘与琴弦</h3>
+      <p>点键盘任意键发声，键下显示 Hz。相邻键（半音）频率 ×1.05946；<b>每 12 键（一个八度）频率 ×2</b>。提琴图里选弦后可拖“按指位置”：指头把弦按短，音变高——注意琴枕到琴桥之间的<b>半音刻度越来越密</b>，频率按 1/弦长变化。下方标尺把同一音列画两次：线性轴（Hz）与对数轴（音分），看两个八度括号的宽度差异，再按“恒速滑奏”听。</p>
+      <h3>② 两种律制</h3>
+      <p>上行=平均律（12 等分、每键 100 音分），下行=纯律（整数比）。试听两种音阶与两种大三和弦，并读差值表（音分）。图上橙色虚线把纯律音拉回平均律键位，越长的线偏离越多。</p>
+      <h3>③ 和声与拍频</h3>
+      <p>频谱图：每一条彩带是一串谐波；绿色竖线/圆点=泛音重合（和谐），琥珀色=“几乎重合”的拍频对（数字为每秒拍数）。用“试听律制”切换纯律/平均律看重合与错位；点“听拍频对”能听到使大三度变粗糙的那对泛音。下方滑块直接制造拍频。</p>
+      <h3>键盘与提示</h3>
+      <p><span class="kbd">1</span>/<span class="kbd">2</span>/<span class="kbd">3</span> 跳到三个演示区，<span class="kbd">Esc</span> 关闭帮助。声音需先在页面点一下按钮解锁（浏览器自动播放策略）。</p>
+    </div>
+    <div id="helpEn" class="hidden">
+      <h3>① Keyboard &amp; strings</h3>
+      <p>Click any key to play; Hz is shown under each key. Adjacent keys (a semitone) multiply frequency by 1.05946; <b>12 keys (one octave) double it</b>. On the violin, pick a string and drag the finger: stopping the string shortens it and raises the pitch — watch the <b>semitone marks get denser toward the bridge</b> (pitch ∝ 1/length). Below, the same notes are drawn twice: a linear Hz ruler and a logarithmic ruler — compare the two octave brackets, then press “constant-speed glide”.</p>
+      <h3>② Two tuning systems</h3>
+      <p>Top row: equal temperament (12 equal semitones, 100 cents each). Bottom row: just intonation (integer ratios). Audition both scales and both major triads; read the cents-difference table. Orange dashed lines pull each just note back to its equal-tempered key — longer means farther off.</p>
+      <h3>③ Harmony &amp; beats</h3>
+      <p>Spectrum view: each coloured comb is one tone’s harmonics. Green lines/dots = coinciding partials (consonance); amber = near-coincident “beating pairs” (numbers = beats per second). Switch between just/equal temperament to see alignment vs mistuning; “hear beating pair” plays the partials that roughen a major third. The slider at the bottom makes beats directly.</p>
+      <h3>Keys &amp; tips</h3>
+      <p><span class="kbd">1</span>/<span class="kbd">2</span>/<span class="kbd">3</span> jump to the three demo areas, <span class="kbd">Esc</span> closes help. Click once anywhere to unlock audio (browser autoplay policy).</p>
+    </div>
+  </div>
+</aside>
+
+<script>
+"use strict";
+window.__errs = [];
+window.onerror = function (m, s, l, c) { window.__errs.push(String(m) + " @" + l + ":" + c); };
+window.__boot = false;
+window.__frames = 0;
+
+/* ================= 双语字典 ================= */
+const I18N = {
+  zh: {
+    pageTitle: "🎹🎻 键盘 · 琴弦 · 律制 · 和声 动态图",
+    sub: "演示：<b>音高与频率成对数关系</b>（钢琴键盘 / 小提琴指位）、<b>十二平均律与纯律（自然律）的算法区别</b>、<b>和声 = 谐波列的重合</b>——均可点击、可试听。",
+    btnHelp: "📖 帮助", helpTitle: "📖 怎么读这张图",
+    c1Title: "① 钢琴键盘 & 小提琴弦：音阶 · 半音 · Hz · 对数标度", c1Tag: "真实感键盘可点击发声 · 琴弦指位与有效弦长 · 线性 / 对数频率标尺",
+    kbRun: "▶ 半音阶上行 C4→C5", kbRunStop: "⏹ 停止上行",
+    kbHzOn: "🏷 键下 Hz 标注：开", kbHzOff: "🏷 键下 Hz 标注：关",
+    kbHint: "点击白键/黑键发声；相邻键相差一个半音（100 音分）。",
+    lgWhite: "白键 = 自然音级（音阶）", lgBlack: "黑键 = 半音（变化音）", lgOn: "当前发音键",
+    vnStrL: "琴弦", vnPlayL: "奏法",
+    vnBow: "🏹 弓奏（持续音）", vnBowStop: "🏹 停止弓奏",
+    vnPluck: "👆 拨弦", vnGliss: "↗ 自动滑奏（0→12 半音）", vnGlissStop: "⏹ 停止滑奏",
+    vnFingL: "按指位置（半音数 n）", vnOpen: "↩ 空弦",
+    lgStr: "黄色 = 发音弦", lgTick: "琴枕→琴桥间刻度 = 各半音指位（越靠琴桥越密）",
+    vnHint: "按住手指的弦段不振动；振动的只有“指尖→琴桥”一段。",
+    logDemo: "▶ 恒速滑奏上行 C2→C7（听感等速）", logDemoStop: "⏹ 停止滑奏",
+    logHint: "点击下方任一带可选取音高并试听；绿点 = 最近一次发音的位置。",
+    logNote: "读法：上下两条都是“键盘音”的分布。线性轴上频率翻倍 → 距离也翻倍，低音全部挤在左侧；对数轴上每个八度等宽、每个半音等距——与人的听觉一致。",
+    c1L1: "① 每个键相差同一个“比例”：", c1L2: "② 耳朵听的是“比例”不是“差值”：",
+    c1L3: "③ 小提琴指位越按越密：", c1L4: "④ 线性轴 vs 对数轴：", c1L5: "⑤ 试着：",
+    c1B1: "钢琴相邻键（半音）频率相差 2^(1/12) ≈ 1.0595 倍（约 6%）。从 C4=261.63 Hz 起每上行一个半音就乘一次 1.0595，到高八度 C5 恰好 ×2 = 523.25 Hz——12 个半音 = 一个八度。",
+    c1B2: "C4→D4 相差约 32 Hz，C5→D5 相差约 65 Hz，听感却是同样“一个全音”。音高感知与频率的对数成正比：频率翻倍感觉“高了八度”，加多少 Hz 并不等价。",
+    c1B3: "弦的音高 f ∝ 1/弦长。要升半音就得把弦长乘 2^(−1/12)≈0.944，于是指头位置按比例收窄——靠近琴桥时同样的半音只差几毫米，这正是“对数标度”长在乐器上。",
+    c1B4: "下方标尺把同一段音列画两次：线性轴按 Hz 摆、对数轴按音分摆。线性轴上八度越往高越宽、低音被挤成一团；对数轴上每个八度等宽——若把每个八度看成同一“形状”，乐谱/键盘/指法就都说得通了。",
+    c1B5: "先听“半音阶上行”，再按“恒速滑奏”——耳朵觉得上升均匀，而 Hz 读数越走越快；再比较小提琴空弦 G3=196、D4≈294、A4=440、E5≈659 的分布。",
+    c2Title: "② 十二平均律 vs 纯律（自然律）：算法与差别", c2Tag: "半音 = 2^(1/12) 等分八度 · 纯律 = 整数比（源自泛音列）· 试听对比两种音阶与和弦",
+    c2RunET: "🔊 平均律音阶", c2RunJI: "🔊 纯律音阶",
+    c2ChordET: "🔊 平均律大三和弦", c2ChordJI: "🔊 纯律大三和弦",
+    c2Base: "国际标准音 A4 = 440 Hz；两行同以 C4 为基准。",
+    cmpD: "音级", cmpETR: "平均律 半音数", cmpETH: "平均律 Hz", cmpETC: "平均律 音分",
+    cmpJIR: "纯律 比例", cmpJIH: "纯律 Hz", cmpJIC: "纯律 音分", cmpDel: "差值（纯 − 均）",
+    cmpNote: "表中“差值”以音分计（1 半音 = 100 音分）。纯律大三度比平均律低 13.7 音分、纯律五度仅高 2 音分——五度几乎一样，三度差别明显，这就是“平均律听起来‘紧’一点”的原因。",
+    c2L1: "① 算法一 · 平均律：", c2L2: "② 算法二 · 纯律（自然律）：", c2L3: "③ 差多少？", c2L4: "④ 听感：", c2L5: "⑤ 历史：",
+    c2B1: "把八度（频率比 2:1）切成 12 个相等的“半音”，每个半音都是同一个小比例 r = 2^(1/12) ≈ 1.05946。任一音 fₙ = 440 × 2^((n−69)/12)（n 为 MIDI 号）。任何调都能弹，所以现代钢琴/电子乐器用它。",
+    c2B2: "音程取简单整数比（来自泛音列）：八度 2:1、纯五度 3:2、纯四度 4:3、大三度 5:4、小三度 6:5、大六度 5:3、大七度 15:8。C 大调七个音依次为 1、9/8、5/4、4/3、3/2、5/3、15/8、2 倍 C。",
+    c2B3: "纯律与平均律只在 C 上对齐；越往五度圈外走差得越多。上表可见：大三度差 −13.7、小三度 +15.6、五度仅 ±2 音分。小提琴/无品乐器按纯律拉，键盘则被迫取折中。",
+    c2B4: "先听“平均律音阶”再听“纯律音阶”，再对比两种大三和弦。纯律的和弦“更干净、发亮”，因为 3:2、5:4 使泛音完全重合、无拍频；平均律的音程略“紧/颤”，但换来任何调都可用。",
+    c2B5: "巴赫《十二平均律曲集》推广了它；此前的五度相生律（毕达哥拉斯律，纯五度 3:2 连环相生）转调时会出现“狼音五度”，平均律把误差均摊到每个音上，人人都能接受。",
+    ivLbl: "音程", chLbl: "和弦", sysLbl: "试听律制",
+    sysJI: "纯律（干净）", sysET: "平均律（键盘实际）",
+    hPlayLbl: "🔊 播放所选", hSepLbl: "🎵 逐个听单音", hBeatPairLbl: "👂 听“拍频对”",
+    hHint: "（上方色点区为可播放提示）",
+    beatT: "拍频实验：两个相近频率 = 强弱起伏",
+    beatDLbl: "两音频率差 Δ", beatPlayLbl: "🔊 同时播放两音", beatStopLbl: "🔇 停止播放",
+    beatHint: "261.0 与 261.9 Hz…差值越小“拍”越慢；差值&gt;约15 Hz 就不再是拍而是粗糙感/不谐和。",
+    beatNote: "拍频是“和声不谐和”的微观机制：纯律的 3:2、5:4 使泛音完全重合（无拍）；平均律把它们错开一点点（如纯五度差约 0.9 Hz、大三度差约 10 Hz），于是产生缓慢或快速的强弱抖动。Δ=0.9 Hz 就接近平均律纯五度那对“几乎重合的泛音”。",
+    c3L1: "① 和声的原理 = 谐波列（泛音列）：", c3L2: "② 整数比为什么和谐：",
+    c3L3: "③ 大三和弦 4:5:6：", c3L4: "④ 小三和弦与七和弦：", c3L5: "⑤ 试着：",
+    c3B1: "任何一个真实乐音都含一串谐波：f₀, 2f₀, 3f₀…。两个音同时响时，耳朵听的是两串谐波的“对齐程度”：重合的泛音越多 → 越和谐；几乎重合又没完全重合的泛音 → 产生拍频/粗糙 → 越不谐和。",
+    c3B2: "频率比简单（如 3:2、4:5:6）时两串谐波大量重合（图中绿点/竖线）。纯八度 2:1 重合最多，纯五度次之，接着是纯四度、大小三度——正好构成“协和音程”的梯队；小二度、三全音几乎不重合且互相“打架”，所以刺耳。",
+    c3B3: "C、E、G 的频率比 4:5:6，恰好是共同基音 C₂（65.4 Hz）的第 4、5、6 次谐波——三串泛音落在同一张“网格”上，听感明亮、稳定、有“根”。",
+    c3B4: "小三和弦 ≈ 1 : 6/5 : 3/2（暗淡柔和）；属七和弦加进 7:4（≈968.8 音分，比平均律的 ♭B 低 31 音分），含“不干净”的七度张力，需要解决到主和弦——古典和声的发动机。",
+    c3B5: "切到“纯律”听大三和弦（干净无拍），再切“平均律”听（有一点紧/颤）；点“听拍频对”可单独听到使大三度粗糙的那对泛音（相差约 10 Hz）；最后用下方滑块自己制造“拍”。",
+    tblTitle: "音高 · 律制 · 和声 · 快速对照表",
+    th1: "概念", th2: "算法 / 数值", th3: "听感与用途",
+    t1a: "音高感知", t1b: "频率取对数：八度 = ×2 = +1200 音分", t1c: "“差多少 Hz”≠“差多少音”；耳朵按比例听",
+    t2a: "半音（平均律）", t2b: "r = 2^(1/12) = 1.059463…（12 个等分）", t2c: "键盘上每一键；100 音分",
+    t3a: "八度", t3b: "2 : 1，谐波完全重合", t3c: "最协和，听感“同一个音更高/更低”",
+    t4a: "纯律（自然律）", t4b: "简单整数比：3:2、5:4、6:5…", t4c: "泛音重合无拍、纯净；转调要重调律",
+    t5a: "十二平均律", t5b: "12 × 100 音分等分八度", t5c: "任意调可弹；三度差 ±13~16 音分，略“紧”",
+    t6a: "大三和弦 C·E·G", t6b: "4 : 5 : 6（共同基音 C₂ 65.4 Hz）", t6c: "明亮稳定，协和梯队顶端",
+    t7a: "小三和弦 C·♭E·G", t7b: "1 : 6/5 : 3/2（10:12:15）", t7c: "暗淡柔和（根音上方是小三度）",
+    t8a: "属七和弦 C·E·G·♭B", t8b: "4 : 5 : 6 : 7（7:4 谐和七度）", t8c: "带张力，倾向解决到主和弦",
+    tk1: "🔑 对数听感：", tk2: "🔑 律制取舍：", tk3: "🔑 和声本质：",
+    tkb1: "音高 ∝ log(频率)。键盘等距、小提琴指距递减、乐谱上下行——都是同一张“对数频率轴”的不同投影。",
+    tkb2: "纯律让每一个“此刻的和声”最纯净；平均律让“每一个调”都可用——现代键盘选后者，代价是三度类音程偏离纯律约 10~16 音分。",
+    tkb3: "协和 = 谐波列重合（整数比、共同基音）；不谐和 = 近似重合的泛音产生拍频/粗糙。乐器发声与和声学在这里汇合。",
+    foot: "教学示意动画：乐器音色为 WebAudio 按谐波实时近似合成；琴弦振动为慢放/放大示意。频率以 A4=440 Hz 的国际标准音高为准。"
+  },
+  en: {
+    pageTitle: "🎹🎻 Keyboard · Strings · Tuning · Harmony",
+    sub: "Demo: <b>pitch vs frequency is logarithmic</b> (piano keys / violin fingering), <b>equal temperament vs just intonation</b>, <b>harmony = coinciding harmonic series</b> — click and listen.",
+    btnHelp: "📖 Help", helpTitle: "📖 How to read this page",
+    c1Title: "① Piano keyboard &amp; violin strings: scale · semitones · Hz · log scale", c1Tag: "clickable keyboard · string fingering &amp; length · linear vs logarithmic frequency rulers",
+    kbRun: "▶ Chromatic run C4→C5", kbRunStop: "⏹ Stop run",
+    kbHzOn: "🏷 Hz labels under keys: on", kbHzOff: "🏷 Hz labels under keys: off",
+    kbHint: "Click white/black keys to play; neighbouring keys differ by one semitone (100 cents).",
+    lgWhite: "white keys = natural notes (scale)", lgBlack: "black keys = semitones (accidentals)", lgOn: "currently playing key",
+    vnStrL: "String", vnPlayL: "Play",
+    vnBow: "🏹 Bow (sustain)", vnBowStop: "🏹 Stop bowing",
+    vnPluck: "👆 Pluck", vnGliss: "↗ Glissando (0→12 semitones)", vnGlissStop: "⏹ Stop glissando",
+    vnFingL: "Finger position (n semitones)", vnOpen: "↩ Open string",
+    lgStr: "yellow = sounding string", lgTick: "nut→bridge marks = semitone positions (denser near bridge)",
+    vnHint: "The stopped part does not vibrate; only the “finger→bridge” segment sounds.",
+    logDemo: "▶ Constant-speed glide C2→C7 (sounds even)", logDemoStop: "⏹ Stop glide",
+    logHint: "Click either ruler band to pick &amp; play a pitch; green dot = latest note.",
+    logNote: "Both rulers plot the same “keyboard notes”. On the linear axis doubling the frequency doubles the distance, cramming low notes on the left; on the logarithmic axis every octave is equally wide and every semitone equally spaced — matching how we hear.",
+    c1L1: "① Every key is the same ratio apart:", c1L2: "② We hear ratios, not differences:",
+    c1L3: "③ Violin finger positions get denser:", c1L4: "④ Linear vs logarithmic axis:", c1L5: "⑤ Try it:",
+    c1B1: "Adjacent keys (a semitone) multiply frequency by 2^(1/12) ≈ 1.0595 (~6%). From C4 = 261.63 Hz each semitone up multiplies by 1.0595, and one octave higher C5 is exactly ×2 = 523.25 Hz — 12 semitones = one octave.",
+    c1B2: "C4→D4 is about 32 Hz, C5→D5 about 65 Hz, yet both sound like “one whole tone”. Pitch perception is proportional to log(frequency): doubling feels like “an octave up”; adding a fixed number of Hz does not.",
+    c1B3: "A string’s pitch f ∝ 1/length. To rise one semitone the vibrating length must be multiplied by 2^(−1/12) ≈ 0.944, so finger spacing shrinks — near the bridge a semitone is only a few mm. The logarithmic scale is literally built into the instrument.",
+    c1B4: "The ruler below draws the same notes twice: linear in Hz, logarithmic in cents. On the linear axis octaves grow wider upward and low notes are crushed together; on the log axis every octave is the same width — that’s why staff, keyboard and fingering all make sense.",
+    c1B5: "Listen to the chromatic run, then the constant-speed glide — the ear hears even steps while the Hz readout accelerates. Compare violin open strings G3=196, D4≈294, A4=440, E5≈659.",
+    c2Title: "② Equal temperament vs just intonation: algorithms &amp; differences", c2Tag: "semitones = 2^(1/12) · just intonation = integer ratios (from the harmonic series) · audition both scales and chords",
+    c2RunET: "🔊 ET scale", c2RunJI: "🔊 Just scale",
+    c2ChordET: "🔊 ET major triad", c2ChordJI: "🔊 Just major triad",
+    c2Base: "Concert pitch A4 = 440 Hz; both rows share the same C4 root.",
+    cmpD: "Degree", cmpETR: "ET semitones", cmpETH: "ET Hz", cmpETC: "ET cents",
+    cmpJIR: "Just ratio", cmpJIH: "Just Hz", cmpJIC: "Just cents", cmpDel: "Diff (just − ET)",
+    cmpNote: "“Diff” is in cents (1 semitone = 100 cents). The just major third is 13.7 cents flatter than ET and the fifth only 2 cents sharper — fifths are nearly identical while thirds clearly differ. That is why equal-tempered thirds sound a bit “tight”.",
+    c2L1: "① Algorithm 1 · Equal temperament:", c2L2: "② Algorithm 2 · Just intonation:", c2L3: "③ How much do they differ?", c2L4: "④ How they sound:", c2L5: "⑤ History:",
+    c2B1: "Split the octave (ratio 2:1) into 12 equal semitones; every semitone is the same ratio r = 2^(1/12) ≈ 1.05946. Any note fₙ = 440 × 2^((n−69)/12) (n = MIDI number). Every key is usable, so modern keyboards/electronics use it.",
+    c2B2: "Intervals come from simple integer ratios of the harmonic series: octave 2:1, fifth 3:2, fourth 4:3, major third 5:4, minor third 6:5, major sixth 5:3, major seventh 15:8. The C-major scale is 1, 9/8, 5/4, 4/3, 3/2, 5/3, 15/8, 2 times C.",
+    c2B3: "Just intonation aligns with ET only at C; away from it the notes drift. From the table: major third −13.7, minor third +15.6, fifth ±2 cents. Fretless instruments (violin) can play just; keyboards must compromise.",
+    c2B4: "Play the ET scale, then the just scale, then both major triads. Just chords sound cleaner/brighter because 3:2 and 5:4 make partials coincide exactly (no beats); ET intervals are slightly “tight/buzzing” but work in every key.",
+    c2B5: "Bach’s Well-Tempered Clavier promoted it. Earlier Pythagorean tuning (chains of pure 3:2 fifths) produced a “wolf fifth” on modulation; equal temperament spreads the error over all notes so everyone can accept it.",
+    ivLbl: "Intervals", chLbl: "Chords", sysLbl: "Audition tuning",
+    sysJI: "Just (clean)", sysET: "Equal (keyboard reality)",
+    hPlayLbl: "🔊 Play selection", hSepLbl: "🎵 Play tones one by one", hBeatPairLbl: "👂 Hear the beating pair",
+    hHint: "(playable pairs are dotted above)",
+    beatT: "Beating: two close frequencies = loudness wobble",
+    beatDLbl: "Frequency difference Δ", beatPlayLbl: "🔊 Play both tones", beatStopLbl: "🔇 Stop",
+    beatHint: "261.0 vs 261.9 Hz… smaller Δ = slower beats; beyond ~15 Hz you no longer hear beats but roughness/dissonance.",
+    beatNote: "Beating is the microscopic cause of dissonance: just-intonation 3:2 and 5:4 make partials coincide exactly (no beats); equal temperament offsets them slightly (≈0.9 Hz for the fifth, ≈10 Hz for the major third), producing slow or fast wobble. Δ=0.9 Hz mimics that fifth’s near-coincident partial pair.",
+    c3L1: "① Harmony = harmonic series alignment:", c3L2: "② Why integer ratios are consonant:",
+    c3L3: "③ Major triad 4:5:6:", c3L4: "④ Minor triad &amp; sevenths:", c3L5: "⑤ Try it:",
+    c3B1: "Every real tone carries harmonics f₀, 2f₀, 3f₀… When two notes sound, the ear judges how well the two harmonic series align: more coinciding partials → more consonant; partials that are close but not identical → beats/roughness → dissonance.",
+    c3B2: "Simple frequency ratios (3:2, 4:5:6) make many partials coincide (green marks/lines below). The octave 2:1 coincides most, then the fifth, fourth, major/minor thirds — exactly the traditional consonant intervals; minor seconds and tritones barely coincide and clash, hence harsh.",
+    c3B3: "C, E, G in ratio 4:5:6 are the 4th, 5th and 6th harmonics of a common fundamental C₂ (65.4 Hz) — all three harmonic series sit on one grid: bright, stable, with a clear “root”.",
+    c3B4: "The minor triad ≈ 1 : 6/5 : 3/2 (dark, soft). A dominant seventh adds 7:4 (≈968.8 cents, 31 cents flatter than ♭B in ET) — a “dirty” seventh tension that must resolve to the tonic: the engine of classical harmony.",
+    c3B5: "Audition the major triad in just tuning (clean), then equal temperament (slightly tight); press “hear the beating pair” to solo the partials that roughen the major third (≈10 Hz apart); finally make your own beats with the slider.",
+    tblTitle: "Pitch · tuning · harmony · quick reference",
+    th1: "Idea", th2: "Algorithm / value", th3: "How it sounds / use",
+    t1a: "Pitch perception", t1b: "log of frequency: octave = ×2 = +1200 cents", t1c: "“Hz difference” ≠ “pitch difference”; we hear ratios",
+    t2a: "Semitone (ET)", t2b: "r = 2^(1/12) = 1.059463… (12 equal parts)", t2c: "one key on the keyboard; 100 cents",
+    t3a: "Octave", t3b: "2 : 1, harmonics coincide fully", t3c: "most consonant; feels like “the same note, higher/lower”",
+    t4a: "Just intonation", t4b: "simple integer ratios: 3:2, 5:4, 6:5…", t4c: "pure, beat-free; retuning needed to modulate",
+    t5a: "Equal temperament", t5b: "octave split into 12 × 100 cents", t5c: "playable in any key; thirds off by ±13~16 cents (“tight”)",
+    t6a: "Major triad C·E·G", t6b: "4 : 5 : 6 (common fundamental C₂ 65.4 Hz)", t6c: "bright, stable, top of the consonance ladder",
+    t7a: "Minor triad C·♭E·G", t7b: "1 : 6/5 : 3/2 (10:12:15)", t7c: "dark, soft (minor third above the root)",
+    t8a: "Dominant 7th C·E·G·♭B", t8b: "4 : 5 : 6 : 7 (harmonic seventh 7:4)", t8c: "tense; wants to resolve to the tonic",
+    tk1: "🔑 Logarithmic hearing: ", tk2: "🔑 Tuning trade-off: ", tk3: "🔑 Harmony in a nutshell: ",
+    tkb1: "pitch ∝ log(frequency). Equal keyboard spacing, shrinking violin finger spacing and the musical staff are all projections of one logarithmic frequency axis.",
+    tkb2: "Just intonation makes each harmony as pure as possible; equal temperament makes every key playable — modern keyboards choose the latter, paying ≈10–16 cents on thirds.",
+    tkb3: "Consonance = coinciding harmonic series (integer ratios, a common fundamental); dissonance = near-coincident partials that beat. Instrument physics and harmony meet here.",
+    foot: "Teaching animation: instrument timbres are approximated live with WebAudio harmonic synthesis; string motion is slowed/amplified. Frequencies use concert pitch A4 = 440 Hz."
+  }
+};
+
+/* 画布内部微词典（zh/en 各自补齐） */
+Object.assign(I18N.zh, {
+  kbTop: "钢琴 · C4–C6 两个完整八度（点击发声）", kbCentral: "中央 C", kbC4: "C4", kbC5: "C5", kbC6: "C6",
+  vnTop: "小提琴（示意）· 四根弦 G D A E", vnNut: "琴枕", vnBridge: "琴桥", vnOpenWord: "空弦", vnFingWord: "按指", vnStopPt: "指尖按弦处",
+  vnBowW: "弓", vnBowPos: "弓毛擦弦点", vnPluckP: "拨弦点", vnSemis: "半音", vnLen: "有效弦长", vnPctOfOpen: "占空弦", vnSemiWord: "半音",
+  vnGs: "G 弦", vnDs: "D 弦", vnAs: "A 弦", vnEs: "E 弦",
+  rtLin: "线性标尺（按 Hz 差值摆放）", rtLog: "对数标尺 = 听觉标尺（按音分摆放）",
+  rtOct: "一个八度（频率 ×2）", rtHz: "Hz", rtNoteDot: "最近发音", rtSemi: "半音",
+  rtDemo: "恒速滑奏：对数轴上等速移动 = 听感等速",
+  tcET: "十二平均律 · 12 个等分半音 × 2^(1/12)", tcJI: "纯律（自然律）· 整数比",
+  tcOc: "同一八度 C4 → C5", tcCents: "音分", tcDelta: "纯律 − 平均律", tcEtHz: "平均律 Hz",
+  tcNote: "橙色线把纯律音拉回平均律键位：长度 = 偏差（音分，放大显示）",
+  tcEx: "示例算法", tcBase: "基准 C4 = 261.63 Hz（A4 = 440）",
+  hmT: "谐波列重合视图", hmK: "泛音最高到", hmCo: "重合泛音", hmNear: "拍频泛音对", hmBeatHz: "每秒拍数",
+  hmTone: "音", hmTun: "律制", hmJI: "纯律", hmET: "平均律", hmRatio: "频率比", hmFund: "共同基音",
+  hmClick: "●=可单独试听", hmPlayH: "播放", hmSel: "所选",
+  btT: "两音叠加", btEnv: "包络：响→轻→响", bt1: "音1", bt2: "音2", btBeat: "拍频 = Δ 次/秒",
+  btNote: "图中实线 = 两个正弦相加后的波形；虚线包络每个“鼓包” = 一次强弱起伏（拍）。"
+});
+Object.assign(I18N.en, {
+  kbTop: "Piano · C4–C6, two full octaves (click to play)", kbCentral: "middle C", kbC4: "C4", kbC5: "C5", kbC6: "C6",
+  vnTop: "Violin (schematic) · four strings G D A E", vnNut: "nut", vnBridge: "bridge", vnOpenWord: "open string", vnFingWord: "finger",
+  vnStopPt: "finger stops string here", vnBowW: "bow", vnBowPos: "bow hair contact", vnPluckP: "pluck point",
+  vnSemis: "semitones", vnLen: "active length", vnPctOfOpen: "of open", vnSemiWord: "semitone",
+  vnGs: "G string", vnDs: "D string", vnAs: "A string", vnEs: "E string",
+  rtLin: "Linear ruler (spacing = Hz difference)", rtLog: "Logarithmic ruler = how we hear (spacing = cents)",
+  rtOct: "one octave (frequency ×2)", rtHz: "Hz", rtNoteDot: "latest note", rtSemi: "semitone",
+  rtDemo: "constant-speed glide: equal motion on the log axis = equal perceived speed",
+  tcET: "Equal temperament · 12 equal semitones × 2^(1/12)", tcJI: "Just intonation · integer ratios",
+  tcOc: "same octave C4 → C5", tcCents: "cents", tcDelta: "just − ET", tcEtHz: "ET Hz",
+  tcNote: "orange lines pull just notes back to the ET keys: length = deviation in cents (magnified)",
+  tcEx: "example formulas", tcBase: "root C4 = 261.63 Hz (A4 = 440)",
+  hmT: "harmonic-series alignment", hmK: "up to harmonic", hmCo: "coinciding partials", hmNear: "beating pairs", hmBeatHz: "beats/s",
+  hmTone: "tone", hmTun: "tuning", hmJI: "just", hmET: "equal", hmRatio: "frequency ratio", hmFund: "common fundamental",
+  hmClick: "● = click to solo-listen", hmPlayH: "play", hmSel: "selection",
+  btT: "two sine tones added", btEnv: "envelope: loud → soft → loud", bt1: "tone 1", bt2: "tone 2", btBeat: "beat rate = Δ per second",
+  btNote: "solid curve = sum of the two sines; each lobe of the dashed envelope = one loudness wobble (a beat)."
+});
+
+/* ================= 常量与工具 ================= */
+const A440 = 440, C4M = 60, C4F = 261.625565;
+const NOTE_PC = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+const PC_WHITE = { 0:1, 2:1, 4:1, 5:1, 7:1, 9:1, 11:1 };
+let LANG = "zh";
+const $ = id => document.getElementById(id);
+const t = k => (I18N[LANG] && I18N[LANG][k] !== undefined) ? I18N[LANG][k] : (I18N.zh[k] !== undefined ? I18N.zh[k] : k);
+const R = Math.round;
+function midiName(m) { m = Math.round(m); return NOTE_PC[((m % 12) + 12) % 12] + (Math.floor(m / 12) - 1); }
+function mf(m) { return A440 * Math.pow(2, (m - 69) / 12); }
+function freqToMidi(f) { return 69 + 12 * Math.log2(f / A440); }
+function centsFromC4(f) { return 1200 * Math.log2(f / C4F); }
+function centsOfRatio(r) { return 1200 * Math.log2(r); }
+function fmtHz(f) { return f >= 1000 ? f.toFixed(1) : f.toFixed(2); }
+const FNT = '"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+const PAL = ["#ffcf6e","#62d7ff","#7be0a0","#ff9ce0","#b18cff","#ffb45e","#8ef0c0","#ff8d9b","#ffd77a","#a5e0ff"];
+
+/* ================= 画布工具 ================= */
+const SIZE_CACHE = {};   // 画布 CSS 宽度缓存：避免每帧强制回流
+function setupCanvas(id) {
+  const cv = $(id);
+  if (!cv) return null;
+  let cssW = SIZE_CACHE[id];
+  if (!(cssW > 1)) {
+    const host = cv.parentElement;
+    cssW = host.clientWidth;
+    if (!(cssW > 1)) return null;
+    SIZE_CACHE[id] = cssW;
+  }
+  const dpr = Math.min(3, window.devicePixelRatio || 1);
+  const lw = +cv.dataset.lw, lh = +cv.dataset.lh;
+  const bw = Math.max(2, Math.round(cssW * dpr));
+  const bh = Math.max(2, Math.round(cssW * lh / lw * dpr));
+  if (cv.width !== bw || cv.height !== bh) { cv.width = bw; cv.height = bh; }
+  const k = cssW / lw;
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(k * dpr, 0, 0, k * dpr, 0, 0);
+  return ctx;
+}
+function rrect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+function ctxText(ctx, s, x, y, size, color, weight, align) {
+  ctx.font = (weight || 500) + " " + size + "px " + FNT;
+  ctx.fillStyle = color || "#e6eefb";
+  ctx.textAlign = align || "left";
+  ctx.textBaseline = "middle";
+  ctx.fillText(s, x, y);
+}
+function ctxLine(ctx, x1, y1, x2, y2, color, w, dash) {
+  ctx.beginPath();
+  ctx.setLineDash(dash || []);
+  ctx.strokeStyle = color; ctx.lineWidth = w || 1;
+  ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  ctx.setLineDash([]);
+}
+function fillBg(ctx, W, H, top, bottom) {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, top); g.addColorStop(1, bottom);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+function poly(ctx, pts, fill, stroke, lw) {
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  ctx.closePath();
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 1.5; ctx.stroke(); }
+}
+
+/* ================= 音频：WebAudio 近似音色 ================= */
+let actx = null, master = null;
+function ensureAC() {
+  if (!actx) {
+    try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; }
+    master = actx.createGain(); master.gain.value = 0.42; master.connect(actx.destination);
+  }
+  if (actx.state === "suspended") { try { actx.resume(); } catch (e) {} }
+  return actx;
+}
+/* 各音色：partials 振幅 + 指数衰减时间（tau=null 表示持续音） */
+const TIMBRES = {
+  piano: { amps: [1,.62,.5,.36,.28,.22,.17,.13,.10,.08], tau: [4.2,3.0,2.4,1.9,1.5,1.2,1.0,.85,.7,.55] },
+  pluck: { amps: [1,.55,.36,.26,.20,.16,.13,.10,.08,.06], tau: [2.0,1.4,1.1,.9,.7,.55,.45,.37,.3,.24] },
+  bow:   { amps: [1,.52,.34,.25,.20,.17,.14,.12,.11,.10], tau: null },
+  soft:  { amps: [1], tau: null }
+};
+function voice(kind, freq, level) {
+  const ac = ensureAC();
+  if (!ac || !freq || freq < 16) return null;
+  const tb = TIMBRES[kind] || TIMBRES.soft;
+  const lvl = level || 0.5;
+  const N = tb.amps.length, oscs = [], gs = [];
+  const out = ac.createGain(); out.gain.value = 1; out.connect(master);
+  const t0 = ac.currentTime;
+  for (let k = 1; k <= N; k++) {
+    const fk = k * freq;
+    let amp = tb.amps[k - 1] * lvl;
+    amp *= 1 / (1 + Math.pow(fk / 8200, 3));          // 轻微高频衰减，避免刺耳
+    const o = ac.createOscillator(); o.type = "sine"; o.frequency.value = fk;
+    const g = ac.createGain(); g.gain.value = 0.0001;
+    o.connect(g); g.connect(out);
+    o.start();
+    oscs.push(o); gs.push(g);
+    if (tb.tau) {
+      const tau = Math.max(0.12, tb.tau[k - 1]);
+      g.gain.linearRampToValueAtTime(amp, t0 + 0.006);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + tau);
+      try { o.stop(t0 + tau + 0.3); } catch (e) {}
+    } else {
+      g.gain.linearRampToValueAtTime(amp, t0 + 0.09);
+    }
+  }
+  const h = {
+    oscs: oscs, gs: gs, out: out,
+    setF: function (f) {
+      if (!f || f < 16) return;
+      const ct = ac.currentTime;
+      for (let k = 0; k < oscs.length; k++) {
+        try { oscs[k].frequency.setTargetAtTime((k + 1) * f, ct, 0.025); } catch (e) {}
+      }
+    },
+    release: function (ms) {
+      const ct = ac.currentTime, d = Math.max(0.05, (ms || 200) / 1000);
+      for (let k = 0; k < gs.length; k++) {
+        try {
+          gs[k].gain.cancelScheduledValues(ct);
+          gs[k].gain.setValueAtTime(Math.max(0.0001, gs[k].gain.value), ct);
+          gs[k].gain.exponentialRampToValueAtTime(0.0001, ct + d);
+          oscs[k].stop(ct + d + 0.1);
+        } catch (e) {}
+      }
+      try { setTimeout(function () { try { out.disconnect(); } catch (e) {} }, (d + 0.2) * 1000); } catch (e) {}
+    }
+  };
+  return h;
+}
+let V1 = null, V1Timer = null;
+function stopMelody(ms) {
+  if (V1Timer) { clearTimeout(V1Timer); V1Timer = null; }
+  if (V1) { try { V1.release(ms || 180); } catch (e) {} V1 = null; }
+}
+/* 弹一个带自动结束的音（若 dur 给定） */
+function melNote(kind, freq, dur, level) {
+  stopMelody(200);
+  const h = voice(kind, freq, level);
+  V1 = h;
+  if (h && dur) {
+    V1Timer = setTimeout(function () { if (V1 === h) { try { h.release(280); } catch (e) {} if (V1 === h) V1 = null; } }, dur);
+  }
+  return h;
+}
+function stopMelNow() { stopMelody(120); }
+let VChord = null;
+function stopChord(ms) {
+  if (VChord) { for (let i = 0; i < VChord.length; i++) { if (VChord[i]) { try { VChord[i].release(ms || 240); } catch (e) {} } } VChord = null; }
+}
+function chordPlay(kind, freqs, dur, level) {
+  stopChord(220);
+  const hs = [];
+  for (let i = 0; i < freqs.length; i++) hs.push(voice(kind, freqs[i], level || 0.34));
+  VChord = hs;
+  if (dur) setTimeout(function () { if (VChord === hs) { stopChord(280); } }, dur);
+  return hs;
+}
+let VBeat = null;
+function startBeat(f1, f2, lvl) {
+  stopBeat();
+  const ac = ensureAC();
+  if (!ac) return;
+  const t0 = ac.currentTime, out = ac.createGain();
+  out.gain.value = 1; out.connect(master);
+  const mk = function (f) {
+    const o = ac.createOscillator(); o.type = "sine"; o.frequency.value = f;
+    const g = ac.createGain(); g.gain.value = 0.0001;
+    g.gain.linearRampToValueAtTime(lvl || 0.22, t0 + 0.04);
+    o.connect(g); g.connect(out); o.start();
+    return { o: o, g: g };
+  };
+  VBeat = { a: mk(f1), b: mk(f2), out: out };
+}
+function stopBeat() {
+  if (VBeat) {
+    const t = actx ? actx.currentTime : 0, d = 0.08;
+    [VBeat.a, VBeat.b].forEach(function (v) {
+      if (!v) return;
+      try {
+        v.g.gain.cancelScheduledValues(t);
+        v.g.gain.setValueAtTime(Math.max(0.0001, v.g.gain.value), t);
+        v.g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+        v.o.stop(t + d + 0.1);
+      } catch (e) {}
+    });
+    try { setTimeout(function () { try { VBeat.out.disconnect(); } catch (e) {} }, 300); } catch (e) {}
+    VBeat = null;
+  }
+}
+function stopAllAudio() { stopMelNow(); stopChord(200); stopBeat(); }
+let beatAuto = null;
+
+/* ================= 共享状态与“正在播放”高亮 ================= */
+const perf = () => (window.performance && performance.now) ? performance.now() : Date.now();
+const HL = { midi: null, until: 0 };          // 高亮的音（MIDI），随时间淡出
+const CUR = { midi: 60, f: C4F, t: 0, src: "" }; // 最近一次发音（标尺绿点用）
+let seqTimer = null, seqKind = null;
+let lastKb = 60;
+function seqStop() {
+  if (seqTimer) { clearTimeout(seqTimer); seqTimer = null; }
+  seqKind = null; HL.midi = null;
+}
+function seqRun(kind, steps, stepMs, noteMs, toneKind, level) {
+  seqStop();
+  seqKind = kind;
+  let i = 0;
+  const tick = function () {
+    if (!seqTimer) return;
+    if (i >= steps.length) {
+      seqTimer = null; seqKind = null; HL.midi = null;
+      refreshUI(); return;
+    }
+    const m = steps[i];
+    HL.midi = m; HL.until = perf() + noteMs + 180;
+    CUR.midi = m; CUR.f = mf(m); CUR.t = perf();
+    melNote(toneKind || "piano", mf(m), noteMs, level || 0.4);
+    if (seqKind === "kbRun") updKbRead(m);
+    i++;
+    seqTimer = setTimeout(tick, stepMs);
+  };
+  seqTimer = setTimeout(tick, 60);
+  refreshUI();
+}
+function updKbRead(m) {
+  lastKb = m;
+  const el = $("kbRead"); if (!el) return;
+  const name = midiName(m), f = mf(m), rel = m - C4M;
+  el.innerHTML = name + " · " + fmtHz(f) + " Hz · "
+    + (LANG === "zh"
+        ? ("距中央 C " + (rel >= 0 ? "+" : "") + rel + " 半音 = " + (rel * 100) + " 音分（八度 ×2=1200 音分）")
+        : ((rel >= 0 ? "+" : "") + rel + " semitones from middle C = " + (rel * 100) + " cents (octave ×2 = 1200 cents)"));
+}
+
+/* ================= 卡① 钢琴键盘 ================= */
+const KB_CFG = { X0: 24, Y0: 112, WH: 196, W: 0, midi0: 60, midi1: 84, lbl: true };
+function kbLayout() {
+  const whites = [];
+  for (let m = KB_CFG.midi0; m <= KB_CFG.midi1; m++) if (PC_WHITE[m % 12]) whites.push(m);
+  const usable = 600 - KB_CFG.X0 * 2;
+  const whiteW = usable / whites.length;
+  KB_CFG.W = whiteW;
+  const xOf = {};
+  whites.forEach(function (m, i) { xOf[m] = KB_CFG.X0 + i * whiteW; });
+  const blacks = [];
+  for (let m = KB_CFG.midi0; m <= KB_CFG.midi1; m++) {
+    if (!PC_WHITE[m % 12]) {
+      blacks.push({ m: m, x: xOf[m - 1] + whiteW - whiteW * 0.31 });
+    }
+  }
+  return { whites: whites, blacks: blacks, whiteW: whiteW, xOf: xOf };
+}
+function kbKeyAt(lx, ly, L) {
+  if (ly < KB_CFG.Y0 || ly > KB_CFG.Y0 + KB_CFG.WH) return null;
+  /* 黑键只在“黑键图形范围内”（纵向也只占白键上部 62%）才响应 */
+  const yBotBlack = KB_CFG.Y0 + KB_CFG.WH * 0.62;
+  if (ly <= yBotBlack) {
+    for (let i = 0; i < L.blacks.length; i++) {
+      const b = L.blacks[i], bw = L.whiteW * 0.62;
+      if (lx >= b.x && lx <= b.x + bw) return b.m;
+    }
+  }
+  const i = Math.floor((lx - KB_CFG.X0) / L.whiteW);
+  if (i >= 0 && i < L.whites.length) return L.whites[i];
+  return null;
+}
+function drawKB(ctx, now) {
+  const W = 600, H = 430;
+  fillBg(ctx, W, H, "#101a2e", "#070b13");
+  const L = kbLayout(), whiteW = L.whiteW;
+  ctxText(ctx, t("kbTop"), 24, 18, 13, "#9fb2d0", 600);
+  ctxText(ctx, "A4 = 440 Hz", 600 - 24, 18, 12, "#5f7396", 600, "right");
+  const g = ctx.createLinearGradient(0, KB_CFG.Y0 - 8, 0, KB_CFG.Y0 + KB_CFG.WH + 16);
+  g.addColorStop(0, "#3a2c1c"); g.addColorStop(1, "#1a130a");
+  rrect(ctx, 10, KB_CFG.Y0 - 8, 580, KB_CFG.WH + 24, 6); ctx.fillStyle = g; ctx.fill();
+  ctx.strokeStyle = "#0c0a06"; ctx.lineWidth = 1.5; ctx.stroke();
+  const yT = KB_CFG.Y0, yB = yT + KB_CFG.WH;
+  const hz = KB_CFG.lbl;
+  L.whites.forEach(function (m) {
+    const x = L.xOf[m], w = whiteW - 1.5;
+    const oct = Math.floor(m / 12) - 1;
+    const pressed = (HL.midi === m && perf() < HL.until);
+    const py = pressed ? yT + 3 : yT;
+    const ph = yB - py;
+    const grad = ctx.createLinearGradient(x, py, x, py + ph);
+    if (pressed) { grad.addColorStop(0, "#ffe9a8"); grad.addColorStop(1, "#e6c070"); }
+    else { grad.addColorStop(0, "#ffffff"); grad.addColorStop(1, (oct % 2 === 0) ? "#f2f5fa" : "#e6ebf4"); }
+    rrect(ctx, x, py, w, ph, 3);
+    ctx.fillStyle = grad; ctx.fill();
+    ctx.strokeStyle = "#8d99ad"; ctx.lineWidth = 1; ctx.stroke();
+    if (pressed) {
+      ctx.fillStyle = "rgba(255,207,110,.5)";
+      rrect(ctx, x + 2, py + 2, w - 4, Math.min(14, ph * 0.25), 3); ctx.fill();
+    }
+    if (hz) {
+      const cx = x + w / 2;
+      ctxText(ctx, midiName(m), cx, yB + 22, 10.5, m === 60 ? "#ffcf6e" : "#aebdd6", 700, "center");
+      ctxText(ctx, fmtHz(mf(m)), cx, yB + 39, 8, "#7186a8", 500, "center");
+    }
+    if (m === 60 || m === 72 || m === 84) {
+      ctxText(ctx, (m === 60 ? t("kbCentral") + " " : "") + midiName(m), x + w / 2, yB + 58, 9, "#ffcf6e", 700, "center");
+    }
+  });
+  L.blacks.forEach(function (b) {
+    const bw = whiteW * 0.62, bh = KB_CFG.WH * 0.62;
+    const hot = (HL.midi === b.m && perf() < HL.until);
+    const by = hot ? yT + 3 : yT;
+    const grad = ctx.createLinearGradient(b.x, by, b.x + bw, by);
+    if (hot) { grad.addColorStop(0, "#6b5a2e"); grad.addColorStop(1, "#ffcf6e"); }
+    else { grad.addColorStop(0, "#3a3f4a"); grad.addColorStop(1, "#101318"); }
+    rrect(ctx, b.x, by, bw, bh, 3);
+    ctx.fillStyle = grad; ctx.fill();
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,.10)";
+    rrect(ctx, b.x + 2, by + 2, bw - 4, 8, 3); ctx.fill();
+  });
+}
+function kbHitPlay(m) {
+  HL.midi = m; HL.until = perf() + 1700;
+  CUR.midi = m; CUR.f = mf(m); CUR.t = perf(); CUR.src = "kb";
+  melNote("piano", mf(m), 1500, 0.5);
+  updKbRead(m);
+}
+
+/* ================= 卡① 小提琴（竖式示意图） ================= */
+const VSTR = [
+  { name: "G3", midi: 55, color: "#ffcf6e" },
+  { name: "D4", midi: 62, color: "#62d7ff" },
+  { name: "A4", midi: 69, color: "#7be0a0" },
+  { name: "E5", midi: 76, color: "#ff9ce0" }
+];
+const VN = { str: 0, n: 0, mode: null, tPluck: 0, bowT0: 0, gliss: false, glissT0: 0 };
+const VN_G = { nutY: 108, bridgeY: 336, xc: 300, xs: [258, 286, 314, 342], fbL: 234, fbR: 366 };
+function vnOpenF() { return mf(VSTR[VN.str].midi); }
+function vnFreq() { return vnOpenF() * Math.pow(2, VN.n / 12); }
+function vnFingerY(n) { return VN_G.nutY + (VN_G.bridgeY - VN_G.nutY) * (1 - Math.pow(2, -n / 12)); }
+function vnLine() {
+  const el = $("vnRead"); if (!el) return;
+  const fo = vnOpenF(), f = vnFreq();
+  const s = VSTR[VN.str];
+  if (VN.n < 0.001) {
+    el.innerHTML = s.name + " · " + t("vnOpenWord") + " · " + fmtHz(fo) + " Hz · L = 100%";
+  } else {
+    const seg = Math.pow(2, -VN.n / 12) * 100;
+    el.innerHTML = s.name + " → " + midiName(Math.round(freqToMidi(f))) + " · " + fmtHz(f) + " Hz · +"
+      + (VN.n % 1 === 0 ? VN.n : VN.n.toFixed(2)) + " " + t("vnSemiWord") + " · " + t("vnLen") + " = " + seg.toFixed(1) + "%";
+  }
+}
+function vnStartBow() {
+  clearAllAudio();
+  VN.mode = "bow"; VN.bowT0 = perf(); VN.gliss = false;
+  V1 = melNote("bow", vnFreq(), 0, 0.26);
+  refreshUI();
+}
+function startBow() {   // 已处于 bow 模式：换弦/按指后平滑重调
+  if (VN.mode !== "bow") return;
+  stopMelody(120);
+  VN.bowT0 = perf();
+  V1 = melNote("bow", vnFreq(), 0, 0.26);
+}
+function vnStopBow() {
+  if (VN.mode === "bow") { stopMelNow(); VN.mode = null; VN.gliss = false; }
+}
+function vnPluck() {
+  clearAllAudio();
+  VN.mode = "pluck"; VN.tPluck = perf(); VN.gliss = false;
+  V1 = melNote("pluck", vnFreq(), 2000, 0.5);
+  CUR.midi = Math.round(freqToMidi(vnFreq())); CUR.f = vnFreq(); CUR.t = perf(); CUR.src = "vn";
+  refreshUI();
+}
+function vnGlissToggle() {
+  if (VN.gliss) { VN.gliss = false; vnStopBow(); refreshUI(); return; }
+  clearAllAudio();
+  VN.mode = "bow"; VN.gliss = true; VN.glissT0 = perf();
+  V1 = melNote("bow", vnOpenF(), 0, 0.24);
+  refreshUI();
+}
+function drawVN(ctx, now) {
+  const W = 600, H = 430;
+  fillBg(ctx, W, H, "#101a2e", "#070b13");
+  ctxText(ctx, t("vnTop"), 24, 18, 13, "#9fb2d0", 600);
+  const G = VN_G, xc = G.xc, s = VSTR[VN.str], actX = G.xs[VN.str];
+  const L0 = G.bridgeY - G.nutY;
+  /* —— 琴身 —— */
+  const bodyR = function (y) {
+    if (y < 170 || y > 420) return 0;
+    if (y < 236) return 60 + (74 - 60) * Math.sin((y - 170) / 66 * Math.PI / 2);
+    if (y < 300) return 74 - (74 - 52) * ((y - 236) / 64);
+    if (y < 382) return 52 + (96 - 52) * ((y - 300) / 82);
+    return 96 * (1 - (y - 382) / 38);
+  };
+  ctx.beginPath();
+  let first = true;
+  for (let y = 170; y <= 420; y += 3) {
+    const r = bodyR(y);
+    const px = first ? xc : xc + r;
+    if (first) { ctx.moveTo(xc, y); first = false; } else ctx.lineTo(px, y);
+  }
+  for (let y = 420; y >= 170; y -= 3) {
+    const r = bodyR(y);
+    ctx.lineTo(xc - r, y);
+  }
+  ctx.closePath();
+  const bg = ctx.createLinearGradient(xc - 100, 0, xc + 100, 0);
+  bg.addColorStop(0, "#5d3518"); bg.addColorStop(0.5, "#a2652f"); bg.addColorStop(1, "#522d13");
+  ctx.fillStyle = bg; ctx.fill();
+  ctx.strokeStyle = "#2c1606"; ctx.lineWidth = 2; ctx.stroke();
+  /* f 孔 */
+  ctx.strokeStyle = "#140a02"; ctx.lineWidth = 4.5;
+  ctx.beginPath(); ctx.moveTo(xc - 82, 300);
+  ctx.bezierCurveTo(xc - 96, 330, xc - 88, 352, xc - 74, 382); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(xc + 82, 300);
+  ctx.bezierCurveTo(xc + 96, 330, xc + 88, 352, xc + 74, 382); ctx.stroke();
+  /* 拉弦板与腮托 */
+  poly(ctx, [[xc - 34, 372], [xc + 34, 372], [xc + 22, 408], [xc - 22, 408]], "#1a0f06", "#000", 1);
+  ctx.fillStyle = "#0d0a07";
+  rrect(ctx, xc - 60, 402, 120, 22, 10); ctx.fill();
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 1; ctx.stroke();
+  /* 琴桥 */
+  ctx.fillStyle = "#c98d4b";
+  rrect(ctx, xc - 15, G.bridgeY - 8, 30, 16, 3); ctx.fill();
+  ctx.strokeStyle = "#5a3a1c"; ctx.lineWidth = 1; ctx.stroke();
+  /* 指板（覆盖琴身中上部） */
+  const fb = ctx.createLinearGradient(G.fbL, 0, G.fbR, 0);
+  fb.addColorStop(0, "#171008"); fb.addColorStop(0.5, "#241a0c"); fb.addColorStop(1, "#120c05");
+  ctx.fillStyle = fb;
+  rrect(ctx, G.fbL, G.nutY, G.fbR - G.fbL, G.bridgeY - G.nutY + 14, 4); ctx.fill();
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 1; ctx.stroke();
+  /* 琴头 / 弦轴 */
+  ctx.fillStyle = "#0e0b06";
+  rrect(ctx, xc - 16, 40, 32, G.nutY - 44, 3); ctx.fill();
+  ctx.beginPath(); ctx.arc(xc, 26, 15, 0, Math.PI * 2); ctx.fillStyle = "#171009"; ctx.fill();
+  ctx.strokeStyle = "#000"; ctx.stroke();
+  ctx.fillStyle = "#3a2c1a";
+  [[xc - 34, 60], [xc + 34, 60], [xc - 34, 84], [xc + 34, 84]].forEach(function (p) {
+    ctx.beginPath(); ctx.arc(p[0], p[1], 5, 0, Math.PI * 2); ctx.fill();
+  });
+  ctxText(ctx, t("vnNut"), G.fbL - 14, G.nutY - 6, 8.5, "#5f7396", 500, "right");
+  ctxText(ctx, t("vnBridge"), G.fbL - 14, G.bridgeY, 8.5, "#5f7396", 500, "right");
+  /* 指位刻度（半音位置：越来越密） */
+  for (let n = 1; n <= 12; n++) {
+    const y = vnFingerY(n);
+    const tcol = n % 3 === 0 ? "rgba(255,207,110,.9)" : "rgba(98,215,255,.6)";
+    ctxLine(ctx, actX - 9, y, actX + 9, y, tcol, 1);
+    ctxText(ctx, String(n), actX + 12, y, 6.5, "#7186a8", 600);
+  }
+  /* —— 四根弦 —— */
+  for (let i = 0; i < 4; i++) {
+    const x = G.xs[i], is = (i === VN.str), col = VSTR[i].color;
+    const yF = VN.n > 0.02 ? vnFingerY(VN.n) : G.nutY;
+    const segA = VN.n > 0.02 ? yF : G.nutY;
+    /* 上段（不振动） */
+    ctx.strokeStyle = is ? "rgba(200,210,225,.6)" : "rgba(210,216,228,.38)";
+    ctx.lineWidth = is ? 1.4 : 1;
+    ctx.beginPath(); ctx.moveTo(x, G.nutY); ctx.lineTo(x, segA); ctx.stroke();
+    /* 振动段 */
+    const active = is && ((VN.mode === "bow") || (VN.mode === "pluck" && perf() - VN.tPluck < 2400));
+    ctx.strokeStyle = is ? col : "rgba(210,216,228,.42)";
+    ctx.lineWidth = is ? 2 : 1;
+    ctx.beginPath();
+    const M = 60;
+    const tbase = VN.mode === "pluck" ? VN.tPluck : (VN.gliss ? VN.glissT0 : VN.bowT0);
+    const tsec = (perf() - tbase) / 1000;
+    const f0 = vnFreq();
+    for (let p = 0; p <= M; p++) {
+      const u = p / M;
+      const y = segA + (G.bridgeY - segA) * u;
+      let dx = 0;
+      if (active) {
+        if (VN.mode === "pluck") {
+          const age = Math.max(0, tsec);
+          for (let k = 1; k <= 7; k++) {
+            const env = Math.exp(-age * (0.9 + k * k * 0.16)) * Math.exp(-k * 0.55);
+            dx += Math.sin(k * Math.PI * u) * Math.sin(2 * Math.PI * f0 * k * tsec * 0.16) * env;
+          }
+        } else {
+          for (let k = 1; k <= 8; k++) {
+            const env = Math.exp(-k * 0.42);
+            dx += (1 / k) * Math.sin(k * Math.PI * u) * Math.sin(2 * Math.PI * f0 * k * tsec * 0.14 + k * 0.7) * env;
+          }
+        }
+      }
+      const xx = x + dx * 3.2;
+      if (p === 0) ctx.moveTo(xx, y); else ctx.lineTo(xx, y);
+    }
+    ctx.stroke();
+    ctxText(ctx, VSTR[i].name + " " + fmtHz(mf(VSTR[i].midi)), x, G.nutY - 10, 10, is ? VSTR[i].color : "#5f7396", is ? 700 : 500, "center");
+  }
+  /* 指尖 */
+  if (VN.n > 0.02) {
+    const yF = vnFingerY(VN.n);
+    ctx.fillStyle = "#ffcf6e";
+    ctx.beginPath(); ctx.ellipse(actX, yF, 9, 6, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 1; ctx.stroke();
+    ctxText(ctx, t("vnStopPt"), actX + 18, yF, 7.5, "#ffcf6e", 600);
+  }
+  /* 弓 */
+  if (VN.mode === "bow") {
+    const bob = Math.sin(perf() / 420) * 8;
+    const by = G.bridgeY - 52 + bob;
+    ctx.strokeStyle = "#6a4426"; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(150, by - 4); ctx.quadraticCurveTo((150 + 452) / 2, by + 7, 452, by - 4); ctx.stroke();
+    ctx.strokeStyle = "rgba(240,236,222,.85)"; ctx.lineWidth = 3.4;
+    ctx.beginPath(); ctx.moveTo(196, by + 3); ctx.lineTo(414, by + 3); ctx.stroke();
+    ctx.fillStyle = "#2a1c10";
+    rrect(ctx, 140, by - 10, 26, 16, 4); ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,.95)";
+    ctx.beginPath(); ctx.ellipse(actX, by + 3, 5, 3, 0, 0, Math.PI * 2); ctx.fill();
+    ctxText(ctx, t("vnBowW") + " / " + t("vnBowPos"), 24, by, 8.5, "#ffb45e", 600);
+  } else if (VN.mode === "pluck" && perf() - VN.tPluck < 2000) {
+    const py = G.bridgeY - 40;
+    const flick = Math.sin((perf() - VN.tPluck) / 90) * Math.exp(-(perf() - VN.tPluck) / 700);
+    ctx.fillStyle = "#ff9ce0";
+    ctx.beginPath(); ctx.ellipse(actX + flick * 6, py, 7, 7, 0, 0, Math.PI * 2); ctx.fill();
+    ctxText(ctx, t("vnPluckP"), actX + 16, py, 8.5, "#ff9ce0", 600);
+  }
+  ctxText(ctx, LANG === "zh" ? "半音刻度 ↓ 越靠琴桥越密（f ∝ 1/弦长）" : "semitone marks ↓ denser toward bridge (f ∝ 1/length)", 24, 414, 11, "#7186a8", 500);
+}
+
+/* ================= 卡① 线性 vs 对数标尺 ================= */
+const RUL = { f0: 65.4064, f1: 2093.0, x0: 120, x1: 1180, oct: 5, m0: 36, m1: 84, glide: null,
+  linB: [38, 84], logB: [160, 206] };
+function rulXLin(f) { return RUL.x0 + (f - RUL.f0) / (RUL.f1 - RUL.f0) * (RUL.x1 - RUL.x0); }
+function rulXLog(f) { return RUL.x0 + Math.log2(f / RUL.f0) / RUL.oct * (RUL.x1 - RUL.x0); }
+function rulClickF(x, isLog) {
+  if (isLog) return RUL.f0 * Math.pow(2, (x - RUL.x0) / (RUL.x1 - RUL.x0) * RUL.oct);
+  return RUL.f0 + (x - RUL.x0) / (RUL.x1 - RUL.x0) * (RUL.f1 - RUL.f0);
+}
+function startGlide() {
+  if (RUL.glide) { stopGlide(); return; }
+  clearAllAudio();
+  RUL.glide = { t0: perf(), dur: 8000 };
+  V1 = melNote("soft", RUL.f0, 0, 0.3);
+  refreshUI();
+}
+function stopGlide() {
+  RUL.glide = null;
+  stopMelNow();
+  refreshUI();
+}
+function drawLog(ctx, now) {
+  const W = 1240, H = 320;
+  fillBg(ctx, W, H, "#101a2e", "#070b13");
+  const yLinA = 38, yLinB = 84, yLogA = 160, yLogB = 206;
+  if (RUL.glide) {
+    const u = Math.min(1, (perf() - RUL.glide.t0) / RUL.glide.dur);
+    const f = RUL.f0 * Math.pow(2, u * RUL.oct);
+    if (V1) V1.setF(f);
+    CUR.f = f; CUR.midi = Math.round(freqToMidi(f)); CUR.t = perf(); CUR.src = "glide";
+    if (u >= 1) stopGlide();
+  }
+  /* 线性带 */
+  ctxText(ctx, t("rtLin"), 24, 20, 12, "#9fb2d0", 600);
+  ctx.fillStyle = "rgba(255,255,255,.03)"; ctx.fillRect(RUL.x0, yLinA, RUL.x1 - RUL.x0, yLinB - yLinA);
+  ctxLine(ctx, RUL.x0, yLinB, RUL.x1, yLinB, "rgba(255,255,255,.35)", 1.2);
+  for (let m = RUL.m0; m <= RUL.m1; m++) {
+    if (m % 12 !== 0) continue;
+    const f = mf(m), x = rulXLin(f);
+    ctxLine(ctx, x, yLinA + 3, x, yLinB - 3, "#62d7ff", 1.3);
+    ctxText(ctx, midiName(m), x, yLinA + 11, 10, "#9fd8ff", 600, "center");
+    ctxText(ctx, Math.round(f) + "", x, yLinA + 23, 7.5, "#7186a8", 500, "center");
+  }
+  ctxText(ctx, LANG === "zh" ? "频率 ×2 → 距离 ×2（低音挤在左边，高音拉得很开）" : "freq ×2 → distance ×2 (low notes crushed left)", RUL.x1, 96, 10, "#7186a8", 500, "right");
+  const bracket = function (x1, x2, yBase, col, lab) {
+    ctx.strokeStyle = col; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x1, yBase); ctx.lineTo(x1, yBase - 7);
+    ctx.moveTo(x2, yBase); ctx.lineTo(x2, yBase - 7);
+    ctx.moveTo(x1, yBase); ctx.lineTo(x2, yBase);
+    ctx.stroke();
+    ctxText(ctx, lab, (x1 + x2) / 2, yBase - 14, 9, col, 700, "center");
+  };
+  bracket(rulXLin(mf(60)), rulXLin(mf(72)), 110, "#ffcf6e", "C4→C5  ×2");
+  bracket(rulXLin(mf(72)), rulXLin(mf(84)), 132, "#ff8b7a", "C5→C6  ×2");
+  /* 对数带 */
+  ctxText(ctx, t("rtLog"), 24, 150, 12, "#7be0a0", 600);
+  ctx.fillStyle = "rgba(255,255,255,.03)"; ctx.fillRect(RUL.x0, yLogA, RUL.x1 - RUL.x0, yLogB - yLogA);
+  ctxLine(ctx, RUL.x0, yLogB, RUL.x1, yLogB, "rgba(255,255,255,.35)", 1.2);
+  for (let m = RUL.m0; m <= RUL.m1; m++) {
+    const pc = m % 12, f = mf(m), x = rulXLog(f);
+    const white = !!PC_WHITE[pc];
+    if (m === 69) { ctx.fillStyle = "rgba(255,207,110,.22)"; ctx.fillRect(x - 7, yLogA, 14, yLogB - yLogA); }
+    ctxLine(ctx, x, yLogA + 3, x, yLogA + (white ? 13 : 8), white ? "#e8ecf4" : "rgba(160,170,190,.55)", white ? 1.4 : 1);
+    if (pc === 0 || m === 69) {
+      ctxText(ctx, midiName(m), x, yLogA + 21, 10, m === 69 ? "#ffcf6e" : "#a5d8ff", 700, "center");
+      ctxText(ctx, fmtHz(f), x, yLogA + 32, 7.5, m === 69 ? "#ffcf6e" : "#7186a8", 500, "center");
+    }
+  }
+  ctxText(ctx, LANG === "zh" ? "每半音等距 · 每个八度等宽（= 听感）" : "equal semitones · equal octaves (= hearing)", RUL.x1, yLogB + 12, 10, "#7186a8", 500, "right");
+  const octW = rulXLog(mf(72)) - rulXLog(mf(60));
+  bracket(rulXLog(mf(60)), rulXLog(mf(72)), 236, "#ffcf6e", "C4→C5  等宽");
+  bracket(rulXLog(mf(72)), rulXLog(mf(84)), 258, "#ff8b7a", "C5→C6  等宽");
+  const fC = CUR.f;
+  if (fC && fC >= RUL.f0 && fC <= RUL.f1) {
+    const col = "#7be0a0";
+    ctxLine(ctx, rulXLin(fC), yLinA + 2, rulXLin(fC), yLinB - 2, col, 1.5);
+    ctxLine(ctx, rulXLog(fC), yLogA + 2, rulXLog(fC), yLogB - 2, col, 1.5);
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(rulXLin(fC), yLinA + 3, 3.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(rulXLog(fC), yLogA + 3, 3.5, 0, Math.PI * 2); ctx.fill();
+  }
+  ctxText(ctx, t("rtNoteDot") + (CUR.f ? "  ·  " + midiName(CUR.midi) + "  " + fmtHz(CUR.f) + " " + t("rtHz") : ""), RUL.x0, 300, 11, "#7be0a0", 600);
+}
+
+/* ================= 卡② 十二平均律 vs 纯律 ================= */
+const TUNE = [
+  { semis: 0,  ratioTxt: "1",    rv: 1,     rc: 0 },
+  { semis: 2,  ratioTxt: "9/8",  rv: 9 / 8, rc: 203.9 },
+  { semis: 4,  ratioTxt: "5/4",  rv: 5 / 4, rc: 386.3 },
+  { semis: 5,  ratioTxt: "4/3",  rv: 4 / 3, rc: 498.0 },
+  { semis: 7,  ratioTxt: "3/2",  rv: 3 / 2, rc: 702.0 },
+  { semis: 9,  ratioTxt: "5/3",  rv: 5 / 3, rc: 884.4 },
+  { semis: 11, ratioTxt: "15/8", rv: 15 / 8, rc: 1088.3 },
+  { semis: 12, ratioTxt: "2",    rv: 2,     rc: 1200 }
+];
+const tunEtF = s => C4F * Math.pow(2, s / 12);
+let tunTimer = null, tunKind = null;
+const tunGl = { et: [], ji: [], until: 0 };
+function tunStop() {
+  if (tunTimer) { clearTimeout(tunTimer); tunTimer = null; }
+  tunKind = null; tunGl.until = 0; tunGl.et = []; tunGl.ji = [];
+  refreshUI();
+}
+function tunStopOthers() { seqStop(); stopGlide(); vnStopBow(); stopBeat(); stopChord(200); VN.gliss = false; }
+function tunRunScale(sys) {
+  if (tunKind === "scale" + sys) { tunStop(); return; }
+  tunStop(); tunStopOthers();
+  tunKind = "scale" + sys;
+  let i = 0;
+  const N = sys === "ET" ? 13 : 8;
+  const tick = function () {
+    if (!tunTimer) return;
+    if (i >= N) { tunStop(); return; }
+    if (sys === "ET") {
+      const s = i, m = 60 + s;
+      melNote("piano", tunEtF(s), 420, 0.42);
+      tunGl.et = [s]; tunGl.ji = []; tunGl.until = perf() + 500;
+    } else {
+      const d = i, f = C4F * TUNE[d].rv;
+      melNote("piano", f, 500, 0.42);
+      tunGl.ji = [d]; tunGl.et = []; tunGl.until = perf() + 560;
+    }
+    i++;
+    tunTimer = setTimeout(tick, sys === "ET" ? 500 : 620);
+  };
+  tunTimer = setTimeout(tick, 80);
+  refreshUI();
+}
+function tunRunChord(sys) {
+  if (tunKind === "chord" + sys) { tunStop(); return; }
+  tunStop(); tunStopOthers();
+  tunKind = "chord" + sys;
+  const freqs = sys === "ET"
+    ? [mf(60), mf(64), mf(67)]
+    : [C4F, C4F * 5 / 4, C4F * 3 / 2];
+  chordPlay("piano", freqs, 4200, 0.34);
+  tunGl.et = sys === "ET" ? [0, 4, 7] : [];
+  tunGl.ji = sys === "ET" ? [] : [0, 2, 4];
+  tunGl.until = perf() + 4300;
+  setTimeout(function () { if (tunKind === "chord" + sys) { tunKind = null; refreshUI(); } }, 4400);
+  refreshUI();
+}
+function buildTunTable() {
+  const tb = $("tunBody"); if (!tb) return;
+  let h = "";
+  TUNE.forEach(function (d, i) {
+    const m = 60 + d.semis, name = midiName(m);
+    const etF = tunEtF(d.semis), jF = C4F * d.rv;
+    const delta = d.rc - d.semis * 100;
+    const cls = Math.abs(delta) < 0.05 ? "d0" : (delta > 0 ? "dp" : "dm");
+    h += "<tr>"
+      + "<td><b>" + name + "</b></td>"
+      + "<td class=\"num\">" + d.semis + "</td>"
+      + "<td class=\"num\">" + fmtHz(etF) + "</td>"
+      + "<td class=\"num\">" + (d.semis * 100) + "</td>"
+      + "<td class=\"num\">" + d.ratioTxt + "</td>"
+      + "<td class=\"num\">" + fmtHz(jF) + "</td>"
+      + "<td class=\"num\">" + d.rc.toFixed(1) + "</td>"
+      + "<td class=\"num " + cls + "\">" + (delta > 0 ? "+" : "") + delta.toFixed(1) + "</td>"
+      + "</tr>";
+  });
+  tb.innerHTML = h;
+}
+function drawTune(ctx, now) {
+  const W = 1240, H = 640;
+  fillBg(ctx, W, H, "#101a2e", "#070b13");
+  const hot = perf() < tunGl.until;
+  /* —— 左：两行律制键位 —— */
+  ctxText(ctx, t("tcOc"), 40, 30, 15, "#e6eefb", 700);
+  ctxText(ctx, t("tcBase"), 40, 54, 11, "#7186a8", 500);
+  /* ET 行：13 键 = C4…C5（12 个等分半音） */
+  ctxText(ctx, t("tcET"), 40, 84, 13, "#62d7ff", 700);
+  const x0 = 40, bw = 57, gap = 2, yET = 104, hET = 78;
+  for (let s = 0; s <= 12; s++) {
+    const x = x0 + s * (bw + gap);
+    const white = !!PC_WHITE[s % 12];
+    const gl = hot && tunGl.et.indexOf(s) >= 0;
+    const grd = ctx.createLinearGradient(x, yET, x + bw, yET + hET);
+    if (gl) { grd.addColorStop(0, "#7a6426"); grd.addColorStop(1, "#ffe9a8"); }
+    else if (white) { grd.addColorStop(0, "#f4f7fc"); grd.addColorStop(1, "#cdd6e4"); }
+    else { grd.addColorStop(0, "#454c5a"); grd.addColorStop(1, "#161a22"); }
+    rrect(ctx, x, yET, bw, hET, 5);
+    ctx.fillStyle = grd; ctx.fill();
+    ctx.strokeStyle = gl ? "#ffcf6e" : "#0b0e15"; ctx.lineWidth = gl ? 2 : 1; ctx.stroke();
+    const tc = white ? "#16202e" : "#dfe6f2";
+    ctxText(ctx, midiName(60 + s), x + bw / 2, yET + 24, 12, gl ? "#3a2c08" : tc, 700, "center");
+    ctxText(ctx, fmtHz(tunEtF(s)), x + bw / 2, yET + 46, 8.5, gl ? "#5a4408" : (white ? "#5a6788" : "#8fa3c4"), 500, "center");
+  }
+  ctxText(ctx, LANG === "zh" ? "13 键 = C4–C5：12 个等分半音 × 2^(1/12) · 每键 100 音分" : "13 keys = C4–C5: 12 equal semitones × 2^(1/12) · 100 cents/key", x0, yET + hET + 16, 10.5, "#7186a8", 500);
+  /* JI 行 */
+  const yJI = 296, hJI = 92, pxC = 1.45;
+  ctxText(ctx, t("tcJI"), 40, 268, 13, "#7be0a0", 700);
+  const cxET = s => x0 + s * (bw + gap) + bw / 2;
+  const wj = 66;
+  for (let d = 0; d < TUNE.length; d++) {
+    const s = TUNE[d].semis, delta = TUNE[d].rc - s * 100;
+    const cx = cxET(s) + delta * pxC;
+    const gl = hot && tunGl.ji.indexOf(d) >= 0;
+    /* 对齐虚线 + 差值箭头 */
+    ctxLine(ctx, cxET(s), yET + hET + 6, cxET(s), yJI - 6, "rgba(255,255,255,.14)", 1, [3, 4]);
+    const col = Math.abs(delta) < 0.05 ? "#7186a8" : (delta > 0 ? "#7be0a0" : "#ffb45e");
+    if (d > 0 && d < 7) {
+      ctxText(ctx, (delta > 0 ? "+" : "") + delta.toFixed(1) + "¢", cxET(s) + (delta >= 0 ? 8 : -8), (yET + hET + yJI) / 2, 10, col, 700, delta >= 0 ? "left" : "right");
+    }
+    ctx.fillStyle = "rgba(123,224,160,.12)";
+    rrect(ctx, cx - wj / 2, yJI, wj, hJI, 6); ctx.fill();
+    const grd = ctx.createLinearGradient(cx - wj / 2, yJI, cx + wj / 2, yJI + hJI);
+    if (gl) { grd.addColorStop(0, "#3f6a2e"); grd.addColorStop(1, "#a8e8b8"); }
+    else { grd.addColorStop(0, "rgba(123,224,160,.10)"); grd.addColorStop(1, "rgba(123,224,160,.02)"); }
+    rrect(ctx, cx - wj / 2, yJI, wj, hJI, 6); ctx.fillStyle = grd; ctx.fill();
+    ctx.strokeStyle = gl ? "#7be0a0" : "rgba(123,224,160,.35)"; ctx.lineWidth = gl ? 2 : 1; ctx.stroke();
+    ctxText(ctx, midiName(60 + s), cx, yJI + 20, 12.5, "#eafff0", 700, "center");
+    ctxText(ctx, TUNE[d].ratioTxt, cx, yJI + 42, 11, "#7be0a0", 700, "center");
+    ctxText(ctx, fmtHz(C4F * TUNE[d].rv), cx, yJI + 64, 9, "#a8c8b0", 500, "center");
+  }
+  ctxText(ctx, t("tcNote"), x0, yJI + hJI + 22, 10.5, "#7186a8", 500);
+  /* —— 右：公式与提示 —— */
+  const px = 878, pw = 330;
+  const panel = function (y, hh) {
+    ctx.fillStyle = "rgba(255,255,255,.028)";
+    rrect(ctx, px, y, pw, hh, 12); ctx.fill();
+    ctx.strokeStyle = "rgba(98,215,255,.25)"; ctx.lineWidth = 1; ctx.stroke();
+  };
+  const zh = LANG === "zh";
+  panel(40, 168);
+  ctxText(ctx, (zh ? "平均律算法" : "Equal temperament"), px + 16, 62, 13, "#62d7ff", 700);
+  ctxText(ctx, (zh ? "fₙ = 440 × 2^((n−69)/12)（n = MIDI 号）" : "fₙ = 440 × 2^((n−69)/12), n = MIDI"), px + 16, 88, 11.5, "#dfe8f6", 500);
+  ctxText(ctx, (zh ? "半音比例 r = 2^(1/12) ≈ 1.059463" : "semitone ratio r = 2^(1/12) ≈ 1.059463"), px + 16, 112, 11.5, "#dfe8f6", 500);
+  ctxText(ctx, (zh ? "每个半音 = 100 音分；12 键 = 八度" : "1 semitone = 100 cents; 12 keys = octave"), px + 16, 136, 11.5, "#dfe8f6", 500);
+  ctxText(ctx, (zh ? "优点：任意调都能弹" : "plus: playable in any key"), px + 16, 158, 10.5, "#8fa3c4", 500);
+  panel(224, 152);
+  ctxText(ctx, (zh ? "纯律（自然律）算法" : "Just intonation"), px + 16, 246, 13, "#7be0a0", 700);
+  ctxText(ctx, (zh ? "音程 = 简单整数比（来自泛音列）：" : "intervals = simple integer ratios (harmonic series):"), px + 16, 272, 11, "#dfe8f6", 500);
+  ctxText(ctx, (zh ? "纯五度 3:2 · 纯四度 4:3 · 大三度 5:4" : "fifth 3:2 · fourth 4:3 · major third 5:4"), px + 16, 296, 11, "#cfe9d8", 500);
+  ctxText(ctx, (zh ? "C 大调音阶 = 1, 9/8, 5/4, 4/3, 3/2, 5/3, 15/8, 2" : "C scale = 1, 9/8, 5/4, 4/3, 3/2, 5/3, 15/8, 2"), px + 16, 320, 11, "#cfe9d8", 500);
+  ctxText(ctx, (zh ? "优点：和声纯净无拍频" : "plus: pure, beat-free harmony"), px + 16, 344, 10.5, "#8fa3c4", 500);
+  panel(392, 200);
+  ctxText(ctx, t("tcDelta"), px + 16, 414, 12, "#ffb45e", 700);
+  ctxText(ctx, (zh ? "差值 = 纯律音分 − 平均律音分" : "delta = just cents − ET cents"), px + 16, 438, 11, "#dfe8f6", 500);
+  ctxText(ctx, (zh ? "大三度 −13.7¢ · 小三度 +15.6¢ · 五度 ±2¢" : "major 3rd −13.7¢ · minor 3rd +15.6¢ · 5th ±2¢"), px + 16, 462, 11, "#dfe8f6", 500);
+  ctxText(ctx, (zh ? "人耳可分辨约 5¢，所以平均律的三度" : "ears can resolve ≈5¢, so ET thirds"), px + 16, 486, 11, "#dfe8f6", 500);
+  ctxText(ctx, (zh ? "听得出“紧/偏高”，五度几乎听不出差别。" : "sound tight; fifths are barely distinguishable."), px + 16, 508, 11, "#dfe8f6", 500);
+  ctxText(ctx, (zh ? "（图中橙色偏差已放大 1.45 px/¢）" : "(orange offsets magnified, 1.45 px/cent)"), px + 16, 548, 10, "#7186a8", 500);
+  /* 左下角键位说明小图 */
+  ctxText(ctx, LANG === "zh" ? "白键名称相同 → 同音名；橙框 = 纯律音高位置（带箭头偏差）" : "same note names; orange = just pitch location (offset arrow)", 40, H - 26, 10.5, "#7186a8", 500);
+}
+
+/* ================= 卡③ 和声：数据 ================= */
+const IVS = [
+  { k: "P8", zh: "纯八度", en: "Octave", midi: [60, 72], ratio: "2:1", num: 2, den: 1, col: "#7be0a0" },
+  { k: "P5", zh: "纯五度", en: "Perfect 5th", midi: [60, 67], ratio: "3:2", num: 3, den: 2, col: "#8ef0c0" },
+  { k: "P4", zh: "纯四度", en: "Perfect 4th", midi: [60, 65], ratio: "4:3", num: 4, den: 3, col: "#a5e0ff" },
+  { k: "M6", zh: "大六度", en: "Major 6th", midi: [60, 69], ratio: "5:3", num: 5, den: 3, col: "#62d7ff" },
+  { k: "M3", zh: "大三度", en: "Major 3rd", midi: [60, 64], ratio: "5:4", num: 5, den: 4, col: "#62d7ff" },
+  { k: "m3", zh: "小三度", en: "Minor 3rd", midi: [60, 63], ratio: "6:5", num: 6, den: 5, col: "#4fc3f7" },
+  { k: "m6", zh: "小六度", en: "Minor 6th", midi: [60, 68], ratio: "8:5", num: 8, den: 5, col: "#b18cff" },
+  { k: "M2", zh: "大二度", en: "Major 2nd", midi: [60, 62], ratio: "9:8", num: 9, den: 8, col: "#b18cff" },
+  { k: "m7", zh: "小七度", en: "Minor 7th", midi: [60, 70], ratio: "9:5", num: 9, den: 5, col: "#ff9ce0" },
+  { k: "M7", zh: "大七度", en: "Major 7th", midi: [60, 71], ratio: "15:8", num: 15, den: 8, col: "#ff9ce0" },
+  { k: "m2", zh: "小二度", en: "Minor 2nd", midi: [60, 61], ratio: "16:15", num: 16, den: 15, col: "#ff8b7a" },
+  { k: "TT", zh: "三全音", en: "Tritone", midi: [60, 66], ratio: "45:32", num: 45, den: 32, col: "#ff8b7a" },
+  { k: "U", zh: "同度", en: "Unison", midi: [60, 60], ratio: "1:1", num: 1, den: 1, col: "#7be0a0" }
+];
+const CHS = [
+  { k: "CM", zh: "大三和弦 C", en: "Major triad C", midi: [60, 64, 67], ratio: "4:5:6", fund: [4, 5, 6], col: "#7be0a0" },
+  { k: "Cm", zh: "小三和弦 Cm", en: "Minor triad Cm", midi: [60, 63, 67], ratio: "10:12:15", fund: [10, 12, 15], col: "#62d7ff" },
+  { k: "C7", zh: "属七和弦 C7", en: "Dominant 7th C7", midi: [60, 64, 67, 70], ratio: "4:5:6:7", fund: [4, 5, 6, 7], col: "#ff9ce0" },
+  { k: "Cmaj7", zh: "大七和弦 Cmaj7", en: "Major 7th Cmaj7", midi: [60, 64, 67, 71], ratio: "8:10:12:15", fund: [8, 10, 12, 15], col: "#ffb45e" }
+];
+const HARM = { kind: "ch", key: "CM", sys: "JI" };
+function harmPreset() {
+  const list = HARM.kind === "iv" ? IVS : CHS;
+  for (let i = 0; i < list.length; i++) if (list[i].k === HARM.key) return list[i];
+  return CHS[0];
+}
+function harmTones() { return harmPreset().midi; }
+function harmFreqs() {
+  const pr = harmPreset();
+  if (HARM.sys === "ET") return pr.midi.map(m => mf(m));
+  if (HARM.kind === "iv") return [C4F, C4F * pr.num / pr.den];
+  return pr.fund.map(h => C4F / pr.fund[0] * h);
+}
+function harmFundHz() {
+  const pr = harmPreset();
+  if (HARM.sys === "ET") return null;
+  if (HARM.kind === "iv") return C4F / pr.den;
+  return C4F / pr.fund[0];
+}
+const HM = { coins: 0, coinPairs: 0, nears: 0, nearPairs: [], lanes: [], fund: null };
+const HM_G = { fmin: 180, fmax: 4480, x0: 170, x1: 1140 };
+function hmX(f) {
+  const g = HM_G;
+  return g.x0 + (Math.log(f / g.fmin)) / (Math.log(g.fmax / g.fmin)) * (g.x1 - g.x0);
+}
+function hmCompute() {
+  const freqs = harmFreqs(), lanes = [], rawCoins = [], nears = [];
+  for (let i = 0; i < freqs.length; i++) {
+    const f = freqs[i];
+    const K = Math.max(1, Math.min(16, Math.floor(HM_G.fmax / f)));
+    const parts = [];
+    for (let k = 1; k <= K; k++) parts.push(k * f);
+    lanes.push({ f: f, parts: parts });
+  }
+  for (let i = 0; i < lanes.length; i++) {
+    for (let j = i + 1; j < lanes.length; j++) {
+      for (let a = 0; a < lanes[i].parts.length; a++) {
+        for (let b = 0; b < lanes[j].parts.length; b++) {
+          const df = Math.abs(lanes[i].parts[a] - lanes[j].parts[b]);
+          if (df < 0.3) rawCoins.push({ f: (lanes[i].parts[a] + lanes[j].parts[b]) / 2 });
+          else if (df <= 20) nears.push({ i: i, j: j, fa: lanes[i].parts[a], fb: lanes[j].parts[b], df: df });
+        }
+      }
+    }
+  }
+  /* 重合点去重：同一频率上可能有 2~3 对泛音同时重合（三重重合只画一根绿线） */
+  const spotMap = new Map();
+  rawCoins.forEach(function (c) {
+    const key = Math.round(c.f * 100);
+    const ex = spotMap.get(key);
+    if (ex) ex.n++; else spotMap.set(key, { f: c.f, n: 1 });
+  });
+  const spots = Array.from(spotMap.values());
+  spots.sort(function (a, b) { return a.f - b.f; });
+  nears.sort(function (a, b) { return a.df - b.df; });
+  if (nears.length > 10) nears.length = 10;                 // 只展示/统计最小的 10 对
+  HM.lanes = lanes; HM.coins = spots.length; HM.coinPairs = rawCoins.length;
+  HM.nears = nears.length; HM.nearPairs = nears; HM.fund = harmFundHz();
+  return { lanes: lanes, coins: spots, coinPairs: rawCoins.length, nears: nears, fund: HM.fund };
+}
+const LANE_COL = ["#62d7ff", "#ffcf6e", "#ff9ce0", "#7be0a0", "#b18cff"];
+function drawHarm(ctx, now) {
+  const W = 1240, H = 600;
+  fillBg(ctx, W, H, "#101a2e", "#070b13");
+  const pr = harmPreset(), res = hmCompute();
+  const lanes = res.lanes, coins = res.coins, nears = res.nears;
+  const zh = LANG === "zh";
+  ctxText(ctx, t("hmT") + "  ·  " + (zh ? pr.zh : pr.en), 40, 26, 15, "#e6eefb", 700);
+  ctxText(ctx, LANG === "zh" ? ("试听律制：" + (HARM.sys === "JI" ? "纯律" : "平均律") + " · 根音 C4") : ("tuning: " + (HARM.sys === "JI" ? "just" : "equal") + " · root C4"), 40, 48, 11, "#7186a8", 500);
+  const N = lanes.length;
+  const laneH = N <= 2 ? 168 : (N === 3 ? 122 : 100);
+  const base = [];
+  for (let i = 0; i < N; i++) base.push(78 + i * laneH + 44);
+  /* 共同基音网格（纯律；过低或过密时抽稀） */
+  if (HM.fund && HM.fund >= 30) {
+    const F = HM.fund;
+    const total = Math.floor(HM_G.fmax / F);
+    const step = total > 90 ? Math.ceil(total / 90) : 1;
+    ctx.strokeStyle = "rgba(255,255,255,.045)";
+    for (let m = 1; m * F <= HM_G.fmax; m += step) {
+      const x = hmX(m * F);
+      ctxLine(ctx, x, 66, x, base[N - 1] + 10, "rgba(255,255,255,.05)", 1);
+    }
+  }
+  /* 各音色条带 */
+  for (let i = 0; i < N; i++) {
+    const yB = base[i], col = LANE_COL[i];
+    const nm = midiName(Math.round(freqToMidi(lanes[i].f)));
+    ctxText(ctx, "●", 40, yB - 22, 13, col, 700);
+    ctxText(ctx, nm + " · " + fmtHz(lanes[i].f) + " Hz", 58, yB - 22, 12, col, 700);
+    ctx.strokeStyle = "rgba(255,255,255,.16)"; ctx.lineWidth = 1;
+    ctxLine(ctx, 30, yB, 1160, yB, "rgba(255,255,255,.10)", 1);
+    for (let k = 0; k < lanes[i].parts.length; k++) {
+      const f = lanes[i].parts[k], x = hmX(f);
+      const hgt = 6 + 30 / (k + 1);
+      ctx.fillStyle = col;
+      ctx.globalAlpha = 0.92;
+      rrect(ctx, x - 2.5, yB - hgt, 5, hgt, 2.5); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+  /* 重合泛音列（绿）：同一频率多对同时重合只画一根粗线并标注 ×n */
+  for (let c = 0; c < coins.length; c++) {
+    const p = coins[c];
+    const x = hmX(p.f);
+    const lw = p.n >= 3 ? 2.8 : (p.n === 2 ? 2.2 : 1.5);
+    ctxLine(ctx, x, base[0] - 32, x, base[N - 1] + 10, "rgba(123,224,160,.9)", lw);
+    if (p.n >= 2) ctxText(ctx, "×" + p.n, x + 4, base[0] - 40, 9.5, "#7be0a0", 700);
+  }
+  /* 拍频对（琥珀色，画全部（≤10 对最小者）） */
+  for (let c = 0; c < nears.length; c++) {
+    const p = nears[c];
+    const xa = hmX(p.fa), xb = hmX(p.fb);
+    ctx.setLineDash([2, 3]);
+    ctx.strokeStyle = "rgba(255,180,94,.95)"; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(xa, base[p.i] + 8); ctx.lineTo(xb, base[p.j] - 8); ctx.stroke();
+    ctx.setLineDash([]);
+    const midx = (xa + xb) / 2, midy = (base[p.i] + base[p.j]) / 2;
+    ctx.fillStyle = "#ffb45e";
+    ctx.beginPath(); ctx.arc(midx, midy, 3, 0, Math.PI * 2); ctx.fill();
+    ctxText(ctx, p.df.toFixed(1) + " Hz", midx + 6, midy, 8.5, "#ffb45e", 700);
+  }
+  /* 频率轴（对数） */
+  const yAx = base[N - 1] + 46;
+  ctxLine(ctx, HM_G.x0, yAx, HM_G.x1, yAx, "rgba(255,255,255,.3)", 1.2);
+  const tickF = [261.63, 523.25, 1046.5, 2093.0, 4186.0];
+  for (let q = 0; q < tickF.length; q++) {
+    const f = tickF[q], x = hmX(f);
+    if (x < HM_G.x0 || x > HM_G.x1) continue;
+    ctxLine(ctx, x, yAx, x, yAx + 6, "rgba(255,255,255,.35)", 1);
+    ctxText(ctx, Math.round(f) + "", x, yAx + 16, 8.5, "#7186a8", 500, "center");
+  }
+  ctxText(ctx, LANG === "zh" ? "频率（对数轴）→" : "frequency (log axis) →", HM_G.x1, yAx + 16, 9.5, "#7186a8", 500, "right");
+  /* 底部说明 */
+  const yTxt = yAx + 40;
+  let s1 = (zh ? pr.zh : pr.en) + "  ·  " + pr.ratio + "  ·  " + (HARM.sys === "JI" ? (zh ? "纯律" : "just") : (zh ? "平均律" : "equal"));
+  ctxText(ctx, s1, 40, yTxt, 13, "#e6eefb", 700);
+  let s2 = t("hmCo") + " " + coins.length;
+  if (res.coinPairs > coins.length) s2 += zh ? "（" + res.coinPairs + " 对重合关系）" : " (" + res.coinPairs + " pair coincidences)";
+  s2 += "  ·  " + t("hmNear") + " " + nears.length;
+  if (nears.length) s2 += "（" + t("hmBeatHz") + " ≤ " + nears[0].df.toFixed(1) + "）";
+  if (HM.fund) s2 += "  ·  " + t("hmFund") + " ≈ " + fmtHz(HM.fund) + " Hz";
+  ctxText(ctx, s2, 40, yTxt + 22, 11.5, coins.length > 0 ? "#7be0a0" : "#ffb45e", 600);
+  ctxText(ctx, t("hmClick"), 40, yTxt + 42, 10, "#7186a8", 500);
+  ctxText(ctx, LANG === "zh"
+      ? "（纯律：泛音落点重合于同一频率网格 → 无拍；平均律：泛音错开 → 琥珀线拍频对）"
+      : "(just: partials share one lattice → no beats; equal: partials offset → amber beating pairs)",
+    40, yTxt + 60, 10, "#7186a8", 500);
+}
+function updateHRead() {
+  const el = $("hRead"); if (!el) return;
+  const pr = harmPreset(), res = hmCompute();
+  const zh = LANG === "zh";
+  const X = res.coins.length, near = res.nears.length;
+  let multi = "";
+  if (HARM.sys === "JI") {
+    let m2 = 0, m3 = 0;
+    res.coins.forEach(function (s) { if (s.n === 2) m2++; else if (s.n >= 3) m3++; });
+    if (m3) multi = zh ? "（含 " + m3 + " 处三重重合）" : " (incl. " + m3 + " triple)";
+    else if (m2) multi = zh ? "（含 " + m2 + " 处二重重合）" : " (incl. " + m2 + " double)";
+  }
+  let txt;
+  if (HARM.kind === "iv") {
+    txt = (zh ? pr.zh : pr.en) + " · " + pr.ratio + " · "
+      + (HARM.sys === "JI"
+          ? (zh ? "纯律：两串谐波列在 " + X + " 个频率列上完全重合，无拍频。" : "just: the two harmonic series coincide at " + X + " frequencies — no beats.")
+          : (zh ? "平均律：泛音错开，出现 " + near + " 个拍频对（最快 " + (res.nears[0] ? res.nears[0].df.toFixed(1) + " Hz" : "—") + "）。" : "equal: partials offset, " + near + " beating pairs (fastest " + (res.nears[0] ? res.nears[0].df.toFixed(1) + " Hz" : "—") + ")."));
+  } else {
+    txt = (zh ? pr.zh : pr.en) + " · " + pr.ratio
+      + (HARM.sys === "JI"
+          ? (zh ? "（纯律）：谐波都落在共同基音 " + fmtHz(HM.fund) + " Hz 的整数倍网格上，在 " + X + " 个频率列重合" + multi + "，完全无拍 → 纯净。" : " (just): all partials sit on the lattice of common fundamental " + fmtHz(HM.fund) + " Hz, coinciding at " + X + " frequencies" + multi + " — beat-free, pure.")
+          : (zh ? "（平均律）：无共同基音，谐波只能近似对齐，出现 " + near + " 个拍频对。" : " (equal): no common fundamental; partials only approximately align, " + near + " beating pairs."));
+  }
+  el.innerHTML = txt;
+}
+
+/* ================= 卡③ 拍频实验 ================= */
+const BT = { d: 0.9, playing: false };
+function drawBeat(ctx, now) {
+  const W = 1240, H = 300;
+  fillBg(ctx, W, H, "#101a2e", "#070b13");
+  const f1 = 262, f2 = f1 + BT.d, d = BT.d;
+  ctxText(ctx, t("btT"), 40, 24, 13, "#9fb2d0", 600);
+  ctxText(ctx, (LANG === "zh" ? "音1 " : "tone1 ") + f1.toFixed(1) + " Hz  ·  " + (LANG === "zh" ? "音2 " : "tone2 ") + f2.toFixed(1) + " Hz", 40, 44, 11, "#dfe8f6", 500);
+  /* 两路正弦小图 */
+  const x0 = 60, x1 = 1220, y1 = 84, y2 = 116, A = 12, T0 = 6 / f1;
+  for (let row = 0; row < 2; row++) {
+    const yC = row === 0 ? y1 : y2;
+    const f = row === 0 ? f1 : f2;
+    ctx.strokeStyle = row === 0 ? "#62d7ff" : "#ff9ce0";
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    for (let px = 0; px <= (x1 - x0); px += 2) {
+      const t = px / (x1 - x0) * T0;
+      const y = yC + A * Math.sin(2 * Math.PI * f * t);
+      if (px === 0) ctx.moveTo(x0 + px, y); else ctx.lineTo(x0 + px, y);
+    }
+    ctx.stroke();
+  }
+  /* 合成分 + 拍频包络 */
+  const yC2 = 222, amp = 62;
+  const T = Math.min(3.2, Math.max(0.8, 3.2 / d));
+  const lobes = Math.max(1, Math.round(d * T));
+  ctx.strokeStyle = "rgba(98,215,255,.5)"; ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let px = 0; px <= (x1 - x0); px += 1) {
+    const t = px / (x1 - x0) * T;
+    const env = Math.abs(Math.cos(Math.PI * d * t));
+    const y = yC2 - amp * env;
+    if (px === 0) ctx.moveTo(x0 + px, y); else ctx.lineTo(x0 + px, y);
+  }
+  ctx.stroke();
+  ctx.beginPath();
+  for (let px = 0; px <= (x1 - x0); px += 1) {
+    const t = px / (x1 - x0) * T;
+    const env = Math.abs(Math.cos(Math.PI * d * t));
+    const y = yC2 + amp * env;
+    if (px === 0) ctx.moveTo(x0 + px, y); else ctx.lineTo(x0 + px, y);
+  }
+  ctx.stroke();
+  /* 鼓包填充 */
+  for (let px = 0; px <= (x1 - x0); px += 2) {
+    const t = px / (x1 - x0) * T;
+    const env = Math.abs(Math.cos(Math.PI * d * t));
+    ctx.fillStyle = "rgba(98,215,255,.10)";
+    ctx.fillRect(x0 + px, yC2 - amp * env, 2, amp * env * 2);
+  }
+  ctxLine(ctx, x0, yC2, x1, yC2, "rgba(255,255,255,.15)", 1);
+  /* 拍频零线 */
+  for (let k = 1; k < d * T; k++) {
+    const t = k / d, x = x0 + t / T * (x1 - x0);
+    ctx.setLineDash([2, 4]);
+    ctxLine(ctx, x, yC2 - amp - 6, x, yC2 + amp + 6, "rgba(255,255,255,.22)", 1);
+    ctx.setLineDash([]);
+  }
+  ctxText(ctx, t("btEnv"), x0, yC2 - amp - 16, 9.5, "#7186a8", 500);
+  ctxText(ctx, t("btBeat") + "  =  " + d.toFixed(1), x1, yC2 + amp + 24, 13, "#ffcf6e", 700, "right");
+}
+function startBeatDemo() {
+  BT.playing = true;
+  startBeat(262, 262 + BT.d, 0.26);
+  refreshUI();
+}
+function stopBeatDemo() {
+  BT.playing = false;
+  stopBeat();
+  refreshUI();
+}
+
+/* ================= 全局停止与 UI 刷新 ================= */
+let sepTimer = null;
+function clearAllAudio() {
+  if (seqTimer) { clearTimeout(seqTimer); seqTimer = null; seqKind = null; HL.midi = null; }
+  if (tunTimer) { clearTimeout(tunTimer); tunTimer = null; tunKind = null; tunGl.until = 0; tunGl.et = []; tunGl.ji = []; }
+  if (sepTimer) { clearTimeout(sepTimer); sepTimer = null; }
+  if (beatAuto) { clearTimeout(beatAuto); beatAuto = null; }
+  stopChord(160); stopMelNow(); stopBeat();
+  RUL.glide = null; VN.gliss = false;
+  if (VN.mode === "bow") VN.mode = null;
+  if (BT.playing) BT.playing = false;
+  refreshUI();
+}
+function refreshUI() {
+  const kb = $("kbRunBtn");
+  if (kb) { kb.classList.toggle("on", seqKind === "kbRun"); const s = kb.firstElementChild; if (s) s.innerHTML = seqKind === "kbRun" ? t("kbRunStop") : t("kbRun"); }
+  const kbz = $("kbHzBtn");
+  if (kbz) { kbz.classList.toggle("on", KB_CFG.lbl); const s = kbz.firstElementChild; if (s) s.innerHTML = KB_CFG.lbl ? t("kbHzOn") : t("kbHzOff"); }
+  const ld = $("logDemoBtn");
+  if (ld) { ld.classList.toggle("on", !!RUL.glide); const s = ld.firstElementChild; if (s) s.innerHTML = RUL.glide ? t("logDemoStop") : t("logDemo"); }
+  const vb = $("vnBowBtn");
+  if (vb) { const on = VN.mode === "bow" && !VN.gliss; vb.classList.toggle("on", on); const s = vb.firstElementChild; if (s) s.innerHTML = on ? t("vnBowStop") : t("vnBow"); }
+  const vg = $("vnGlissBtn");
+  if (vg) { vg.classList.toggle("on", VN.gliss); const s = vg.firstElementChild; if (s) s.innerHTML = VN.gliss ? t("vnGlissStop") : t("vnGliss"); }
+  [["tunScaleET", "scaleET"], ["tunScaleJI", "scaleJI"], ["tunChordET", "chordET"], ["tunChordJI", "chordJI"]].forEach(function (p) {
+    const b = $(p[0]); if (b) b.classList.toggle("on", tunKind === p[1]);
+  });
+  const sJ = $("sysJI"), sE = $("sysET");
+  if (sJ) sJ.classList.toggle("on", HARM.sys === "JI");
+  if (sE) sE.classList.toggle("on", HARM.sys === "ET");
+  const bp = $("beatPlay");
+  if (bp) { bp.classList.toggle("on", BT.playing); const s = bp.firstElementChild; if (s) s.innerHTML = BT.playing ? t("beatStopLbl") : t("beatPlayLbl"); }
+  const vf = $("vnFv"); if (vf) vf.textContent = VN.n % 1 === 0 ? String(VN.n) : VN.n.toFixed(2);
+}
+function buildVnStrChips() {
+  const host = $("vnStr"); if (!host) return;
+  host.innerHTML = "";
+  VSTR.forEach(function (s, i) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn" + (i === VN.str ? " on" : "");
+    b.textContent = s.name;
+    b.title = s.name + " = " + fmtHz(mf(s.midi)) + " Hz";
+    b.addEventListener("click", function () { vnSetStr(i); });
+    host.appendChild(b);
+  });
+}
+function vnSetStr(i) {
+  VN.str = i;
+  if (VN.mode === "bow") startBow();
+  CUR.midi = Math.round(freqToMidi(vnFreq())); CUR.f = vnFreq(); CUR.t = perf(); CUR.src = "vn";
+  vnLine(); buildVnStrChips(); refreshUI();
+}
+function buildIvChips() {
+  const host = $("ivChips"); if (!host) return;
+  host.innerHTML = "";
+  IVS.forEach(function (p) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn" + (HARM.kind === "iv" && HARM.key === p.k ? " on" : "");
+    b.textContent = LANG === "zh" ? p.zh : p.en;
+    b.addEventListener("click", function () {
+      HARM.kind = "iv"; HARM.key = p.k;
+      buildIvChips(); buildChChips(); updateHRead(); refreshUI();
+    });
+    host.appendChild(b);
+  });
+}
+function buildChChips() {
+  const host = $("chChips"); if (!host) return;
+  host.innerHTML = "";
+  CHS.forEach(function (p) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn" + (HARM.kind === "ch" && HARM.key === p.k ? " on" : "");
+    b.textContent = LANG === "zh" ? p.zh : p.en;
+    b.addEventListener("click", function () {
+      HARM.kind = "ch"; HARM.key = p.k;
+      buildIvChips(); buildChChips(); updateHRead(); refreshUI();
+    });
+    host.appendChild(b);
+  });
+}
+function playHarmSelection() {
+  clearAllAudio();
+  const freqs = harmFreqs(), uniq = [];
+  freqs.forEach(function (f) { if (!uniq.some(function (u) { return Math.abs(u - f) < 0.01; })) uniq.push(f); });
+  if (uniq.length > 1) chordPlay("piano", uniq, 4000, 0.34);
+  else melNote("piano", uniq[0], 2600, 0.5);
+}
+function sepRunTones() {
+  clearAllAudio();
+  const freqs = harmFreqs();
+  let i = 0;
+  const step = function () {
+    if (!sepTimer) return;
+    if (i >= freqs.length) { sepTimer = null; return; }
+    melNote("pluck", freqs[i], 950, 0.4);
+    i++;
+    sepTimer = setTimeout(step, 1160);
+  };
+  sepTimer = setTimeout(step, 90);
+}
+function beatPairAction() {
+  clearAllAudio();
+  const freqs = harmFreqs();
+  hmCompute();
+  let fa = 0, fb = 0;
+  if (HM.nearPairs.length) { const p = HM.nearPairs[0]; fa = p.fa; fb = p.fb; }
+  else if (freqs.length > 1) { fa = freqs[0]; fb = freqs[1]; }
+  if (fa && fb && Math.abs(fa - fb) > 0.05) {
+    startBeat(fa, fb, 0.2);
+    beatAuto = setTimeout(function () { stopBeat(); beatAuto = null; }, 3400);
+  } else if (fa) {
+    melNote("soft", fa, 2000, 0.4);
+  }
+}
+function harmLaneIndex(y) {
+  const freqs = harmFreqs(), N = freqs.length;
+  const laneH = N <= 2 ? 168 : (N === 3 ? 122 : 100);
+  for (let i = 0; i < N; i++) {
+    const base = 78 + i * laneH + 44;
+    if (Math.abs(y - (base - 22)) <= 13) return i;
+  }
+  return -1;
+}
+
+/* ================= 语言 / 初始化 ================= */
+function applyLang() {
+  document.documentElement.lang = LANG === "en" ? "en" : "zh-CN";
+  $("btnLang").textContent = LANG === "en" ? "中文" : "EN";
+  document.querySelectorAll("[data-i18n]").forEach(function (el) {
+    const k = el.getAttribute("data-i18n");
+    if (k) el.innerHTML = t(k);
+  });
+  document.title = LANG === "en"
+    ? "Keyboard · Tuning · Harmony — log pitch / ET vs Just / chord acoustics"
+    : "键盘·律制·和声动态图 · 音高对数 / 平均律vs纯律 / 和弦声学";
+  $("helpZh").classList.toggle("hidden", LANG !== "zh");
+  $("helpEn").classList.toggle("hidden", LANG !== "en");
+  buildVnStrChips(); buildIvChips(); buildChChips();
+  updKbRead(lastKb); vnLine(); updateHRead();
+  refreshUI();
+}
+function cvPos(ev, cv, lw, lh) {
+  const r = cv.getBoundingClientRect();
+  return { x: (ev.clientX - r.left) / r.width * lw, y: (ev.clientY - r.top) / r.height * lh };
+}
+
+/* ================= 主循环 ================= */
+const CVS = ["cvKB", "cvVN", "cvLog", "cvTune", "cvHarm", "cvBeat"];
+const DRAWS = { cvKB: drawKB, cvVN: drawVN, cvLog: drawLog, cvTune: drawTune, cvHarm: drawHarm, cvBeat: drawBeat };
+const FP = {};   // 各画布内容指纹：不变则跳过重绘（静止时零重绘）
+let lastTs = 0, glissLast = 0;
+function fpNow(id) {
+  const np = perf();
+  switch (id) {
+    case "cvKB": return (KB_CFG.lbl ? "1" : "0") + LANG + "|" + (HL.until > np ? HL.midi : "-");
+    case "cvVN": {
+      const act = (VN.mode === "bow") || (VN.mode === "pluck" && np - VN.tPluck < 2600) || VN.gliss;
+      return VN.str + "|" + Math.round(VN.n * 100) + "|" + VN.mode + "|" + (act ? Math.floor(np / 33) : 0);
+    }
+    case "cvLog": return LANG + "|" + (RUL.glide ? "g" + Math.floor(np / 33) : "s" + Math.round(CUR.f * 10));
+    case "cvTune": return LANG + "|" + (tunGl.until > np ? "g" + tunGl.et.join(",") + "/" + tunGl.ji.join(",") : "0");
+    case "cvHarm": return LANG + "|" + HARM.kind + HARM.key + HARM.sys;
+    case "cvBeat": return LANG + "|" + Math.round(BT.d * 10);
+  }
+  return "";
+}
+function invalidateLayout() {
+  for (const k in SIZE_CACHE) delete SIZE_CACHE[k];
+  for (const k in FP) delete FP[k];
+}
+function frame(now) {
+  window.__frames++;
+  requestAnimationFrame(frame);
+  lastTs = now;
+  /* 小提琴滑奏推进 / 拨弦收尾 */
+  if (VN.gliss && now - glissLast > 33) {
+    glissLast = now;
+    const u = (perf() - VN.glissT0) / 8000;
+    if (u >= 1) {
+      VN.gliss = false; VN.n = 12;
+      $("vnFinger").value = 12;
+      vnLine(); vnStopBow(); refreshUI();
+    } else {
+      VN.n = u * 12;
+      $("vnFinger").value = VN.n;
+      vnLine();
+      if (V1) V1.setF(vnFreq());
+      CUR.midi = Math.round(freqToMidi(vnFreq())); CUR.f = vnFreq(); CUR.t = perf(); CUR.src = "vn";
+    }
+  }
+  if (VN.mode === "pluck" && perf() - VN.tPluck > 2600) VN.mode = null;
+  /* 指纹对比：只有画面真的变了才重绘（动画中约 30fps 的 33ms 节拍） */
+  for (let i = 0; i < CVS.length; i++) {
+    const id = CVS[i];
+    const fp = fpNow(id);
+    if (FP[id] !== fp) {
+      FP[id] = fp;
+      const ctx = setupCanvas(id);
+      if (ctx) DRAWS[id](ctx, now);
+    }
+  }
+}
+
+function init() {
+  CVS.forEach(function (id) {
+    const cv = $(id);
+    cv.setAttribute("data-lw", cv.getAttribute("width"));
+    cv.setAttribute("data-lh", cv.getAttribute("height"));
+  });
+  buildTunTable();
+  buildVnStrChips(); buildIvChips(); buildChChips();
+  updKbRead(60); vnLine(); updateHRead();
+
+  /* 顶部按钮 */
+  $("btnLang").addEventListener("click", function () { LANG = LANG === "zh" ? "en" : "zh"; applyLang(); });
+  $("btnHelp").addEventListener("click", function () { $("scrim").classList.add("show"); $("helpPanel").classList.add("show"); });
+  $("helpClose").addEventListener("click", closeHelp);
+  $("scrim").addEventListener("click", closeHelp);
+  function closeHelp() { $("scrim").classList.remove("show"); $("helpPanel").classList.remove("show"); }
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closeHelp();
+    if (/^[123]$/.test(e.key) && !/INPUT|TEXTAREA/.test(e.target.tagName)) {
+      const cards = document.querySelectorAll("section.card");
+      const i = +e.key - 1;
+      if (cards[i]) cards[i].scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+
+  /* —— ① 键盘 —— */
+  $("kbRunBtn").addEventListener("click", function () {
+    if (seqKind === "kbRun") { seqStop(); refreshUI(); return; }
+    clearAllAudio();
+    const steps = [];
+    for (let s = 0; s <= 12; s++) steps.push(60 + s);
+    seqRun("kbRun", steps, 400, 340, "piano", 0.4);
+  });
+  $("kbHzBtn").addEventListener("click", function () { KB_CFG.lbl = !KB_CFG.lbl; refreshUI(); });
+  const kbCv = $("cvKB"), kbL = kbLayout();
+  let kbDrag = false;
+  kbCv.addEventListener("pointerdown", function (ev) {
+    ev.preventDefault();
+    kbDrag = true;
+    const p = cvPos(ev, kbCv, 600, 430);
+    const m = kbKeyAt(p.x, p.y, kbL);
+    if (m != null) { clearAllAudio(); kbHitPlay(m); }
+    try { kbCv.setPointerCapture(ev.pointerId); } catch (e) {}
+  });
+  kbCv.addEventListener("pointermove", function (ev) {
+    if (!kbDrag) return;
+    const p = cvPos(ev, kbCv, 600, 430);
+    const m = kbKeyAt(p.x, p.y, kbL);
+    if (m != null && HL.midi !== m) { clearAllAudio(); kbHitPlay(m); }
+  });
+  ["pointerup", "pointercancel", "pointerleave"].forEach(function (t) {
+    kbCv.addEventListener(t, function () { kbDrag = false; });
+  });
+
+  /* —— ① 小提琴 —— */
+  $("vnBowBtn").addEventListener("click", function () {
+    if (VN.mode === "bow" && !VN.gliss) vnStopBow();
+    else vnStartBow();
+  });
+  $("vnPluckBtn").addEventListener("click", vnPluck);
+  $("vnGlissBtn").addEventListener("click", vnGlissToggle);
+  $("vnOpenBtn").addEventListener("click", function () {
+    VN.n = 0; $("vnFinger").value = 0;
+    if (VN.mode === "bow") startBow();
+    vnLine(); refreshUI();
+  });
+  $("vnFinger").addEventListener("input", function () {
+    VN.n = +this.value;
+    vnLine();
+    if (VN.mode === "bow") { if (V1) V1.setF(vnFreq()); else startBow(); }
+    CUR.midi = Math.round(freqToMidi(vnFreq())); CUR.f = vnFreq(); CUR.t = perf(); CUR.src = "vn";
+    refreshUI();
+  });
+  const vnCv = $("cvVN");
+  vnCv.addEventListener("pointerdown", function (ev) {
+    const p = cvPos(ev, vnCv, 600, 430);
+    if (p.y < VN_G.nutY - 8 || p.y > VN_G.bridgeY + 4) return;
+    for (let i = 0; i < VN_G.xs.length; i++) {
+      if (Math.abs(p.x - VN_G.xs[i]) <= 13) { vnSetStr(i); vnPluck(); return; }
+    }
+  });
+
+  /* —— ① 标尺 —— */
+  $("logDemoBtn").addEventListener("click", function () { if (RUL.glide) stopGlide(); else startGlide(); });
+  const logCv = $("cvLog");
+  logCv.addEventListener("pointerdown", function (ev) {
+    const p = cvPos(ev, logCv, 1240, 320);
+    let f = 0;
+    if (p.y >= RUL.linB[0] && p.y <= RUL.linB[1]) f = rulClickF(p.x, false);
+    else if (p.y >= RUL.logB[0] && p.y <= RUL.logB[1]) f = rulClickF(p.x, true);
+    if (!f) return;
+    let m = Math.round(freqToMidi(f));
+    m = Math.max(RUL.m0, Math.min(RUL.m1, m));
+    clearAllAudio();
+    HL.midi = m; HL.until = perf() + 1400;
+    CUR.midi = m; CUR.f = mf(m); CUR.t = perf(); CUR.src = "ruler";
+    melNote("piano", mf(m), 1300, 0.42);
+    updKbRead(m);
+  });
+
+  /* —— ② 律制 —— */
+  $("tunScaleET").addEventListener("click", function () { tunRunScale("ET"); });
+  $("tunScaleJI").addEventListener("click", function () { tunRunScale("JI"); });
+  $("tunChordET").addEventListener("click", function () { tunRunChord("ET"); });
+  $("tunChordJI").addEventListener("click", function () { tunRunChord("JI"); });
+
+  /* —— ③ 和声 —— */
+  $("sysJI").addEventListener("click", function () { HARM.sys = "JI"; updateHRead(); refreshUI(); });
+  $("sysET").addEventListener("click", function () { HARM.sys = "ET"; updateHRead(); refreshUI(); });
+  $("hPlay").addEventListener("click", playHarmSelection);
+  $("hSep").addEventListener("click", function () { if (sepTimer) { clearTimeout(sepTimer); sepTimer = null; clearAllAudio(); } else sepRunTones(); });
+  $("hBeatPair").addEventListener("click", beatPairAction);
+  const hCv = $("cvHarm");
+  hCv.addEventListener("pointerdown", function (ev) {
+    const p = cvPos(ev, hCv, 1240, 600);
+    if (p.x < 24 || p.x > 200) return;
+    const i = harmLaneIndex(p.y);
+    if (i >= 0) {
+      const freqs = harmFreqs();
+      clearAllAudio();
+      melNote("pluck", freqs[i], 1500, 0.42);
+    }
+  });
+  /* 拍频实验 */
+  $("beatD").addEventListener("input", function () {
+    BT.d = +this.value;
+    $("beatDv").textContent = BT.d.toFixed(1) + " Hz";
+    if (BT.playing) { stopBeat(); startBeat(262, 262 + BT.d, 0.26); }
+  });
+  $("beatPlay").addEventListener("click", function () {
+    if (BT.playing) { stopBeatDemo(); }
+    else { clearAllAudio(); startBeatDemo(); }
+  });
+
+  window.addEventListener("resize", function () { lastTs = 0; invalidateLayout(); });
+  applyLang();
+  window.__boot = true;
+  requestAnimationFrame(function (t0) { lastTs = t0; requestAnimationFrame(frame); });
+}
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
+</script>
+</body>
+</html>
