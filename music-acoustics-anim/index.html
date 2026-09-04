@@ -869,7 +869,7 @@ const VSTR = [
   { name: "A4", midi: 69, color: "#7be0a0" },
   { name: "E5", midi: 76, color: "#ff9ce0" }
 ];
-const VN = { str: 0, n: 0, mode: null, tPluck: 0, bowT0: 0, gliss: false, glissT0: 0 };
+const VN = { str: 0, n: 0, mode: null, tech: null, tPluck: 0, bowT0: 0, gliss: false, glissT0: 0 };
 const VN_G = { nutY: 108, bridgeY: 336, xc: 300, xs: [258, 286, 314, 342], fbL: 234, fbR: 366 };
 let vnDrag = false;
 function vnNFromY(y) {
@@ -879,12 +879,30 @@ function vnNFromY(y) {
   const n = -12 * Math.log2(Math.max(1e-6, 1 - u));
   return Math.max(0, Math.min(12, Math.round(n * 4) / 4));
 }
+function vnRetriggerPluck() {
+  VN.tech = "pluck";
+  VN.mode = "pluck";
+  VN.gliss = false;
+  const now = perf();
+  if (V1 && VN.tPluck && now - VN.tPluck < 45) {
+    V1.setF(vnFreq());
+    VN.tPluck = now;
+    return;
+  }
+  VN.tPluck = now;
+  V1 = melNote("pluck", vnFreq(), 2000, 0.5);
+  CUR.midi = Math.round(freqToMidi(vnFreq())); CUR.f = vnFreq(); CUR.t = perf(); CUR.src = "vn";
+}
 function vnApplyFinger(n) {
+  const changed = n !== VN.n;
   VN.n = n;
   const el = $("vnFinger"); if (el) el.value = String(n);
   vnLine();
-  if ((VN.mode === "bow" || VN.mode === "pluck") && V1) V1.setF(vnFreq());
-  else if (VN.mode === "bow") startBow();
+  if (VN.mode === "bow") {
+    if (V1) V1.setF(vnFreq()); else startBow();
+  } else if (changed && VN.tech === "pluck") {
+    vnRetriggerPluck();
+  }
   CUR.midi = Math.round(freqToMidi(vnFreq())); CUR.f = vnFreq(); CUR.t = perf(); CUR.src = "vn";
   refreshUI();
 }
@@ -905,7 +923,7 @@ function vnLine() {
 }
 function vnStartBow() {
   clearAllAudio();
-  VN.mode = "bow"; VN.bowT0 = perf(); VN.gliss = false;
+  VN.tech = "bow"; VN.mode = "bow"; VN.bowT0 = perf(); VN.gliss = false;
   V1 = melNote("bow", vnFreq(), 0, 0.26);
   refreshUI();
 }
@@ -920,15 +938,13 @@ function vnStopBow() {
 }
 function vnPluck() {
   clearAllAudio();
-  VN.mode = "pluck"; VN.tPluck = perf(); VN.gliss = false;
-  V1 = melNote("pluck", vnFreq(), 2000, 0.5);
-  CUR.midi = Math.round(freqToMidi(vnFreq())); CUR.f = vnFreq(); CUR.t = perf(); CUR.src = "vn";
+  vnRetriggerPluck();
   refreshUI();
 }
 function vnGlissToggle() {
   if (VN.gliss) { VN.gliss = false; vnStopBow(); refreshUI(); return; }
   clearAllAudio();
-  VN.mode = "bow"; VN.gliss = true; VN.glissT0 = perf();
+  VN.tech = "bow"; VN.mode = "bow"; VN.gliss = true; VN.glissT0 = perf();
   V1 = melNote("bow", vnOpenF(), 0, 0.24);
   refreshUI();
 }
@@ -1624,6 +1640,8 @@ function refreshUI() {
   if (ld) { ld.classList.toggle("on", !!RUL.glide); const s = ld.firstElementChild; if (s) s.innerHTML = RUL.glide ? t("logDemoStop") : t("logDemo"); }
   const vb = $("vnBowBtn");
   if (vb) { const on = VN.mode === "bow" && !VN.gliss; vb.classList.toggle("on", on); const s = vb.firstElementChild; if (s) s.innerHTML = on ? t("vnBowStop") : t("vnBow"); }
+  const vp = $("vnPluckBtn");
+  if (vp) vp.classList.toggle("on", VN.tech === "pluck" && VN.mode !== "bow" && !VN.gliss);
   const vg = $("vnGlissBtn");
   if (vg) { vg.classList.toggle("on", VN.gliss); const s = vg.firstElementChild; if (s) s.innerHTML = VN.gliss ? t("vnGlissStop") : t("vnGliss"); }
   [["tunScaleET", "scaleET"], ["tunScaleJI", "scaleJI"], ["tunChordET", "chordET"], ["tunChordJI", "chordJI"]].forEach(function (p) {
@@ -1652,6 +1670,7 @@ function buildVnStrChips() {
 function vnSetStr(i) {
   VN.str = i;
   if (VN.mode === "bow") startBow();
+  else if (VN.tech === "pluck") vnRetriggerPluck();
   CUR.midi = Math.round(freqToMidi(vnFreq())); CUR.f = vnFreq(); CUR.t = perf(); CUR.src = "vn";
   vnLine(); buildVnStrChips(); refreshUI();
 }
@@ -1880,6 +1899,7 @@ function init() {
   $("vnOpenBtn").addEventListener("click", function () {
     VN.n = 0; $("vnFinger").value = 0;
     if (VN.mode === "bow") startBow();
+    else if (VN.tech === "pluck") vnRetriggerPluck();
     vnLine(); refreshUI();
   });
   $("vnFinger").addEventListener("input", function () {
@@ -1898,9 +1918,19 @@ function init() {
     ev.preventDefault();
     vnDrag = true;
     try { vnCv.setPointerCapture(ev.pointerId); } catch (e) {}
-    if (best !== VN.str) vnSetStr(best);
-    vnApplyFinger(vnNFromY(p.y));
-    if (VN.mode !== "bow") vnPluck();
+    if (best !== VN.str) {
+      VN.str = best;
+      buildVnStrChips();
+    }
+    const n = vnNFromY(p.y);
+    if (VN.mode === "bow") {
+      vnApplyFinger(n);
+    } else {
+      VN.n = n;
+      const el = $("vnFinger"); if (el) el.value = String(n);
+      vnLine();
+      vnPluck();
+    }
   });
   vnCv.addEventListener("pointermove", function (ev) {
     if (!vnDrag) return;
