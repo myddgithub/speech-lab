@@ -1752,6 +1752,7 @@ function applyLang() {
   buildVnStrChips(); buildIvChips(); buildChChips();
   updKbRead(lastKb); vnLine(); updateHRead();
   refreshUI();
+  for (const k in FP) delete FP[k];
 }
 function cvPos(ev, cv, lw, lh) {
   const r = cv.getBoundingClientRect();
@@ -1769,7 +1770,7 @@ function fpNow(id) {
     case "cvKB": return (KB_CFG.lbl ? "1" : "0") + LANG + "|" + (HL.until > np ? HL.midi : "-");
     case "cvVN": {
       const act = (VN.mode === "bow") || (VN.mode === "pluck" && np - VN.tPluck < 2600) || VN.gliss;
-      return VN.str + "|" + Math.round(VN.n * 100) + "|" + VN.mode + "|" + (act ? Math.floor(np / 33) : 0);
+      return LANG + "|" + VN.str + "|" + Math.round(VN.n * 100) + "|" + VN.mode + "|" + (act ? Math.floor(np / 33) : 0);
     }
     case "cvLog": return LANG + "|" + (RUL.glide ? "g" + Math.floor(np / 33) : "s" + Math.round(CUR.f * 10));
     case "cvTune": return LANG + "|" + (tunGl.until > np ? "g" + tunGl.et.join(",") + "/" + tunGl.ji.join(",") : "0");
