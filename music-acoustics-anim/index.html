@@ -165,7 +165,7 @@
         <div class="legend">
           <span><i class="dot" style="background:#ffcf6e"></i><span data-i18n="lgStr">黄色 = 发音弦</span></span>
           <span><i class="dot" style="background:#62d7ff"></i><span data-i18n="lgTick">琴枕→琴桥间刻度 = 各半音指位（越靠琴桥越密）</span></span>
-          <span style="font-size:11.5px" data-i18n="vnHint">按住手指的弦段不振动；振动的只有“指尖→琴桥”一段。</span>
+          <span style="font-size:11.5px" data-i18n="vnHint">可在指板上点按/拖动来按指。按住的一段不振动；振动的只有“指尖→琴桥”。</span>
         </div>
       </div>
     </div>
@@ -174,7 +174,7 @@
       <div class="cv"><canvas id="cvLog" width="1240" height="320" role="img" aria-label="线性与对数频率标尺对比"></canvas></div>
       <div class="bars">
         <button class="btn warn" id="logDemoBtn" type="button"><span data-i18n="logDemo">▶ 恒速滑奏上行 C2→C7（听感等速）</span></button>
-        <span style="font-size:12px;color:var(--muted)" data-i18n="logHint">点击下方任一带可选取音高并试听；绿点 = 最近一次发音的位置。</span>
+        <span style="font-size:12px;color:var(--muted)" data-i18n="logHint">点击标尺按指针处的频率发声（不吸附到最近的键）；绿点 = 最近一次发音的位置。</span>
       </div>
       <div class="note" id="logNote" data-i18n="logNote">读法：上下两条都是“键盘音”的分布。线性轴上频率翻倍 → 距离也翻倍，低音全部挤在左侧；对数轴上每个八度等宽、每个半音等距——与人的听觉一致。</div>
     </div>
@@ -198,7 +198,7 @@
       <button class="btn warn" id="tunScaleJI" type="button"><span data-i18n="c2RunJI">🔊 纯律音阶</span></button>
       <button class="btn" id="tunChordET" type="button"><span data-i18n="c2ChordET">🔊 平均律大三和弦</span></button>
       <button class="btn" id="tunChordJI" type="button"><span data-i18n="c2ChordJI">🔊 纯律大三和弦</span></button>
-      <span style="font-size:12px;color:var(--muted)" data-i18n="c2Base">国际标准音 A4 = 440 Hz；两行同以 C4 为基准。</span>
+      <span style="font-size:12px;color:var(--muted)" data-i18n="c2Base">国际标准音 A4 = 440 Hz；两行同以 C4 为基准（故纯律 A ≈ 436 Hz，不是 440）。</span>
     </div>
     <div class="cv"><canvas id="cvTune" width="1240" height="640" role="img" aria-label="十二平均律与纯律对比动画"></canvas></div>
     <div class="cmpWrap">
@@ -216,13 +216,13 @@
         <tbody id="tunBody"></tbody>
       </table>
     </div>
-    <div class="note" id="cmpNote" data-i18n="cmpNote">表中“差值”以音分计（1 半音 = 100 音分）。纯律大三度比平均律低 13.7 音分、纯律五度仅高 2 音分——五度几乎一样，三度差别明显，这就是“平均律听起来‘紧’一点”的原因。</div>
+    <div class="note" id="cmpNote" data-i18n="cmpNote">表中“差值”以音分计（1 半音 = 100 音分）。纯律大三度比平均律低 13.7 音分、纯五度高 2.0 音分——五度几乎一样，三度差别明显。以 C 为根的纯律 A（5/3）约 436 Hz，比 A4=440 低 15.6 音分。小三度 6/5（+15.6¢）不在本表（C 大调无 E♭）。</div>
     <ul class="bullets">
       <li><b data-i18n="c2L1">① 算法一 · 平均律：</b><span data-i18n="c2B1">把八度（频率比 2:1）切成 12 个相等的“半音”，每个半音都是同一个小比例 r = 2^(1/12) ≈ 1.05946。任一音 fₙ = 440 × 2^((n−69)/12)（n 为 MIDI 号）。任何调都能弹，所以现代钢琴/电子乐器用它。</span></li>
       <li><b data-i18n="c2L2">② 算法二 · 纯律（自然律）：</b><span data-i18n="c2B2">音程取简单整数比（来自泛音列）：八度 2:1、纯五度 3:2、纯四度 4:3、大三度 5:4、小三度 6:5、大六度 5:3、大七度 15:8。C 大调七个音依次为 1、9/8、5/4、4/3、3/2、5/3、15/8、2 倍 C。</span></li>
-      <li><b data-i18n="c2L3">③ 差多少？</b><span data-i18n="c2B3">纯律与平均律只在 C 上对齐；越往五度圈外走差得越多。上表可见：大三度差 −13.7、小三度 +15.6、五度仅 ±2 音分。小提琴/无品乐器按纯律拉，键盘则被迫取折中。</span></li>
+      <li><b data-i18n="c2L3">③ 差多少？</b><span data-i18n="c2B3">纯律与平均律只在 C（及高八度 C）上对齐。上表可见：大三度 −13.7¢、五度 +2.0¢；纯律 A 为 436.0 Hz（−15.6¢），不是 440。小三度 6/5 相对平均律为 +15.6¢，但不在本表（C 大调无 E♭）。小提琴/无品乐器可按纯律拉，键盘则取折中。</span></li>
       <li><b data-i18n="c2L4">④ 听感：</b><span data-i18n="c2B4">先听“平均律音阶”再听“纯律音阶”，再对比两种大三和弦。纯律的和弦“更干净、发亮”，因为 3:2、5:4 使泛音完全重合、无拍频；平均律的音程略“紧/颤”，但换来任何调都可用。</span></li>
-      <li><b data-i18n="c2L5">⑤ 历史：</b><span data-i18n="c2B5">巴赫《十二平均律曲集》推广了它；此前的五度相生律（毕达哥拉斯律，纯五度 3:2 连环相生）转调时会出现“狼音五度”，平均律把误差均摊到每个音上，人人都能接受。</span></li>
+      <li><b data-i18n="c2L5">⑤ 历史：</b><span data-i18n="c2B5">巴赫《十二平均律曲集》（The Well-Tempered Clavier）推广的是「各调都能弹」的好律（well temperament），与今日钢琴上每个半音严格 2^(1/12) 的十二平均律（12-TET）不是同一套算法。更早的五度相生律（毕达哥拉斯律，纯五度 3:2 连环相生）在收束八度时会出现狼音五度；十二平均律把误差均摊到 12 个半音上。</span></li>
     </ul>
   </section>
 
@@ -254,7 +254,7 @@
         <input id="beatD" type="range" min="0.1" max="16" step="0.1" value="0.9" />
         <span class="val" id="beatDv">0.9 Hz</span>
         <button class="btn warn" id="beatPlay" type="button"><span data-i18n="beatPlayLbl">🔊 同时播放两音</span></button>
-        <span style="font-size:12px;color:var(--muted)" data-i18n="beatHint">261.0 与 261.9 Hz…差值越小“拍”越慢；差值>约15 Hz 就不再是拍而是粗糙感/不谐和。</span>
+        <span style="font-size:12px;color:var(--muted)" data-i18n="beatHint">262.0 与 262.9 Hz…差值越小“拍”越慢；差值>约15 Hz 就不再是拍而是粗糙感/不谐和。</span>
       </div>
       <div class="note" data-i18n="beatNote">拍频是“和声不谐和”的微观机制：纯律的 3:2、5:4 使泛音完全重合（无拍）；平均律把它们错开一点点（如纯五度差约 0.9 Hz、大三度差约 10 Hz），于是产生缓慢或快速的强弱抖动。Δ=0.9 Hz 就接近平均律纯五度那对“几乎重合的泛音”。</div>
     </div>
@@ -263,8 +263,8 @@
       <li><b data-i18n="c3L1">① 和声的原理 = 谐波列（泛音列）：</b><span data-i18n="c3B1">任何一个真实乐音都含一串谐波：f₀, 2f₀, 3f₀…。两个音同时响时，耳朵听的是两串谐波的“对齐程度”：重合的泛音越多 → 越和谐；几乎重合又没完全重合的泛音 → 产生拍频/粗糙 → 越不谐和。</span></li>
       <li><b data-i18n="c3L2">② 整数比为什么和谐：</b><span data-i18n="c3B2">频率比简单（如 3:2、4:5:6）时两串谐波大量重合（图中绿点/竖线）。纯八度 2:1 重合最多，纯五度次之，接着是纯四度、大小三度——正好构成“协和音程”的梯队；小二度、三全音几乎不重合且互相“打架”，所以刺耳。</span></li>
       <li><b data-i18n="c3L3">③ 大三和弦 4:5:6：</b><span data-i18n="c3B3">C、E、G 的频率比 4:5:6，恰好是共同基音 C₂（65.4 Hz）的第 4、5、6 次谐波——三串泛音落在同一张“网格”上，听感明亮、稳定、有“根”。</span></li>
-      <li><b data-i18n="c3L4">④ 小三和弦与七和弦：</b><span data-i18n="c3B4">小三和弦 ≈ 1 : 6/5 : 3/2（暗淡柔和）；属七和弦加进 7:4（≈968.8 音分，比平均律的 bB 低 31 音分），含“不干净”的七度张力，需要解决到主和弦——古典和声的发动机。</span></li>
-      <li><b data-i18n="c3L5">⑤ 试着：</b><span data-i18n="c3B5">切到“纯律”听大三和弦（干净无拍），再切“平均律”听（有一点紧/颤）；点“听拍频对”可单独听到使大三度粗糙的那对泛音（相差约 10 Hz）；最后用下方滑块自己制造“拍”。</span></li>
+      <li><b data-i18n="c3L4">④ 小三和弦与七和弦：</b><span data-i18n="c3B4">小三和弦 ≈ 1 : 6/5 : 3/2（暗淡柔和）；属七和弦加进 7:4（谐和七度，≈968.8 音分，比平均律 ♭B 低 31 音分）。这与上面音程条里的「小七度 9:5」不是同一个比例：9:5 是五限小七度，7:4 才是属七里那根需要解决的张力。</span></li>
+      <li><b data-i18n="c3L5">⑤ 试着：</b><span data-i18n="c3B5">切到“纯律”听大三和弦（干净无拍），再切“平均律”听（有一点紧/颤）；点“听拍频对”可单独听到使大三度粗糙的那对泛音（相差约 10 Hz）。纯律下若无拍频对，会改播一对已重合的同频泛音作为对照。最后用下方滑块自己制造“拍”。</span></li>
     </ul>
   </section>
 
@@ -299,7 +299,7 @@
     </div>
   </section>
 
-  <footer data-i18n="foot">教学示意动画：乐器音色为 WebAudio 按谐波实时近似合成；琴弦振动为慢放/放大示意。频率以 A4=440 Hz 的国际标准音高为准。</footer>
+  <footer data-i18n="foot">教学示意动画：乐器音色为 WebAudio 按谐波实时近似合成；琴弦振动为慢放/放大示意。平均律以 A4=440 Hz 为准；纯律音阶以 C4 为根，故其 A 约为 436 Hz。</footer>
 </div>
 
 <!-- 帮助抽屉 -->
@@ -309,21 +309,21 @@
   <div class="hBody">
     <div id="helpZh">
       <h3>① 键盘与琴弦</h3>
-      <p>点键盘任意键发声，键下显示 Hz。相邻键（半音）频率 ×1.05946；<b>每 12 键（一个八度）频率 ×2</b>。提琴图里选弦后可拖“按指位置”：指头把弦按短，音变高——注意琴枕到琴桥之间的<b>半音刻度越来越密</b>，频率按 1/弦长变化。下方标尺把同一音列画两次：线性轴（Hz）与对数轴（音分），看两个八度括号的宽度差异，再按“恒速滑奏”听。</p>
+      <p>点键盘任意键发声，键下显示 Hz。相邻键（半音）频率 ×1.05946；<b>每 12 键（一个八度）频率 ×2</b>。提琴图里可点按/拖动指板来按指，或用下方滑块：指头把弦按短，音变高——注意琴枕到琴桥之间的<b>半音刻度越来越密</b>，频率按 1/弦长变化。下方标尺把同一音列画两次：线性轴（Hz）与对数轴（音分），看两个八度括号的宽度差异，再按“恒速滑奏”听。点标尺会按指针处的频率发声。</p>
       <h3>② 两种律制</h3>
-      <p>上行=平均律（12 等分、每键 100 音分），下行=纯律（整数比）。试听两种音阶与两种大三和弦，并读差值表（音分）。图上橙色虚线把纯律音拉回平均律键位，越长的线偏离越多。</p>
+      <p>上行=平均律（12 等分、每键 100 音分），下行=纯律（整数比）。试听两种音阶与两种大三和弦，并读差值表（音分）。橙色虚线把每个纯律音拉回对应的平均律键位，线越长偏离越多。两行都以 C4 为根，所以纯律的 A 约为 436 Hz，不是 440。</p>
       <h3>③ 和声与拍频</h3>
-      <p>频谱图：每一条彩带是一串谐波；绿色竖线/圆点=泛音重合（和谐），琥珀色=“几乎重合”的拍频对（数字为每秒拍数）。用“试听律制”切换纯律/平均律看重合与错位；点“听拍频对”能听到使大三度变粗糙的那对泛音。下方滑块直接制造拍频。</p>
+      <p>频谱图：每一条彩带是一串谐波；绿色竖线=泛音重合（和谐），琥珀色=“几乎重合”的拍频对（数字为每秒拍数）。用“试听律制”切换纯律/平均律看重合与错位。点“听拍频对”：若有近重合泛音就播放那一对；纯律大三和弦没有拍，会改播一对已重合的同频泛音（听不到拍）。下方滑块直接制造拍频。</p>
       <h3>键盘与提示</h3>
       <p><span class="kbd">1</span>/<span class="kbd">2</span>/<span class="kbd">3</span> 跳到三个演示区，<span class="kbd">Esc</span> 关闭帮助。声音需先在页面点一下按钮解锁（浏览器自动播放策略）。</p>
     </div>
     <div id="helpEn" class="hidden">
       <h3>① Keyboard &amp; strings</h3>
-      <p>Click any key to play; Hz is shown under each key. Adjacent keys (a semitone) multiply frequency by 1.05946; <b>12 keys (one octave) double it</b>. On the violin, pick a string and drag the finger: stopping the string shortens it and raises the pitch — watch the <b>semitone marks get denser toward the bridge</b> (pitch ∝ 1/length). Below, the same notes are drawn twice: a linear Hz ruler and a logarithmic ruler — compare the two octave brackets, then press “constant-speed glide”.</p>
+      <p>Click any key to play; Hz is shown under each key. Adjacent keys (a semitone) multiply frequency by 1.05946; <b>12 keys (one octave) double it</b>. On the violin, click/drag the fingerboard (or use the slider): stopping the string shortens it and raises the pitch — watch the <b>semitone marks get denser toward the bridge</b> (pitch ∝ 1/length). Below, the same notes are drawn twice: a linear Hz ruler and a logarithmic ruler — compare the two octave brackets, then press “constant-speed glide”. Clicking a ruler plays the frequency under the pointer.</p>
       <h3>② Two tuning systems</h3>
-      <p>Top row: equal temperament (12 equal semitones, 100 cents each). Bottom row: just intonation (integer ratios). Audition both scales and both major triads; read the cents-difference table. Orange dashed lines pull each just note back to its equal-tempered key — longer means farther off.</p>
+      <p>Top row: equal temperament (12 equal semitones, 100 cents each). Bottom row: just intonation (integer ratios). Audition both scales and both major triads; read the cents-difference table. Orange dashed lines pull each just note back to its equal-tempered key — longer means farther off. Both rows are rooted on C4, so just A is about 436 Hz, not 440.</p>
       <h3>③ Harmony &amp; beats</h3>
-      <p>Spectrum view: each coloured comb is one tone’s harmonics. Green lines/dots = coinciding partials (consonance); amber = near-coincident “beating pairs” (numbers = beats per second). Switch between just/equal temperament to see alignment vs mistuning; “hear beating pair” plays the partials that roughen a major third. The slider at the bottom makes beats directly.</p>
+      <p>Spectrum view: each coloured comb is one tone’s harmonics. Green lines = coinciding partials (consonance); amber = near-coincident “beating pairs” (numbers = beats per second). Switch between just/equal temperament to see alignment vs mistuning. “Hear the beating pair” plays the closest near-coincident partials when they exist; a just major triad has none, so it plays a coinciding pair instead (no beats). The slider at the bottom makes beats directly.</p>
       <h3>Keys &amp; tips</h3>
       <p><span class="kbd">1</span>/<span class="kbd">2</span>/<span class="kbd">3</span> jump to the three demo areas, <span class="kbd">Esc</span> closes help. Click once anywhere to unlock audio (browser autoplay policy).</p>
     </div>
@@ -353,9 +353,9 @@ const I18N = {
     vnPluck: "👆 拨弦", vnGliss: "↗ 自动滑奏（0→12 半音）", vnGlissStop: "⏹ 停止滑奏",
     vnFingL: "按指位置（半音数 n）", vnOpen: "↩ 空弦",
     lgStr: "黄色 = 发音弦", lgTick: "琴枕→琴桥间刻度 = 各半音指位（越靠琴桥越密）",
-    vnHint: "按住手指的弦段不振动；振动的只有“指尖→琴桥”一段。",
+    vnHint: "可在指板上点按/拖动来按指。按住的一段不振动；振动的只有“指尖→琴桥”。",
     logDemo: "▶ 恒速滑奏上行 C2→C7（听感等速）", logDemoStop: "⏹ 停止滑奏",
-    logHint: "点击下方任一带可选取音高并试听；绿点 = 最近一次发音的位置。",
+    logHint: "点击标尺按指针处的频率发声（不吸附到最近的键）；绿点 = 最近一次发音的位置。",
     logNote: "读法：上下两条都是“键盘音”的分布。线性轴上频率翻倍 → 距离也翻倍，低音全部挤在左侧；对数轴上每个八度等宽、每个半音等距——与人的听觉一致。",
     c1L1: "① 每个键相差同一个“比例”：", c1L2: "② 耳朵听的是“比例”不是“差值”：",
     c1L3: "③ 小提琴指位越按越密：", c1L4: "④ 线性轴 vs 对数轴：", c1L5: "⑤ 试着：",
@@ -367,31 +367,34 @@ const I18N = {
     c2Title: "② 十二平均律 vs 纯律（自然律）：算法与差别", c2Tag: "半音 = 2^(1/12) 等分八度 · 纯律 = 整数比（源自泛音列）· 试听对比两种音阶与和弦",
     c2RunET: "🔊 平均律音阶", c2RunJI: "🔊 纯律音阶",
     c2ChordET: "🔊 平均律大三和弦", c2ChordJI: "🔊 纯律大三和弦",
-    c2Base: "国际标准音 A4 = 440 Hz；两行同以 C4 为基准。",
+    c2Base: "国际标准音 A4 = 440 Hz；两行同以 C4 为基准（故纯律 A ≈ 436 Hz，不是 440）。",
     cmpD: "音级", cmpETR: "平均律 半音数", cmpETH: "平均律 Hz", cmpETC: "平均律 音分",
     cmpJIR: "纯律 比例", cmpJIH: "纯律 Hz", cmpJIC: "纯律 音分", cmpDel: "差值（纯 − 均）",
-    cmpNote: "表中“差值”以音分计（1 半音 = 100 音分）。纯律大三度比平均律低 13.7 音分、纯律五度仅高 2 音分——五度几乎一样，三度差别明显，这就是“平均律听起来‘紧’一点”的原因。",
+    cmpNote: "表中“差值”以音分计（1 半音 = 100 音分）。纯律大三度比平均律低 13.7 音分、纯五度高 2.0 音分——五度几乎一样，三度差别明显。以 C 为根的纯律 A（5/3）约 436 Hz，比 A4=440 低 15.6 音分。小三度 6/5（+15.6¢）不在本表（C 大调无 E♭）。",
     c2L1: "① 算法一 · 平均律：", c2L2: "② 算法二 · 纯律（自然律）：", c2L3: "③ 差多少？", c2L4: "④ 听感：", c2L5: "⑤ 历史：",
     c2B1: "把八度（频率比 2:1）切成 12 个相等的“半音”，每个半音都是同一个小比例 r = 2^(1/12) ≈ 1.05946。任一音 fₙ = 440 × 2^((n−69)/12)（n 为 MIDI 号）。任何调都能弹，所以现代钢琴/电子乐器用它。",
     c2B2: "音程取简单整数比（来自泛音列）：八度 2:1、纯五度 3:2、纯四度 4:3、大三度 5:4、小三度 6:5、大六度 5:3、大七度 15:8。C 大调七个音依次为 1、9/8、5/4、4/3、3/2、5/3、15/8、2 倍 C。",
-    c2B3: "纯律与平均律只在 C 上对齐；越往五度圈外走差得越多。上表可见：大三度差 −13.7、小三度 +15.6、五度仅 ±2 音分。小提琴/无品乐器按纯律拉，键盘则被迫取折中。",
+    c2B3: "纯律与平均律只在 C（及高八度 C）上对齐。上表可见：大三度 −13.7¢、五度 +2.0¢；纯律 A 为 436.0 Hz（−15.6¢），不是 440。小三度 6/5 相对平均律为 +15.6¢，但不在本表（C 大调无 E♭）。小提琴/无品乐器可按纯律拉，键盘则取折中。",
     c2B4: "先听“平均律音阶”再听“纯律音阶”，再对比两种大三和弦。纯律的和弦“更干净、发亮”，因为 3:2、5:4 使泛音完全重合、无拍频；平均律的音程略“紧/颤”，但换来任何调都可用。",
-    c2B5: "巴赫《十二平均律曲集》推广了它；此前的五度相生律（毕达哥拉斯律，纯五度 3:2 连环相生）转调时会出现“狼音五度”，平均律把误差均摊到每个音上，人人都能接受。",
+    c2B5: "巴赫《十二平均律曲集》（The Well-Tempered Clavier）推广的是「各调都能弹」的好律（well temperament），与今日钢琴上每个半音严格 2^(1/12) 的十二平均律（12-TET）不是同一套算法。更早的五度相生律（毕达哥拉斯律，纯五度 3:2 连环相生）在收束八度时会出现狼音五度；十二平均律把误差均摊到 12 个半音上。",
+    c3Title: "③ 和声原理 & 主要和声的声学特征",
+    c3Tag: "谐波列重合 → 和谐 · 近似重合 → 拍频/粗糙 · 大三 / 小三 / 七和弦频谱示意",
     ivLbl: "音程", chLbl: "和弦", sysLbl: "试听律制",
     sysJI: "纯律（干净）", sysET: "平均律（键盘实际）",
     hPlayLbl: "🔊 播放所选", hSepLbl: "🎵 逐个听单音", hBeatPairLbl: "👂 听“拍频对”",
     hHint: "（上方色点区为可播放提示）",
+    hBeatNone: "无拍频对：两路同频泛音已重合，听不到拍（对照）。",
     beatT: "拍频实验：两个相近频率 = 强弱起伏",
     beatDLbl: "两音频率差 Δ", beatPlayLbl: "🔊 同时播放两音", beatStopLbl: "🔇 停止播放",
-    beatHint: "261.0 与 261.9 Hz…差值越小“拍”越慢；差值&gt;约15 Hz 就不再是拍而是粗糙感/不谐和。",
-    beatNote: "拍频是“和声不谐和”的微观机制：纯律的 3:2、5:4 使泛音完全重合（无拍）；平均律把它们错开一点点（如纯五度差约 0.9 Hz、大三度差约 10 Hz），于是产生缓慢或快速的强弱抖动。Δ=0.9 Hz 就接近平均律纯五度那对“几乎重合的泛音”。",
+    beatHint: "262.0 与 262.9 Hz…差值越小“拍”越慢；差值&gt;约15 Hz 就不再是拍而是粗糙感/不谐和。",
+    beatNote: "拍频是“和声不谐和”的微观机制：纯律的 3:2、5:4 使泛音完全重合（无拍）；平均律把它们错开一点点（如纯五度差约 0.9 Hz、大三度差约 10 Hz），于是产生缓慢或快速的强弱抖动。Δ=0.9 Hz 就接近平均律纯五度那对“几乎重合的泛音”。图中实线是两正弦之和，虚线是拍频包络；为看清振荡，图里的载波比试听的 262 Hz 慢，拍频 Δ 与试听相同。",
     c3L1: "① 和声的原理 = 谐波列（泛音列）：", c3L2: "② 整数比为什么和谐：",
     c3L3: "③ 大三和弦 4:5:6：", c3L4: "④ 小三和弦与七和弦：", c3L5: "⑤ 试着：",
     c3B1: "任何一个真实乐音都含一串谐波：f₀, 2f₀, 3f₀…。两个音同时响时，耳朵听的是两串谐波的“对齐程度”：重合的泛音越多 → 越和谐；几乎重合又没完全重合的泛音 → 产生拍频/粗糙 → 越不谐和。",
     c3B2: "频率比简单（如 3:2、4:5:6）时两串谐波大量重合（图中绿点/竖线）。纯八度 2:1 重合最多，纯五度次之，接着是纯四度、大小三度——正好构成“协和音程”的梯队；小二度、三全音几乎不重合且互相“打架”，所以刺耳。",
     c3B3: "C、E、G 的频率比 4:5:6，恰好是共同基音 C₂（65.4 Hz）的第 4、5、6 次谐波——三串泛音落在同一张“网格”上，听感明亮、稳定、有“根”。",
-    c3B4: "小三和弦 ≈ 1 : 6/5 : 3/2（暗淡柔和）；属七和弦加进 7:4（≈968.8 音分，比平均律的 ♭B 低 31 音分），含“不干净”的七度张力，需要解决到主和弦——古典和声的发动机。",
-    c3B5: "切到“纯律”听大三和弦（干净无拍），再切“平均律”听（有一点紧/颤）；点“听拍频对”可单独听到使大三度粗糙的那对泛音（相差约 10 Hz）；最后用下方滑块自己制造“拍”。",
+    c3B4: "小三和弦 ≈ 1 : 6/5 : 3/2（暗淡柔和）；属七和弦加进 7:4（谐和七度，≈968.8 音分，比平均律 ♭B 低 31 音分）。这与上面音程条里的「小七度 9:5」不是同一个比例：9:5 是五限小七度，7:4 才是属七里那根需要解决的张力。",
+    c3B5: "切到“纯律”听大三和弦（干净无拍），再切“平均律”听（有一点紧/颤）；点“听拍频对”可单独听到使大三度粗糙的那对泛音（相差约 10 Hz）。纯律下若无拍频对，会改播一对已重合的同频泛音作为对照。最后用下方滑块自己制造“拍”。",
     tblTitle: "音高 · 律制 · 和声 · 快速对照表",
     th1: "概念", th2: "算法 / 数值", th3: "听感与用途",
     t1a: "音高感知", t1b: "频率取对数：八度 = ×2 = +1200 音分", t1c: "“差多少 Hz”≠“差多少音”；耳朵按比例听",
@@ -406,7 +409,7 @@ const I18N = {
     tkb1: "音高 ∝ log(频率)。键盘等距、小提琴指距递减、乐谱上下行——都是同一张“对数频率轴”的不同投影。",
     tkb2: "纯律让每一个“此刻的和声”最纯净；平均律让“每一个调”都可用——现代键盘选后者，代价是三度类音程偏离纯律约 10~16 音分。",
     tkb3: "协和 = 谐波列重合（整数比、共同基音）；不谐和 = 近似重合的泛音产生拍频/粗糙。乐器发声与和声学在这里汇合。",
-    foot: "教学示意动画：乐器音色为 WebAudio 按谐波实时近似合成；琴弦振动为慢放/放大示意。频率以 A4=440 Hz 的国际标准音高为准。"
+    foot: "教学示意动画：乐器音色为 WebAudio 按谐波实时近似合成；琴弦振动为慢放/放大示意。平均律以 A4=440 Hz 为准；纯律音阶以 C4 为根，故其 A 约为 436 Hz。"
   },
   en: {
     pageTitle: "🎹🎻 Keyboard · Strings · Tuning · Harmony",
@@ -422,9 +425,9 @@ const I18N = {
     vnPluck: "👆 Pluck", vnGliss: "↗ Glissando (0→12 semitones)", vnGlissStop: "⏹ Stop glissando",
     vnFingL: "Finger position (n semitones)", vnOpen: "↩ Open string",
     lgStr: "yellow = sounding string", lgTick: "nut→bridge marks = semitone positions (denser near bridge)",
-    vnHint: "The stopped part does not vibrate; only the “finger→bridge” segment sounds.",
+    vnHint: "Click/drag the fingerboard to stop the string. The stopped part does not vibrate; only the “finger→bridge” segment sounds.",
     logDemo: "▶ Constant-speed glide C2→C7 (sounds even)", logDemoStop: "⏹ Stop glide",
-    logHint: "Click either ruler band to pick &amp; play a pitch; green dot = latest note.",
+    logHint: "Click a ruler to play the frequency under the pointer (not snapped to a key); green dot = latest note.",
     logNote: "Both rulers plot the same “keyboard notes”. On the linear axis doubling the frequency doubles the distance, cramming low notes on the left; on the logarithmic axis every octave is equally wide and every semitone equally spaced — matching how we hear.",
     c1L1: "① Every key is the same ratio apart:", c1L2: "② We hear ratios, not differences:",
     c1L3: "③ Violin finger positions get denser:", c1L4: "④ Linear vs logarithmic axis:", c1L5: "⑤ Try it:",
@@ -436,31 +439,34 @@ const I18N = {
     c2Title: "② Equal temperament vs just intonation: algorithms &amp; differences", c2Tag: "semitones = 2^(1/12) · just intonation = integer ratios (from the harmonic series) · audition both scales and chords",
     c2RunET: "🔊 ET scale", c2RunJI: "🔊 Just scale",
     c2ChordET: "🔊 ET major triad", c2ChordJI: "🔊 Just major triad",
-    c2Base: "Concert pitch A4 = 440 Hz; both rows share the same C4 root.",
+    c2Base: "Concert pitch A4 = 440 Hz; both rows share the same C4 root (so just A ≈ 436 Hz, not 440).",
     cmpD: "Degree", cmpETR: "ET semitones", cmpETH: "ET Hz", cmpETC: "ET cents",
     cmpJIR: "Just ratio", cmpJIH: "Just Hz", cmpJIC: "Just cents", cmpDel: "Diff (just − ET)",
-    cmpNote: "“Diff” is in cents (1 semitone = 100 cents). The just major third is 13.7 cents flatter than ET and the fifth only 2 cents sharper — fifths are nearly identical while thirds clearly differ. That is why equal-tempered thirds sound a bit “tight”.",
+    cmpNote: "“Diff” is in cents (1 semitone = 100 cents). The just major third is 13.7 cents flatter than ET and the fifth 2.0 cents sharper — fifths are nearly identical while thirds clearly differ. Just A (5/3) is about 436 Hz, 15.6 cents below A4=440, because this table is rooted on C, not A. The minor third 6/5 (+15.6¢) is not in the table (no E♭ in C major).",
     c2L1: "① Algorithm 1 · Equal temperament:", c2L2: "② Algorithm 2 · Just intonation:", c2L3: "③ How much do they differ?", c2L4: "④ How they sound:", c2L5: "⑤ History:",
     c2B1: "Split the octave (ratio 2:1) into 12 equal semitones; every semitone is the same ratio r = 2^(1/12) ≈ 1.05946. Any note fₙ = 440 × 2^((n−69)/12) (n = MIDI number). Every key is usable, so modern keyboards/electronics use it.",
     c2B2: "Intervals come from simple integer ratios of the harmonic series: octave 2:1, fifth 3:2, fourth 4:3, major third 5:4, minor third 6:5, major sixth 5:3, major seventh 15:8. The C-major scale is 1, 9/8, 5/4, 4/3, 3/2, 5/3, 15/8, 2 times C.",
-    c2B3: "Just intonation aligns with ET only at C; away from it the notes drift. From the table: major third −13.7, minor third +15.6, fifth ±2 cents. Fretless instruments (violin) can play just; keyboards must compromise.",
+    c2B3: "Just intonation aligns with ET only at C (and the C an octave up). From the table: major third −13.7¢, fifth +2.0¢; just A is 436.0 Hz (−15.6¢), not 440. The minor third 6/5 is +15.6¢ vs ET but is not in this C-major table (no E♭). Fretless instruments (violin) can play just; keyboards must compromise.",
     c2B4: "Play the ET scale, then the just scale, then both major triads. Just chords sound cleaner/brighter because 3:2 and 5:4 make partials coincide exactly (no beats); ET intervals are slightly “tight/buzzing” but work in every key.",
-    c2B5: "Bach’s Well-Tempered Clavier promoted it. Earlier Pythagorean tuning (chains of pure 3:2 fifths) produced a “wolf fifth” on modulation; equal temperament spreads the error over all notes so everyone can accept it.",
+    c2B5: "Bach’s Well-Tempered Clavier promoted well temperament — every key is playable, but keys still differ in colour. That is not the same algorithm as modern 12-tone equal temperament (every semitone exactly 2^(1/12)). Earlier Pythagorean tuning (chains of pure 3:2 fifths) produced a wolf fifth when the octave was closed; 12-TET spreads the error across all twelve semitones.",
+    c3Title: "③ Harmony &amp; the acoustics of chords",
+    c3Tag: "coinciding partials → consonant · near-coincidences → beats/roughness · triad / seventh spectra",
     ivLbl: "Intervals", chLbl: "Chords", sysLbl: "Audition tuning",
     sysJI: "Just (clean)", sysET: "Equal (keyboard reality)",
     hPlayLbl: "🔊 Play selection", hSepLbl: "🎵 Play tones one by one", hBeatPairLbl: "👂 Hear the beating pair",
     hHint: "(playable pairs are dotted above)",
+    hBeatNone: "No beating pair: two coinciding partials at the same frequency — no beats (control).",
     beatT: "Beating: two close frequencies = loudness wobble",
     beatDLbl: "Frequency difference Δ", beatPlayLbl: "🔊 Play both tones", beatStopLbl: "🔇 Stop",
-    beatHint: "261.0 vs 261.9 Hz… smaller Δ = slower beats; beyond ~15 Hz you no longer hear beats but roughness/dissonance.",
-    beatNote: "Beating is the microscopic cause of dissonance: just-intonation 3:2 and 5:4 make partials coincide exactly (no beats); equal temperament offsets them slightly (≈0.9 Hz for the fifth, ≈10 Hz for the major third), producing slow or fast wobble. Δ=0.9 Hz mimics that fifth’s near-coincident partial pair.",
+    beatHint: "262.0 vs 262.9 Hz… smaller Δ = slower beats; beyond ~15 Hz you no longer hear beats but roughness/dissonance.",
+    beatNote: "Beating is the microscopic cause of dissonance: just-intonation 3:2 and 5:4 make partials coincide exactly (no beats); equal temperament offsets them slightly (≈0.9 Hz for the fifth, ≈10 Hz for the major third), producing slow or fast wobble. Δ=0.9 Hz mimics that fifth’s near-coincident partial pair. In the figure the solid curve is the sum of two sines and the dashed curve is the beat envelope; the carrier is slowed so the oscillation is visible, while the beat rate Δ matches the audio (262 Hz and 262+Δ).",
     c3L1: "① Harmony = harmonic series alignment:", c3L2: "② Why integer ratios are consonant:",
     c3L3: "③ Major triad 4:5:6:", c3L4: "④ Minor triad &amp; sevenths:", c3L5: "⑤ Try it:",
     c3B1: "Every real tone carries harmonics f₀, 2f₀, 3f₀… When two notes sound, the ear judges how well the two harmonic series align: more coinciding partials → more consonant; partials that are close but not identical → beats/roughness → dissonance.",
     c3B2: "Simple frequency ratios (3:2, 4:5:6) make many partials coincide (green marks/lines below). The octave 2:1 coincides most, then the fifth, fourth, major/minor thirds — exactly the traditional consonant intervals; minor seconds and tritones barely coincide and clash, hence harsh.",
     c3B3: "C, E, G in ratio 4:5:6 are the 4th, 5th and 6th harmonics of a common fundamental C₂ (65.4 Hz) — all three harmonic series sit on one grid: bright, stable, with a clear “root”.",
-    c3B4: "The minor triad ≈ 1 : 6/5 : 3/2 (dark, soft). A dominant seventh adds 7:4 (≈968.8 cents, 31 cents flatter than ♭B in ET) — a “dirty” seventh tension that must resolve to the tonic: the engine of classical harmony.",
-    c3B5: "Audition the major triad in just tuning (clean), then equal temperament (slightly tight); press “hear the beating pair” to solo the partials that roughen the major third (≈10 Hz apart); finally make your own beats with the slider.",
+    c3B4: "The minor triad ≈ 1 : 6/5 : 3/2 (dark, soft). A dominant seventh adds 7:4 (the harmonic seventh, ≈968.8 cents, 31 cents flatter than ♭B in ET). That is not the same ratio as the “minor 7th 9:5” chip above: 9:5 is the 5-limit minor seventh; 7:4 is the tense seventh that wants to resolve.",
+    c3B5: "Audition the major triad in just tuning (clean), then equal temperament (slightly tight); press “hear the beating pair” to solo the partials that roughen the major third (≈10 Hz apart). If there is no beating pair (just triad), it plays two coinciding partials instead as a control. Finally make your own beats with the slider.",
     tblTitle: "Pitch · tuning · harmony · quick reference",
     th1: "Idea", th2: "Algorithm / value", th3: "How it sounds / use",
     t1a: "Pitch perception", t1b: "log of frequency: octave = ×2 = +1200 cents", t1c: "“Hz difference” ≠ “pitch difference”; we hear ratios",
@@ -475,7 +481,7 @@ const I18N = {
     tkb1: "pitch ∝ log(frequency). Equal keyboard spacing, shrinking violin finger spacing and the musical staff are all projections of one logarithmic frequency axis.",
     tkb2: "Just intonation makes each harmony as pure as possible; equal temperament makes every key playable — modern keyboards choose the latter, paying ≈10–16 cents on thirds.",
     tkb3: "Consonance = coinciding harmonic series (integer ratios, a common fundamental); dissonance = near-coincident partials that beat. Instrument physics and harmony meet here.",
-    foot: "Teaching animation: instrument timbres are approximated live with WebAudio harmonic synthesis; string motion is slowed/amplified. Frequencies use concert pitch A4 = 440 Hz."
+    foot: "Teaching animation: instrument timbres are approximated live with WebAudio harmonic synthesis; string motion is slowed/amplified. Equal temperament uses concert pitch A4 = 440 Hz; the just scale is rooted on C4, so its A is about 436 Hz."
   }
 };
 
@@ -490,13 +496,13 @@ Object.assign(I18N.zh, {
   rtDemo: "恒速滑奏：对数轴上等速移动 = 听感等速",
   tcET: "十二平均律 · 12 个等分半音 × 2^(1/12)", tcJI: "纯律（自然律）· 整数比",
   tcOc: "同一八度 C4 → C5", tcCents: "音分", tcDelta: "纯律 − 平均律", tcEtHz: "平均律 Hz",
-  tcNote: "橙色线把纯律音拉回平均律键位：长度 = 偏差（音分，放大显示）",
-  tcEx: "示例算法", tcBase: "基准 C4 = 261.63 Hz（A4 = 440）",
+  tcNote: "橙色虚线把纯律音拉回平均律键位：越长 = 偏差越大（已按 1.45 px/¢ 放大）",
+  tcEx: "示例算法", tcBase: "基准 C4 = 261.63 Hz（A4 = 440；纯律 A ≈ 436）",
   hmT: "谐波列重合视图", hmK: "泛音最高到", hmCo: "重合泛音", hmNear: "拍频泛音对", hmBeatHz: "每秒拍数",
   hmTone: "音", hmTun: "律制", hmJI: "纯律", hmET: "平均律", hmRatio: "频率比", hmFund: "共同基音",
   hmClick: "●=可单独试听", hmPlayH: "播放", hmSel: "所选",
-  btT: "两音叠加", btEnv: "包络：响→轻→响", bt1: "音1", bt2: "音2", btBeat: "拍频 = Δ 次/秒",
-  btNote: "图中实线 = 两个正弦相加后的波形；虚线包络每个“鼓包” = 一次强弱起伏（拍）。"
+  btT: "两音叠加", btEnv: "虚线包络：响→轻→响", bt1: "音1", bt2: "音2", btBeat: "拍频 = Δ 次/秒",
+  btFig: "实线 = 两正弦之和（图中载波已放慢以便看清）；虚线 = 拍频包络。试听仍是 262 Hz 与 262+Δ。"
 });
 Object.assign(I18N.en, {
   kbTop: "Piano · C4–C6, two full octaves (click to play)", kbCentral: "middle C", kbC4: "C4", kbC5: "C5", kbC6: "C6",
@@ -509,13 +515,13 @@ Object.assign(I18N.en, {
   rtDemo: "constant-speed glide: equal motion on the log axis = equal perceived speed",
   tcET: "Equal temperament · 12 equal semitones × 2^(1/12)", tcJI: "Just intonation · integer ratios",
   tcOc: "same octave C4 → C5", tcCents: "cents", tcDelta: "just − ET", tcEtHz: "ET Hz",
-  tcNote: "orange lines pull just notes back to the ET keys: length = deviation in cents (magnified)",
-  tcEx: "example formulas", tcBase: "root C4 = 261.63 Hz (A4 = 440)",
+  tcNote: "orange dashes pull just notes back to ET keys: longer = farther off (magnified 1.45 px/cent)",
+  tcEx: "example formulas", tcBase: "root C4 = 261.63 Hz (A4 = 440; just A ≈ 436)",
   hmT: "harmonic-series alignment", hmK: "up to harmonic", hmCo: "coinciding partials", hmNear: "beating pairs", hmBeatHz: "beats/s",
   hmTone: "tone", hmTun: "tuning", hmJI: "just", hmET: "equal", hmRatio: "frequency ratio", hmFund: "common fundamental",
   hmClick: "● = click to solo-listen", hmPlayH: "play", hmSel: "selection",
-  btT: "two sine tones added", btEnv: "envelope: loud → soft → loud", bt1: "tone 1", bt2: "tone 2", btBeat: "beat rate = Δ per second",
-  btNote: "solid curve = sum of the two sines; each lobe of the dashed envelope = one loudness wobble (a beat)."
+  btT: "two sine tones added", btEnv: "dashed envelope: loud → soft → loud", bt1: "tone 1", bt2: "tone 2", btBeat: "beat rate = Δ per second",
+  btFig: "solid = sum of two sines (carrier slowed so you can see it); dashed = beat envelope. Audio is still 262 Hz and 262+Δ."
 });
 
 /* ================= 常量与工具 ================= */
@@ -733,6 +739,7 @@ let lastKb = 60;
 function seqStop() {
   if (seqTimer) { clearTimeout(seqTimer); seqTimer = null; }
   seqKind = null; HL.midi = null;
+  stopMelNow();
 }
 function seqRun(kind, steps, stepMs, noteMs, toneKind, level) {
   seqStop();
@@ -864,6 +871,23 @@ const VSTR = [
 ];
 const VN = { str: 0, n: 0, mode: null, tPluck: 0, bowT0: 0, gliss: false, glissT0: 0 };
 const VN_G = { nutY: 108, bridgeY: 336, xc: 300, xs: [258, 286, 314, 342], fbL: 234, fbR: 366 };
+let vnDrag = false;
+function vnNFromY(y) {
+  const L = VN_G.bridgeY - VN_G.nutY;
+  const u = (y - VN_G.nutY) / L;
+  if (!(u > 0)) return 0;
+  const n = -12 * Math.log2(Math.max(1e-6, 1 - u));
+  return Math.max(0, Math.min(12, Math.round(n * 4) / 4));
+}
+function vnApplyFinger(n) {
+  VN.n = n;
+  const el = $("vnFinger"); if (el) el.value = String(n);
+  vnLine();
+  if ((VN.mode === "bow" || VN.mode === "pluck") && V1) V1.setF(vnFreq());
+  else if (VN.mode === "bow") startBow();
+  CUR.midi = Math.round(freqToMidi(vnFreq())); CUR.f = vnFreq(); CUR.t = perf(); CUR.src = "vn";
+  refreshUI();
+}
 function vnOpenF() { return mf(VSTR[VN.str].midi); }
 function vnFreq() { return vnOpenF() * Math.pow(2, VN.n / 12); }
 function vnFingerY(n) { return VN_G.nutY + (VN_G.bridgeY - VN_G.nutY) * (1 - Math.pow(2, -n / 12)); }
@@ -1017,7 +1041,8 @@ function drawVN(ctx, now) {
       if (p === 0) ctx.moveTo(xx, y); else ctx.lineTo(xx, y);
     }
     ctx.stroke();
-    ctxText(ctx, VSTR[i].name + " " + fmtHz(mf(VSTR[i].midi)), x, G.nutY - 10, 10, is ? VSTR[i].color : "#5f7396", is ? 700 : 500, "center");
+    ctxText(ctx, VSTR[i].name, x, G.nutY - 12, 10, is ? VSTR[i].color : "#5f7396", is ? 700 : 500, "center");
+    if (is) ctxText(ctx, fmtHz(vnFreq()) + " Hz", G.fbR + 8, G.nutY - 12, 10, col, 600, "left");
   }
   /* 指尖 */
   if (VN.n > 0.02) {
@@ -1051,7 +1076,7 @@ function drawVN(ctx, now) {
 }
 
 /* ================= 卡① 线性 vs 对数标尺 ================= */
-const RUL = { f0: 65.4064, f1: 2093.0, x0: 120, x1: 1180, oct: 5, m0: 36, m1: 84, glide: null,
+const RUL = { f0: 65.4064, f1: 2093.0, x0: 120, x1: 1180, oct: 5, m0: 36, m1: 96, glide: null,
   linB: [38, 84], logB: [160, 206] };
 function rulXLin(f) { return RUL.x0 + (f - RUL.f0) / (RUL.f1 - RUL.f0) * (RUL.x1 - RUL.x0); }
 function rulXLog(f) { return RUL.x0 + Math.log2(f / RUL.f0) / RUL.oct * (RUL.x1 - RUL.x0); }
@@ -1137,33 +1162,33 @@ function drawLog(ctx, now) {
 
 /* ================= 卡② 十二平均律 vs 纯律 ================= */
 const TUNE = [
-  { semis: 0,  ratioTxt: "1",    rv: 1,     rc: 0 },
-  { semis: 2,  ratioTxt: "9/8",  rv: 9 / 8, rc: 203.9 },
-  { semis: 4,  ratioTxt: "5/4",  rv: 5 / 4, rc: 386.3 },
-  { semis: 5,  ratioTxt: "4/3",  rv: 4 / 3, rc: 498.0 },
-  { semis: 7,  ratioTxt: "3/2",  rv: 3 / 2, rc: 702.0 },
-  { semis: 9,  ratioTxt: "5/3",  rv: 5 / 3, rc: 884.4 },
-  { semis: 11, ratioTxt: "15/8", rv: 15 / 8, rc: 1088.3 },
-  { semis: 12, ratioTxt: "2",    rv: 2,     rc: 1200 }
+  { semis: 0,  ratioTxt: "1",    rv: 1 },
+  { semis: 2,  ratioTxt: "9/8",  rv: 9 / 8 },
+  { semis: 4,  ratioTxt: "5/4",  rv: 5 / 4 },
+  { semis: 5,  ratioTxt: "4/3",  rv: 4 / 3 },
+  { semis: 7,  ratioTxt: "3/2",  rv: 3 / 2 },
+  { semis: 9,  ratioTxt: "5/3",  rv: 5 / 3 },
+  { semis: 11, ratioTxt: "15/8", rv: 15 / 8 },
+  { semis: 12, ratioTxt: "2",    rv: 2 }
 ];
 const tunEtF = s => C4F * Math.pow(2, s / 12);
 let tunTimer = null, tunKind = null;
 const tunGl = { et: [], ji: [], until: 0 };
-function tunStop() {
+function tunStop(stopSound) {
   if (tunTimer) { clearTimeout(tunTimer); tunTimer = null; }
   tunKind = null; tunGl.until = 0; tunGl.et = []; tunGl.ji = [];
+  if (stopSound) { stopChord(200); stopMelNow(); }
   refreshUI();
 }
-function tunStopOthers() { seqStop(); stopGlide(); vnStopBow(); stopBeat(); stopChord(200); VN.gliss = false; }
 function tunRunScale(sys) {
-  if (tunKind === "scale" + sys) { tunStop(); return; }
-  tunStop(); tunStopOthers();
+  if (tunKind === "scale" + sys) { tunStop(true); return; }
+  clearAllAudio();
   tunKind = "scale" + sys;
   let i = 0;
   const N = sys === "ET" ? 13 : 8;
   const tick = function () {
     if (!tunTimer) return;
-    if (i >= N) { tunStop(); return; }
+    if (i >= N) { tunStop(false); return; }
     if (sys === "ET") {
       const s = i, m = 60 + s;
       melNote("piano", tunEtF(s), 420, 0.42);
@@ -1180,8 +1205,8 @@ function tunRunScale(sys) {
   refreshUI();
 }
 function tunRunChord(sys) {
-  if (tunKind === "chord" + sys) { tunStop(); return; }
-  tunStop(); tunStopOthers();
+  if (tunKind === "chord" + sys) { tunStop(true); return; }
+  clearAllAudio();
   tunKind = "chord" + sys;
   const freqs = sys === "ET"
     ? [mf(60), mf(64), mf(67)]
@@ -1198,8 +1223,8 @@ function buildTunTable() {
   let h = "";
   TUNE.forEach(function (d, i) {
     const m = 60 + d.semis, name = midiName(m);
-    const etF = tunEtF(d.semis), jF = C4F * d.rv;
-    const delta = d.rc - d.semis * 100;
+    const etF = tunEtF(d.semis), jF = C4F * d.rv, jc = centsOfRatio(d.rv);
+    const delta = jc - d.semis * 100;
     const cls = Math.abs(delta) < 0.05 ? "d0" : (delta > 0 ? "dp" : "dm");
     h += "<tr>"
       + "<td><b>" + name + "</b></td>"
@@ -1208,7 +1233,7 @@ function buildTunTable() {
       + "<td class=\"num\">" + (d.semis * 100) + "</td>"
       + "<td class=\"num\">" + d.ratioTxt + "</td>"
       + "<td class=\"num\">" + fmtHz(jF) + "</td>"
-      + "<td class=\"num\">" + d.rc.toFixed(1) + "</td>"
+      + "<td class=\"num\">" + jc.toFixed(1) + "</td>"
       + "<td class=\"num " + cls + "\">" + (delta > 0 ? "+" : "") + delta.toFixed(1) + "</td>"
       + "</tr>";
   });
@@ -1246,11 +1271,13 @@ function drawTune(ctx, now) {
   const cxET = s => x0 + s * (bw + gap) + bw / 2;
   const wj = 66;
   for (let d = 0; d < TUNE.length; d++) {
-    const s = TUNE[d].semis, delta = TUNE[d].rc - s * 100;
+    const s = TUNE[d].semis, delta = centsOfRatio(TUNE[d].rv) - s * 100;
     const cx = cxET(s) + delta * pxC;
     const gl = hot && tunGl.ji.indexOf(d) >= 0;
-    /* 对齐虚线 + 差值箭头 */
     ctxLine(ctx, cxET(s), yET + hET + 6, cxET(s), yJI - 6, "rgba(255,255,255,.14)", 1, [3, 4]);
+    if (Math.abs(delta) >= 0.5) {
+      ctxLine(ctx, cx, yJI, cxET(s), yET + hET + 6, "#ffb45e", 1.6, [5, 3]);
+    }
     const col = Math.abs(delta) < 0.05 ? "#7186a8" : (delta > 0 ? "#7be0a0" : "#ffb45e");
     if (d > 0 && d < 7) {
       ctxText(ctx, (delta > 0 ? "+" : "") + delta.toFixed(1) + "¢", cxET(s) + (delta >= 0 ? 8 : -8), (yET + hET + yJI) / 2, 10, col, 700, delta >= 0 ? "left" : "right");
@@ -1290,12 +1317,12 @@ function drawTune(ctx, now) {
   panel(392, 200);
   ctxText(ctx, t("tcDelta"), px + 16, 414, 12, "#ffb45e", 700);
   ctxText(ctx, (zh ? "差值 = 纯律音分 − 平均律音分" : "delta = just cents − ET cents"), px + 16, 438, 11, "#dfe8f6", 500);
-  ctxText(ctx, (zh ? "大三度 −13.7¢ · 小三度 +15.6¢ · 五度 ±2¢" : "major 3rd −13.7¢ · minor 3rd +15.6¢ · 5th ±2¢"), px + 16, 462, 11, "#dfe8f6", 500);
+  ctxText(ctx, (zh ? "大三度 −13.7¢ · 五度 +2.0¢ · A（5/3）−15.6¢" : "major 3rd −13.7¢ · 5th +2.0¢ · A (5/3) −15.6¢"), px + 16, 462, 11, "#dfe8f6", 500);
   ctxText(ctx, (zh ? "人耳可分辨约 5¢，所以平均律的三度" : "ears can resolve ≈5¢, so ET thirds"), px + 16, 486, 11, "#dfe8f6", 500);
   ctxText(ctx, (zh ? "听得出“紧/偏高”，五度几乎听不出差别。" : "sound tight; fifths are barely distinguishable."), px + 16, 508, 11, "#dfe8f6", 500);
   ctxText(ctx, (zh ? "（图中橙色偏差已放大 1.45 px/¢）" : "(orange offsets magnified, 1.45 px/cent)"), px + 16, 548, 10, "#7186a8", 500);
   /* 左下角键位说明小图 */
-  ctxText(ctx, LANG === "zh" ? "白键名称相同 → 同音名；橙框 = 纯律音高位置（带箭头偏差）" : "same note names; orange = just pitch location (offset arrow)", 40, H - 26, 10.5, "#7186a8", 500);
+  ctxText(ctx, LANG === "zh" ? "白键名称相同 → 同音名；绿色格子左右偏移 = 纯律音高；橙色虚线拉回平均律键位" : "same note names; green boxes shift with just pitch; orange dashes pull back to ET keys", 40, H - 26, 10.5, "#7186a8", 500);
 }
 
 /* ================= 卡③ 和声：数据 ================= */
@@ -1519,44 +1546,50 @@ function drawBeat(ctx, now) {
     }
     ctx.stroke();
   }
-  /* 合成分 + 拍频包络 */
-  const yC2 = 222, amp = 62;
+  /* 合成波 + 拍频包络。载波放慢到约 12 周/拍，才能在轴上同时看见振荡和鼓包；拍频 Δ 与试听相同。 */
+  const yC2 = 214, amp = 50;
   const T = Math.min(3.2, Math.max(0.8, 3.2 / d));
-  const lobes = Math.max(1, Math.round(d * T));
-  ctx.strokeStyle = "rgba(98,215,255,.5)"; ctx.lineWidth = 2;
-  ctx.beginPath();
-  for (let px = 0; px <= (x1 - x0); px += 1) {
-    const t = px / (x1 - x0) * T;
-    const env = Math.abs(Math.cos(Math.PI * d * t));
-    const y = yC2 - amp * env;
-    if (px === 0) ctx.moveTo(x0 + px, y); else ctx.lineTo(x0 + px, y);
-  }
-  ctx.stroke();
-  ctx.beginPath();
-  for (let px = 0; px <= (x1 - x0); px += 1) {
-    const t = px / (x1 - x0) * T;
-    const env = Math.abs(Math.cos(Math.PI * d * t));
-    const y = yC2 + amp * env;
-    if (px === 0) ctx.moveTo(x0 + px, y); else ctx.lineTo(x0 + px, y);
-  }
-  ctx.stroke();
-  /* 鼓包填充 */
+  const fAvgD = 12 * d, f1d = Math.max(0.1, fAvgD - d / 2), f2d = fAvgD + d / 2;
   for (let px = 0; px <= (x1 - x0); px += 2) {
-    const t = px / (x1 - x0) * T;
-    const env = Math.abs(Math.cos(Math.PI * d * t));
+    const tt = px / (x1 - x0) * T;
+    const env = Math.abs(Math.cos(Math.PI * d * tt));
     ctx.fillStyle = "rgba(98,215,255,.10)";
     ctx.fillRect(x0 + px, yC2 - amp * env, 2, amp * env * 2);
   }
-  ctxLine(ctx, x0, yC2, x1, yC2, "rgba(255,255,255,.15)", 1);
-  /* 拍频零线 */
-  for (let k = 1; k < d * T; k++) {
-    const t = k / d, x = x0 + t / T * (x1 - x0);
-    ctx.setLineDash([2, 4]);
-    ctxLine(ctx, x, yC2 - amp - 6, x, yC2 + amp + 6, "rgba(255,255,255,.22)", 1);
-    ctx.setLineDash([]);
+  ctx.strokeStyle = "rgba(230,238,251,.92)"; ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  for (let px = 0; px <= (x1 - x0); px += 1) {
+    const tt = px / (x1 - x0) * T;
+    const s = Math.sin(2 * Math.PI * f1d * tt) + Math.sin(2 * Math.PI * f2d * tt);
+    const y = yC2 - (amp / 2) * s;
+    if (px === 0) ctx.moveTo(x0 + px, y); else ctx.lineTo(x0 + px, y);
   }
-  ctxText(ctx, t("btEnv"), x0, yC2 - amp - 16, 9.5, "#7186a8", 500);
-  ctxText(ctx, t("btBeat") + "  =  " + d.toFixed(1), x1, yC2 + amp + 24, 13, "#ffcf6e", 700, "right");
+  ctx.stroke();
+  ctx.setLineDash([5, 4]);
+  ctx.strokeStyle = "rgba(98,215,255,.9)"; ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  for (let px = 0; px <= (x1 - x0); px += 1) {
+    const tt = px / (x1 - x0) * T;
+    const y = yC2 - amp * Math.abs(Math.cos(Math.PI * d * tt));
+    if (px === 0) ctx.moveTo(x0 + px, y); else ctx.lineTo(x0 + px, y);
+  }
+  ctx.stroke();
+  ctx.beginPath();
+  for (let px = 0; px <= (x1 - x0); px += 1) {
+    const tt = px / (x1 - x0) * T;
+    const y = yC2 + amp * Math.abs(Math.cos(Math.PI * d * tt));
+    if (px === 0) ctx.moveTo(x0 + px, y); else ctx.lineTo(x0 + px, y);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctxLine(ctx, x0, yC2, x1, yC2, "rgba(255,255,255,.15)", 1);
+  for (let k = 1; k < d * T; k++) {
+    const tt = k / d, x = x0 + tt / T * (x1 - x0);
+    ctxLine(ctx, x, yC2 - amp - 6, x, yC2 + amp + 6, "rgba(255,255,255,.22)", 1, [2, 4]);
+  }
+  ctxText(ctx, t("btEnv"), x0, yC2 - amp - 14, 9.5, "#62d7ff", 500);
+  ctxText(ctx, t("btFig"), x0, yC2 + amp + 14, 9.5, "#7186a8", 500);
+  ctxText(ctx, t("btBeat") + "  =  " + d.toFixed(1), x1, yC2 + amp + 14, 13, "#ffcf6e", 700, "right");
 }
 function startBeatDemo() {
   BT.playing = true;
@@ -1675,16 +1708,21 @@ function sepRunTones() {
 function beatPairAction() {
   clearAllAudio();
   const freqs = harmFreqs();
-  hmCompute();
-  let fa = 0, fb = 0;
-  if (HM.nearPairs.length) { const p = HM.nearPairs[0]; fa = p.fa; fb = p.fb; }
-  else if (freqs.length > 1) { fa = freqs[0]; fb = freqs[1]; }
-  if (fa && fb && Math.abs(fa - fb) > 0.05) {
-    startBeat(fa, fb, 0.2);
+  const res = hmCompute();
+  if (HM.nearPairs.length) {
+    const p = HM.nearPairs[0];
+    startBeat(p.fa, p.fb, 0.2);
     beatAuto = setTimeout(function () { stopBeat(); beatAuto = null; }, 3400);
-  } else if (fa) {
-    melNote("soft", fa, 2000, 0.4);
+    return;
   }
+  if (res.coins.length) {
+    const f = res.coins[0].f;
+    startBeat(f, f, 0.2);
+    beatAuto = setTimeout(function () { stopBeat(); beatAuto = null; }, 2800);
+    const el = $("hRead"); if (el) el.innerHTML = t("hBeatNone");
+    return;
+  }
+  if (freqs[0]) melNote("soft", freqs[0], 2000, 0.4);
 }
 function harmLaneIndex(y) {
   const freqs = harmFreqs(), N = freqs.length;
@@ -1702,7 +1740,9 @@ function applyLang() {
   $("btnLang").textContent = LANG === "en" ? "中文" : "EN";
   document.querySelectorAll("[data-i18n]").forEach(function (el) {
     const k = el.getAttribute("data-i18n");
-    if (k) el.innerHTML = t(k);
+    if (!k) return;
+    if (I18N.zh[k] === undefined) console.warn("i18n missing:", k);
+    el.innerHTML = t(k);
   });
   document.title = LANG === "en"
     ? "Keyboard · Tuning · Harmony — log pitch / ET vs Just / chord acoustics"
@@ -1842,19 +1882,31 @@ function init() {
     vnLine(); refreshUI();
   });
   $("vnFinger").addEventListener("input", function () {
-    VN.n = +this.value;
-    vnLine();
-    if (VN.mode === "bow") { if (V1) V1.setF(vnFreq()); else startBow(); }
-    CUR.midi = Math.round(freqToMidi(vnFreq())); CUR.f = vnFreq(); CUR.t = perf(); CUR.src = "vn";
-    refreshUI();
+    vnApplyFinger(+this.value);
   });
   const vnCv = $("cvVN");
   vnCv.addEventListener("pointerdown", function (ev) {
     const p = cvPos(ev, vnCv, 600, 430);
     if (p.y < VN_G.nutY - 8 || p.y > VN_G.bridgeY + 4) return;
+    if (p.x < VN_G.fbL - 16 || p.x > VN_G.fbR + 16) return;
+    let best = 0, bd = 1e9;
     for (let i = 0; i < VN_G.xs.length; i++) {
-      if (Math.abs(p.x - VN_G.xs[i]) <= 13) { vnSetStr(i); vnPluck(); return; }
+      const dd = Math.abs(p.x - VN_G.xs[i]);
+      if (dd < bd) { bd = dd; best = i; }
     }
+    ev.preventDefault();
+    vnDrag = true;
+    try { vnCv.setPointerCapture(ev.pointerId); } catch (e) {}
+    if (best !== VN.str) vnSetStr(best);
+    vnApplyFinger(vnNFromY(p.y));
+    if (VN.mode !== "bow") vnPluck();
+  });
+  vnCv.addEventListener("pointermove", function (ev) {
+    if (!vnDrag) return;
+    vnApplyFinger(vnNFromY(cvPos(ev, vnCv, 600, 430).y));
+  });
+  ["pointerup", "pointercancel"].forEach(function (tn) {
+    vnCv.addEventListener(tn, function () { vnDrag = false; });
   });
 
   /* —— ① 标尺 —— */
@@ -1866,13 +1918,11 @@ function init() {
     if (p.y >= RUL.linB[0] && p.y <= RUL.linB[1]) f = rulClickF(p.x, false);
     else if (p.y >= RUL.logB[0] && p.y <= RUL.logB[1]) f = rulClickF(p.x, true);
     if (!f) return;
-    let m = Math.round(freqToMidi(f));
-    m = Math.max(RUL.m0, Math.min(RUL.m1, m));
+    f = Math.max(RUL.f0, Math.min(RUL.f1, f));
     clearAllAudio();
-    HL.midi = m; HL.until = perf() + 1400;
-    CUR.midi = m; CUR.f = mf(m); CUR.t = perf(); CUR.src = "ruler";
-    melNote("piano", mf(m), 1300, 0.42);
-    updKbRead(m);
+    CUR.midi = freqToMidi(f); CUR.f = f; CUR.t = perf(); CUR.src = "ruler";
+    HL.midi = Math.round(CUR.midi); HL.until = perf() + 1400;
+    melNote("piano", f, 1300, 0.42);
   });
 
   /* —— ② 律制 —— */
@@ -1910,6 +1960,9 @@ function init() {
   });
 
   window.addEventListener("resize", function () { lastTs = 0; invalidateLayout(); });
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) clearAllAudio();
+  });
   applyLang();
   window.__boot = true;
   requestAnimationFrame(function (t0) { lastTs = t0; requestAnimationFrame(frame); });
