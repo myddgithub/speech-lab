@@ -238,13 +238,13 @@
       <button class="btn" id="dToneCycle" type="button" data-i18n="dToneCycleBtn" aria-pressed="false">🔀 循环对比：纯音→口哨→小提琴</button>
     </div>
     <div class="bars">
-      <button class="btn warn" id="dRangeX" type="button" data-i18n="dRangeBtn" aria-pressed="false">🔊 听口哨全音域：E5→E7 再超吹上 E8（×2）</button>
+      <button class="btn warn" id="dRangeX" type="button" data-i18n="dRangeBtn" aria-pressed="false">🔊 听音域：E5→E7，再示意到 E8（个别基频，非超吹）</button>
       <span style="font-size:12px;color:var(--muted)" data-i18n="dToneHint">点“纯音/口哨/小提琴”即以当前音高发声（再点一次停止）：纯音＝单根尖峰；口哨＝尖峰＋弱谐波＋少量气流噪声；小提琴＝一串递减谐波。</span>
     </div>
     <ul class="bullets">
       <li><b data-i18n="c4b1a">1) 音质＝“纯” ：</b><span data-i18n="c4b1b">频谱上能量几乎全在基频（上图：基频尖峰 + 极弱的几个高次谐波 + 一点气流噪声），听感接近长笛/钟形纯音：没有琴弦的金属感、没有簧片的“哨气”。因为声源是气流（无固定质量-弹簧系统），振荡天然接近正弦。</span></li>
       <li><b data-i18n="c4b2a">2) 影响音质的“旋钮”：</b><span data-i18n="c4b2b">唇孔小而圆 → 射流聚焦、音更清亮（口径大或嘴角漏气 → 噪声/“噗”声）。本页合成器里，唇孔只改音色（孔小＝更纯、孔大＝气声更重），不改音高；气息滑杆改响度。真实口哨里这些旋钮都会耦合，必须靠听觉协同。</span></li>
-      <li><b data-i18n="c4b3a">3) 音域：</b><span data-i18n="c4b3b">成人常用本调基频约 0.7–2.6 kHz（1.5–2 个八度左右）；熟练者可跨约 2.5–3.5 个八度（约 0.5–4 kHz+），再靠超吹与腔形微调逼近 4–5 kHz；个体差异极大，世界级口哨手音域纪录更宽（下图）。低音要“大腔＋大唇孔＋缓气”，高音要“小腔＋小孔＋强而细的射流”——正好是第 1 节的几何规律。</span></li>
+      <li><b data-i18n="c4b3a">3) 音域：</b><span data-i18n="c4b3b">常用演奏大约 <b>0.5–4 kHz（约 B4–B7）</b>。本页本调尺是 E5–E7（0.66–2.6 kHz），落在这个区间的中低段。影像实验对照过 C5 / C6 / C7（523 / 1046 / 2093 Hz）：腔越大音越低。16 名吹口哨者中约一半能到 <b>B7（≈3951 Hz）</b>，少数人超过 6 kHz。<b>E8≈5274 Hz</b> 属于熟练/个别能吹到的<b>基频</b>（把口腔捏得很小），不是人人都能稳定吹；纯音在 4–5 kHz 以上音高感也会变差。极限纪录可到约 10 kHz，是突出个例。高音靠「小腔＋小孔＋急而细的射流」抬基频，不是长笛那种「舌位不动超吹翻八度」。</span></li>
       <li><b data-i18n="c4b4a">4) 为什么“听得远、刺耳”？</b><span data-i18n="c4b4b">口哨基频大多落在人耳最灵敏的 2–5 kHz 区（响度敏感峰），声压不高也“扎眼”；且方向性强（唇前），像一支小号角。这也是课堂/球场吹口哨能传得远的原因。</span></li>
     </ul>
   </section>
@@ -274,7 +274,7 @@
       <li><b data-i18n="t5L1">1) 边棱音（edge tone / 气簧）：</b><span data-i18n="t5B1">口腔/笛子的声源不是弦也不是簧片，而是“会自己振荡的空气”：从唇孔喷出的射流（jet）在唇齿棱上被周期性切开、交替卷出涡（主图唇口旋涡示意）。这层空气动力失稳产生宽频扰动，只有接近口腔共鸣频率的成分被放大存活——所以换腔形（舌位/唇孔）就能在同一口气上换音，这正是“气簧”乐器的核心。</span></li>
       <li><b data-i18n="t5L2">2) 亥姆霍兹共鸣器（瓶腔）：</b><span data-i18n="t5B2">真出口哨更接近亥姆霍兹共鸣器，不是一根开管。f≈(c/2π)·√(A/(V·ℓ_neck))：V＝瓶身体积（本页用舌位滑杆代表，V∝ℓ），A＝瓶口面积（用本节的“孔径 A”滑杆，不是上面的唇孔音色滑杆）。于是 f∝1/√V、f∝√A：同样把 V 缩到 ¼，音高只翻一个八度（E5→E6），而 1/ℓ 尺会翻两个八度。亥姆霍兹基本上只有一个峰，没有“超吹 ×2”的谐波梯子。点“亥姆霍兹试音”开关后拖动 A 和舌位，听的就是这条公式。</span></li>
       <li><b data-i18n="t5L3">3) 气柱驻波与泛音：</b><span data-i18n="t5B3">第 1–4 节的 1/f 尺来自开管/弦的几何类比：两端开口时 f1≈c/(2ℓ)，f2=2f1、f3=3f1（模式号＝半波数；第 2 号中间有节点）。闭管（一端开口）则是 f、3f、5f，超吹到十二度而不是八度——本页不采用闭管模型。这套驻波图画的是开管，用来解释“为什么长度减半音高翻倍”，不是说口腔就是一根长笛。</span></li>
-      <li><b data-i18n="t5L4">4) 超吹（overblowing）：</b><span data-i18n="t5B4">长笛、竖笛等开管气簧乐器：指法不动、气流加急，驻波跳到第 2 号模式，音高×2。本页主图“超吹”开关演示的就是这个同族技巧，不是亥姆霍兹瓶腔的行为（埙/陶笛更接近亥姆霍兹，通常不能像长笛那样干净地翻八度）。下方“听口哨全音域”在 E7 再 ×2 到 E8≈5.3 kHz，是演示用的开管超吹，不是主张人口腔真能稳定驻出第 2 谐波。</span></li>
+      <li><b data-i18n="t5L4">4) 超吹（overblowing）：</b><span data-i18n="t5B4">长笛、竖笛等开管：指法不动、气流加急，驻波跳到第 2 号，音高×2。真出口哨是亥姆霍兹瓶腔，没有这根谐波梯子；高音是把腔捏小，把<b>基频</b>本身抬上去。E8≈5.3 kHz 少数人可以作为基频碰到（常用上限更接近 B7≈4 kHz），但不能指望「E7 超吹 ×2」像长笛那样稳定翻上去。本页「超吹」开关和音域演示末尾的 E8，是开管类比示意，不是口腔真能驻出第 2 谐波。</span></li>
     </ul>
   </section>
   <footer>
@@ -307,6 +307,7 @@
       <li>为什么口腔能“定音”？射流拍棱产生宽频振荡，只有接近共鸣频率的成分被放大。瓶腔（亥姆霍兹）越大音越低；几何尺上腔越短小音越高（1/ℓ）。</li>
       <li>为什么越吹越高越难？每个半音都缩短当前腔长约 5.6%，但高音区腔已经很短，同样百分比只有更少的毫米。</li>
       <li>听不到声音？首次点击“吹气”即可（浏览器要求用户手势后才有声）；若无声请换 Edge/Chrome。</li>
+      <li>口哨能超吹到 E8 吗？E8≈5.3 kHz 少数人可以当作<b>基频</b>吹到（腔很小）；常用大约到 B7≈4 kHz。真出口哨不是长笛，不能靠「舌位不动超吹」稳定翻八度。本页开关只是开管类比。</li>
     </ul>
   </div>
   <div id="helpEn" class="hidden">
@@ -332,6 +333,7 @@
       <li>Why is high whistling hard? Each semitone is always ≈5.6% of the <em>current</em> length, but that percentage is fewer millimetres as the cavity shrinks (E7 is ¼ of E5).</li>
       <li>No sound? Click “Blow” once first (browsers require a gesture). Prefer Edge/Chrome.</li>
       <li>Two models on purpose: §§1–4 use 1/ℓ + flute ×2 as a geometry demo; §5.2 is Helmholtz √(A/V), with no overblow ladder.</li>
+      <li>Can a whistle overblow to E8? A few people can reach E8 ≈ 5.3 kHz as a <b>fundamental</b> (tiny cavity). Everyday playing is closer to B7 ≈ 4 kHz. Real whistling is Helmholtz, not a flute: you do not keep the tongue still and jump an octave. The Overblow switch is an open-pipe analogy.</li>
     </ul>
   </div>
 </aside>
@@ -376,7 +378,7 @@ const I18N = {
   c4Tag: "实时频谱（能量集中基频＝纯音性）· 音域范围 · 与长笛/人声对比",
   c4b1a: "1) 音质＝“纯”：", c4b1b: "频谱上能量几乎全在基频（上图：基频尖峰＋极弱高次谐波＋少量气流噪声），听感接近长笛的纯音：没有琴弦的金属感、没有簧片的粗粝感——因为声源是气流，天然接近正弦。",
   c4b2a: "2) 影响音质的“旋钮”：", c4b2b: "唇孔小而圆 → 射流聚焦、音更清亮（口径大或嘴角漏气 → 噪声/“噗”声）。本页合成器里，唇孔只改音色（孔小＝更纯、孔大＝气声更重），不改音高；气息滑杆改响度。真实口哨里这些旋钮都会耦合，必须靠听觉协同。",
-  c4b3a: "3) 音域：", c4b3b: "成人常用本调基频约 0.7–2.6 kHz（≈1.5–2 个八度）；熟练者约 2.5–3.5 个八度（0.5–4 kHz+）；世界级口哨手音域更宽。低音要“大腔＋大唇孔＋缓气”，高音要“小腔＋小孔＋强而细的射流”——正是第 1 节的几何规律。",
+  c4b3a: "3) 音域：", c4b3b: "常用演奏大约 <b>0.5–4 kHz（约 B4–B7）</b>。本页本调尺是 E5–E7（0.66–2.6 kHz），落在这个区间的中低段。影像实验对照过 C5 / C6 / C7（523 / 1046 / 2093 Hz）：腔越大音越低。16 名吹口哨者中约一半能到 <b>B7（≈3951 Hz）</b>，少数人超过 6 kHz。<b>E8≈5274 Hz</b> 属于熟练/个别能吹到的<b>基频</b>（把口腔捏得很小），不是人人都能稳定吹；纯音在 4–5 kHz 以上音高感也会变差。极限纪录可到约 10 kHz，是突出个例。高音靠「小腔＋小孔＋急而细的射流」抬基频，不是长笛那种「舌位不动超吹翻八度」。",
   c4b4a: "4) 为什么“传得远、有点刺耳”？", c4b4b: "口哨基频大多落在人耳最灵敏的 2–5 kHz（响度敏感峰），声压不高也“扎耳”；且方向性强（唇前），像一支小号角。",
   foot1: "<b>教学简化声明：</b>本页并用两套模型，请勿合成一套公式。(1) 第 1–4 节：把“有效长度 ℓ”按开管/弦的 1/ℓ 几何来画对数尺，并与小提琴 E 弦对照；超吹开关按长笛开管 ×2。(2) 第 5.2 节：亥姆霍兹 f∝√(A/V)，更接近真出口哨（体积+瓶口），没有谐波梯子。真实口哨还有射流–腔体非线性耦合，Hz 为演示值。合成＝正弦基频＋微量谐波＋气流噪声。",
   foot2: "延伸关键词：边棱音 edge tone · 亥姆霍兹共鸣器 · 气柱驻波 / 超吹 overblowing · 等响曲线与对数听觉 · 1/f 弦长律 · 本体感觉与听觉-运动闭环。",
@@ -402,21 +404,21 @@ const I18N = {
   cmpNut: "琴枕", cmpBridge: "琴桥", cmpStrLive: "振动弦段", cmpStrDead: "按死的弦段(不振)",
   cmpLow: "低(舌后)", cmpMid: "中", cmpHigh: "高(舌前近齿)",
   cmpF1: "Ⅰ 把位", cmpF2: "Ⅱ", cmpF3: "Ⅲ", cmpF4: "Ⅳ", cmpF5: "Ⅴ+ 高位",
-  specTitle: "实时频谱（对数频率轴 · 绿线 = E5 / E6 / E7 / E8；本调两个八度，E8＝超吹）",
+  specTitle: "实时频谱（对数频率轴 · 绿线 = E5 / E6 / E7 / E8；E8＝个别能吹到的基频示意，不是长笛超吹）",
   specIdle: "（先点“吹气”或任意试听按钮——这里会画出该音的实时频谱）",
   specFund: "基频(几乎全部能量)", specH2: "第2谐波(很弱)", specNoise: "气流噪声",
-  rangeTitle: "口哨音域范围（对数频率轴；标注为典型值）",
+  rangeTitle: "口哨音域（对数频率轴；文献典型值 — E8 不是人人能吹）",
   rangeHear: "人耳最灵敏区 2–5 kHz", rangeFlute: "长笛常规音域 C4–C7",
-  rangeVoice: "歌声基频区（对照）", rangeWhistMain: "口哨常用本调", rangeWhistHi: "超吹/高音技巧", rangeWhistX: "个别训练者/纪录",
-  rangeB1: "初学者 ≈1–1.5 八度", rangeB2: "一般熟练 ≈2 八度+", rangeB3: "训练有素 ≈3 八度+",
-  rangeNote: "注意：频率轴每向右一段 = ×2（八度）。口哨一开口就站在长笛中高音区：比“唱”高、比“长笛”还方便冲上 4 kHz。",
+  rangeVoice: "歌声基频区（对照）", rangeWhistMain: "常用本调（本页 E5–E7）", rangeWhistHi: "熟练高音至 B7≈4 kHz", rangeWhistX: "个别基频 E8 / 纪录～10 kHz",
+  rangeB1: "初学者 ≈1–1.5 八度", rangeB2: "一般熟练 ≈2 八度（约 0.7–3 kHz）", rangeB3: "训练有素 ≈ B4–B7（约 0.5–4 kHz）",
+  rangeNote: "轴上每向右一段＝×2（八度）。常用口哨约 0.5–4 kHz（B4–B7）；E8≈5.3 kHz 是个别能吹到的基频，不是长笛超吹。极限纪录约 10 kHz。",
   famStrip: "“谁在发声？”——口哨与笛类：气流拍棱（气簧），无弦无簧；小提琴/钢琴：琴弦振动（弦鸣）。口哨还“无键盘”：音高连续可滑。",
   fam1t: "吹口哨  (本页)", fam2t: "长笛/竖笛/埙（同族）", fam3t: "小提琴", fam4t: "钢琴",
   famWhistleSub: "声源＝气流拍唇缘\n腔＝口腔(无级)", famFluteSub: "声源＝气流拍棱\n腔＝指孔定管长", famViolinSub: "声源＝弓擦弦(粘滑)\n腔＝琴体(固定)", famPianoSub: "声源＝槌击弦\n离散琴键",
   helpHint: "拖舌位 / 吹气 / 试听，随时可出声",
   t_play: "🎺 吹气", t_stop: "⏹ 停", t_regOn: "↗ 超吹：开（×2 高八度）", t_regOff: "↗ 超吹：关（本调）",
   t_octaveLbl: "八度", t_over: "超吹", t_effShort: "腔短", t_effLong: "腔长",
-  dToneLbl: "🎚 同一音高试听不同音色（上方频谱实时变化）：", dToneSine: "● 纯音（正弦）", dToneWhistle: "🎺 口哨（气簧·本页音色）", dToneViolin: "🎻 小提琴（谐波一串）", dToneCycleBtn: "🔀 循环对比：纯音→口哨→小提琴", dRangeBtn: "🔊 听口哨全音域：E5→E7 再超吹上 E8（×2）",
+  dToneLbl: "🎚 同一音高试听不同音色（上方频谱实时变化）：", dToneSine: "● 纯音（正弦）", dToneWhistle: "🎺 口哨（气簧·本页音色）", dToneViolin: "🎻 小提琴（谐波一串）", dToneCycleBtn: "🔀 循环对比：纯音→口哨→小提琴", dRangeBtn: "🔊 听音域：E5→E7，再示意到 E8（个别基频，非超吹）",
   dToneHint: "点“●纯音 / 🎺口哨 / 🎻小提琴”即用当前音高发声（再点一次停止），频谱同步显示：纯音＝单根尖峰；口哨＝尖峰＋弱谐波＋少量气流噪声；小提琴＝一串递减谐波。",
   t5Title: "5. 原理名词扩展：边棱音 · 亥姆霍兹共鸣器 · 气柱驻波 · 超吹",
   t5Tag: "三种模型分开对照：边棱音声源 · 亥姆霍兹（真出口哨的一阶模型）· 开管驻波/长笛超吹（几何类比，不是同一个腔）",
@@ -424,7 +426,7 @@ const I18N = {
   t5B1: "口腔/笛子的声源不是弦也不是簧片，而是“会自己振荡的空气”：从唇孔喷出的射流（jet）在唇齿棱上被周期性切开、交替卷出涡（主图唇口旋涡示意）。这层空气动力失稳产生宽频扰动，只有接近口腔共鸣频率的成分被放大存活——所以换腔形（舌位/唇孔）就能在同一口气上换音，这正是“气簧”乐器的核心。",
   t5B2: "真出口哨更接近亥姆霍兹共鸣器，不是一根开管。f≈(c/2π)·√(A/(V·ℓ_neck))：V＝瓶身体积（本页用舌位滑杆代表，V∝ℓ），A＝瓶口面积（用本节的“孔径 A”滑杆，不是上面的唇孔音色滑杆）。于是 f∝1/√V、f∝√A：同样把 V 缩到 ¼，音高只翻一个八度（E5→E6），而 1/ℓ 尺会翻两个八度。亥姆霍兹基本上只有一个峰，没有“超吹 ×2”的谐波梯子。点“亥姆霍兹试音”开关后拖动 A 和舌位，听的就是这条公式。",
   t5B3: "第 1–4 节的 1/f 尺来自开管/弦的几何类比：两端开口时 f1≈c/(2ℓ)，f2=2f1、f3=3f1（模式号＝半波数；第 2 号中间有节点）。闭管（一端开口）则是 f、3f、5f，超吹到十二度而不是八度——本页不采用闭管模型。这套驻波图画的是开管，用来解释“为什么长度减半音高翻倍”，不是说口腔就是一根长笛。",
-  t5B4: "长笛、竖笛等开管气簧乐器：指法不动、气流加急，驻波跳到第 2 号模式，音高×2。本页主图“超吹”开关演示的就是这个同族技巧，不是亥姆霍兹瓶腔的行为（埙/陶笛更接近亥姆霍兹，通常不能像长笛那样干净地翻八度）。下方“听口哨全音域”在 E7 再 ×2 到 E8≈5.3 kHz，是演示用的开管超吹，不是主张人口腔真能稳定驻出第 2 谐波。",
+  t5B4: "长笛、竖笛等开管：指法不动、气流加急，驻波跳到第 2 号，音高×2。真出口哨是亥姆霍兹瓶腔，没有这根谐波梯子；高音是把腔捏小，把<b>基频</b>本身抬上去。E8≈5.3 kHz 少数人可以作为基频碰到（常用上限更接近 B7≈4 kHz），但不能指望「E7 超吹 ×2」像长笛那样稳定翻上去。本页「超吹」开关和音域演示末尾的 E8，是开管类比示意，不是口腔真能驻出第 2 谐波。",
   t5p1: "边棱音（气簧）", t5p2: "亥姆霍兹共鸣器", t5p3: "气柱驻波", t5p4: "超吹",
   t5a1: "缝/孔喷出＝射流", t5a2: "棱切开→涡街＝声源", t5a3: "腔体“选频”定音高",
   t5b1: "体积 V＋瓶口 A、ℓ", t5b2: "腔大音低 孔大音高", t5b3: "f≈(c/2π)√(A/Vℓ)",
@@ -485,7 +487,7 @@ const I18N = {
   c4Tag: "Live spectrum (energy at the fundamental = pure tone) · range · compared with flute/voice",
   c4b1a: "1) Timbre is “pure”: ", c4b1b: "almost all energy sits at the fundamental (live spectrum above: tall peak + very weak harmonics + breath noise). It sounds like a pure tone / flute — no string metallic edge, no reed roughness — because the source is the air stream itself, naturally near-sinusoidal.",
   c4b2a: "2) Timbre “knobs”: ", c4b2b: "small round lip hole → focused jet, brighter tone (wide hole / leak → noise). On this page the lip slider changes timbre only (small = purer, large = breathier), not pitch; Breath changes loudness. In real whistling those knobs couple and must be coordinated by ear.",
-  c4b3a: "3) Range: ", c4b3b: "typical adult fundamentals ≈ 0.7–2.6 kHz (≈1.5–2 octaves); skilled ≈ 2.5–3.5 octaves (0.5–4 kHz+); world-class whistlers wider. Low notes need a large cavity + wide lip hole + gentle air; high notes need a small cavity + small hole + a strong, thin jet — exactly the geometry of §1.",
+  c4b3a: "3) Range: ", c4b3b: "typical playing is about <b>0.5–4 kHz (≈ B4–B7)</b>. This page’s home ruler is E5–E7 (0.66–2.6 kHz), the mid-low part of that span. Imaging studies matched C5 / C6 / C7 (523 / 1046 / 2093 Hz): bigger cavity → lower pitch. In a group of 16 whistlers, about half reached <b>B7 (≈3951 Hz)</b>; a few exceeded 6 kHz. <b>E8 ≈ 5274 Hz</b> is a skilled/exceptional <b>fundamental</b> (tiny cavity), not a note everyone can hold; pitch of a pure tone also gets worse above 4–5 kHz. Record extremes near 10 kHz are outliers. High notes come from a small cavity + small hole + a thin, fast jet raising the <b>fundamental</b> — not a flute-style “same tongue, overblow an octave”.",
   c4b4a: "4) Why so piercing / audible from afar? ", c4b4b: "fundamentals land mostly in the ear’s most sensitive 2–5 kHz region, so even low sound pressure is loud; the beam is directional (straight from the lips) like a tiny horn.",
   foot1: "<b>Pedagogical simplification:</b> this page uses two models on purpose — do not fuse them. (1) §§1–4: an “effective length ℓ” drawn with open-pipe / string 1/ℓ geometry, lined up with the violin E string; the Overblow switch is flute-style ×2. (2) §5.2: Helmholtz f∝√(A/V), closer to a real mouth (volume + neck), with no harmonic ladder. Real whistling also has jet–cavity nonlinear coupling; Hz values are demos. Synth = sine fundamental + faint harmonics + breath noise.",
   foot2: "Keywords: edge tone · Helmholtz resonator · standing waves / overblowing · equal-loudness & logarithmic hearing · 1/f string law · proprioception & auditory–motor loop.",
@@ -512,21 +514,21 @@ const I18N = {
   cmpNut: "Nut", cmpBridge: "Bridge", cmpStrLive: "vibrating segment", cmpStrDead: "stopped segment (silent)",
   cmpLow: "low (tongue back)", cmpMid: "mid", cmpHigh: "high (tongue near teeth)",
   cmpF1: "1st pos.", cmpF2: "2nd", cmpF3: "3rd", cmpF4: "4th", cmpF5: "5th+ high",
-  specTitle: "Live spectrum (log frequency; green = E5 / E6 / E7 / E8; two octaves in the home register, E8 = overblow)",
+  specTitle: "Live spectrum (log frequency; green = E5 / E6 / E7 / E8; E8 = exceptional fundamental, not flute overblow)",
   specIdle: "(Press “Blow” or any demo button — the spectrum of the sounding note appears here)",
   specFund: "fundamental (nearly all energy)", specH2: "2nd harmonic (weak)", specNoise: "breath noise",
-  rangeTitle: "Whistle range (log frequency axis; typical values)",
+  rangeTitle: "Whistle range (log frequency; typical values — E8 is not for everyone)",
   rangeHear: "ear’s most sensitive 2–5 kHz", rangeFlute: "flute C4–C7",
-  rangeVoice: "singing fundamentals (for comparison)", rangeWhistMain: "whistle usual register", rangeWhistHi: "overblown / advanced", rangeWhistX: "exceptional / record",
-  rangeB1: "beginner ≈1–1.5 oct.", rangeB2: "skilled ≈2 oct.+", rangeB3: "trained ≈3 oct.+",
-  rangeNote: "Each doubling rightward = one octave. A whistle starts already in the flute’s upper-mid register and can push past 4 kHz easily.",
+  rangeVoice: "singing fundamentals (for comparison)", rangeWhistMain: "usual register (this page: E5–E7)", rangeWhistHi: "skilled highs to B7 ≈ 4 kHz", rangeWhistX: "exceptional E8 / records ~10 kHz",
+  rangeB1: "beginner ≈1–1.5 oct.", rangeB2: "skilled ≈2 oct. (≈0.7–3 kHz)", rangeB3: "trained ≈ B4–B7 (≈0.5–4 kHz)",
+  rangeNote: "Each step rightward = ×2 (one octave). Typical whistling ≈ 0.5–4 kHz (B4–B7). E8 ≈ 5.3 kHz is an exceptional fundamental, not flute overblow. Record extremes ≈ 10 kHz.",
   famStrip: "What vibrates? Whistle & flutes: the air stream striking an edge (air reed), no string/reed. Violin/piano: a string. Whistling is also keyboard-less: pitch slides continuously.",
   fam1t: "Whistle (this page)", fam2t: "Flute/recorder/ocarina", fam3t: "Violin", fam4t: "Piano",
   famWhistleSub: "source: jet on lip edge\ncavity: mouth (continuous)", famFluteSub: "source: jet on edge\ncavity: tube (holes)", famViolinSub: "source: bowed string (stick-slip)\ncavity: body (fixed)", famPianoSub: "source: hammered string\ndiscrete keys",
   helpHint: "drag tongue / blow / listen",
   t_play: "🎺 Blow", t_stop: "⏹ Stop", t_regOn: "↗ Overblow: ON (×2 octave)", t_regOff: "↗ Overblow: OFF (fundamental)",
   t_octaveLbl: "octave", t_over: "overblow", t_effShort: "short", t_effLong: "long",
-  dToneLbl: "🎚 Same pitch, different timbres (live spectrum above):", dToneSine: "● Pure sine", dToneWhistle: "🎺 Whistle (air reed)", dToneViolin: "🎻 Violin (harmonics ladder)", dToneCycleBtn: "🔀 Cycle: sine → whistle → violin", dRangeBtn: "🔊 Whistle range: E5→E7, then overblow to E8 (×2)",
+  dToneLbl: "🎚 Same pitch, different timbres (live spectrum above):", dToneSine: "● Pure sine", dToneWhistle: "🎺 Whistle (air reed)", dToneViolin: "🎻 Violin (harmonics ladder)", dToneCycleBtn: "🔀 Cycle: sine → whistle → violin", dRangeBtn: "🔊 Range: E5→E7, then a sketch of E8 (exceptional fundamental, not overblow)",
   dToneHint: "Press one timbre button to play at the current pitch (press again to stop); the spectrum shows it live — sine: one spike; whistle: spike + faint harmonics + breath noise; violin: a ladder of decreasing harmonics.",
   t5Title: "5. Principle glossary: edge tone · Helmholtz resonator · standing waves · overblowing",
   t5Tag: "Three models kept apart: edge-tone source · Helmholtz (first-order real whistle) · open-pipe standing wave / flute overblow (geometry analogy, not the same cavity)",
@@ -534,7 +536,7 @@ const I18N = {
   t5B1: "The source of a whistle (or flute) is not a string or reed but “air that oscillates by itself”: the jet leaving the lip hole is sliced periodically by the lip/tooth edge, shedding alternating vortices (see the swirls at the lips in §1). That aerodynamic instability is broadband; only components near the mouth-cavity resonance survive and grow — so changing the cavity (tongue/lips) retunes the pitch on the same breath: the essence of air-reed instruments.",
   t5B2: "A real human whistle is closer to a Helmholtz resonator than to an open pipe. f≈(c/2π)·√(A/(V·ℓ_neck)): V = bottle volume (the tongue slider here, V∝ℓ), A = mouth area (the “Aperture A” slider in this section — not the lip-timbre slider above). So f∝1/√V and f∝√A: shrinking V to ¼ only raises pitch one octave (E5→E6), whereas the 1/ℓ ruler jumps two. Helmholtz is essentially a single peak — no ×2 overblow ladder. Turn on “Helmholtz test” and drag A and the tongue: that is this formula.",
   t5B3: "The 1/f ruler in §§1–4 is an open-pipe / string analogy: both ends open, f1≈c/(2ℓ), f2=2f1, f3=3f1 (mode number = half-waves; the 2nd mode has a mid-tube node). A closed–open pipe would be f, 3f, 5f and overblow to a twelfth — this page does not use that model. The standing-wave drawing is an open pipe, to show “half the length → double the pitch”, not to claim the mouth is a flute.",
-  t5B4: "Flutes and recorders (open air-reeds): keep the fingering, push more air, jump to the 2nd mode, pitch ×2. The Overblow switch demos that family trick; it is not what a Helmholtz bottle does (ocarinas are Helmholtz-like and usually cannot overblow a clean octave). The “full range” demo ×2 at E7 up to E8 ≈ 5.3 kHz is that open-pipe switch, not a claim that a mouth stably supports the 2nd harmonic.",
+  t5B4: "Flutes and recorders (open pipes): keep the fingering, push more air, jump to the 2nd mode, pitch ×2. A real human whistle is a Helmholtz bottle with no such ladder; high notes come from shrinking the cavity and raising the <b>fundamental</b>. A few people can hit E8 ≈ 5.3 kHz as a fundamental (everyday ceiling is closer to B7 ≈ 4 kHz); you should not expect “overblow E7 ×2” the flute way. This page’s Overblow switch and the E8 at the end of the range demo are an open-pipe analogy, not a 2nd standing wave in the mouth.",
   t5p1: "Edge tone (air reed)", t5p2: "Helmholtz resonator", t5p3: "Standing waves", t5p4: "Overblowing",
   t5a1: "aperture → air jet", t5a2: "edge → vortex street", t5a3: "cavity locks the pitch",
   t5b1: "volume V + neck A, ℓ", t5b2: "big V → low; big A → high", t5b3: "f≈(c/2π)√(A/Vℓ)",
@@ -1536,15 +1538,14 @@ function drawRange() {
   txt(ctx, T("rangeFlute"), x0 - 8, yTop + 7, "#8fa3c4", 10.5, "right");
   drawBand(110, 1100, yTop + 20, 10, "#9aa8d0", 0.25);
   txt(ctx, T("rangeVoice"), x0 - 8, yTop + 25, "#9aa8d0", 10.5, "right");
-  drawBand(700, 2600, yA, 34, "#7be0a0", 0.55);
-  drawBand(2600, 5200, yB, 34, "#b18cff", 0.5);
-  drawBand(5200, 7900, yC, 34, "#ff9ce0", 0.35);
-  txt(ctx, T("rangeWhistMain"), lx(700) + 4, yA + 17, "#7be0a0", 10.5);
+  drawBand(500, 2600, yA, 34, "#7be0a0", 0.55);
+  drawBand(2600, 4000, yB, 34, "#b18cff", 0.5);
+  drawBand(4000, 7900, yC, 34, "#ff9ce0", 0.35);
+  txt(ctx, T("rangeWhistMain"), lx(500) + 4, yA + 17, "#7be0a0", 10.5);
   txt(ctx, T("rangeWhistHi"), lx(2600) + 4, yB + 17, "#b18cff", 10.5);
-  txt(ctx, T("rangeWhistX"), lx(5250) + 4, yC + 17, "#ff9ce0", 10.5);
-  /* octave ticks E5..E8 & note ruler */
+  txt(ctx, T("rangeWhistX"), lx(4000) + 4, yC + 17, "#ff9ce0", 10.5);
   ctx.strokeStyle = "rgba(98,215,255,0.6)"; ctx.lineWidth = 1.2;
-  var baseNotes = [659, 1318, 2637, 5274];
+  var baseNotes = [659, 1318, 2637, 3951, 5274];
   for (var i = 0; i < baseNotes.length; i++) {
     var xg = lx(baseNotes[i]);
     ctx.beginPath(); ctx.moveTo(xg, yA - 14); ctx.lineTo(xg, yC + 50); ctx.stroke();
@@ -1555,7 +1556,7 @@ function drawRange() {
   var skills = [
     { a: 900, b: 2050, col: "#62d7ff", key: "rangeB1" },
     { a: 700, b: 3000, col: "#7be0a0", key: "rangeB2" },
-    { a: 550, b: 4200, col: "#ffcf6e", key: "rangeB3" }
+    { a: 500, b: 4000, col: "#ffcf6e", key: "rangeB3" }
   ];
   for (var sk = 0; sk < skills.length; sk++) {
     var sb = skills[sk], yy = ySkill + sk * 24;
