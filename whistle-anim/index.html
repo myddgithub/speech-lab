@@ -402,7 +402,7 @@ const I18N = {
   cmpNut: "琴枕", cmpBridge: "琴桥", cmpStrLive: "振动弦段", cmpStrDead: "按死的弦段(不振)",
   cmpLow: "低(舌后)", cmpMid: "中", cmpHigh: "高(舌前近齿)",
   cmpF1: "Ⅰ 把位", cmpF2: "Ⅱ", cmpF3: "Ⅲ", cmpF4: "Ⅳ", cmpF5: "Ⅴ+ 高位",
-  specTitle: "实时频谱（对数频率轴 · 本调 E5–E7＝两个八度；绿线对准基频。超吹时才出现 E8）",
+  specTitle: "实时频谱（对数频率轴 · 绿线 = E5 / E6 / E7 / E8；本调两个八度，E8＝超吹）",
   specIdle: "（先点“吹气”或任意试听按钮——这里会画出该音的实时频谱）",
   specFund: "基频(几乎全部能量)", specH2: "第2谐波(很弱)", specNoise: "气流噪声",
   rangeTitle: "口哨音域范围（对数频率轴；标注为典型值）",
@@ -512,7 +512,7 @@ const I18N = {
   cmpNut: "Nut", cmpBridge: "Bridge", cmpStrLive: "vibrating segment", cmpStrDead: "stopped segment (silent)",
   cmpLow: "low (tongue back)", cmpMid: "mid", cmpHigh: "high (tongue near teeth)",
   cmpF1: "1st pos.", cmpF2: "2nd", cmpF3: "3rd", cmpF4: "4th", cmpF5: "5th+ high",
-  specTitle: "Live spectrum (log frequency; fundamental register E5–E7 = two octaves. E8 appears only when overblown)",
+  specTitle: "Live spectrum (log frequency; green = E5 / E6 / E7 / E8; two octaves in the home register, E8 = overblow)",
   specIdle: "(Press “Blow” or any demo button — the spectrum of the sounding note appears here)",
   specFund: "fundamental (nearly all energy)", specH2: "2nd harmonic (weak)", specNoise: "breath noise",
   rangeTitle: "Whistle range (log frequency axis; typical values)",
@@ -727,9 +727,11 @@ function updateViolin(s, on) {
   var ctx = AC, t = ctx.currentTime;
   var f0 = s2f(s) * (S.reg ? 2 : 1);
   if (f0 > 7600) f0 = 7600;
+  var ny = AC.sampleRate * 0.45;
+  var lpF = Math.min(ny, Math.max(f0 * 1.2, f0 * 3.2));
   v.o.frequency.setTargetAtTime(f0, t, 0.03);
-  v.lp.frequency.setTargetAtTime(900 + 1500 * (1 - Math.min(1, s / 24)), t, 0.1);
-  v.g.gain.setTargetAtTime(on ? 0.16 : 0, t, on ? 0.05 : 0.25);
+  v.lp.frequency.setTargetAtTime(lpF, t, 0.08);
+  v.g.gain.setTargetAtTime(on ? (0.20 + 0.10 * Math.min(1, f0 / 2600)) : 0, t, on ? 0.05 : 0.25);
   if (v.vg) v.vg.gain.setTargetAtTime(on ? vibDepthHz(f0, S.vib) : 0, t, 0.05);
   if (v.vib) v.vib.frequency.setTargetAtTime(4.6 + 1.6 * S.vib, t, 0.1);
 }
@@ -1427,10 +1429,9 @@ function drawSpec() {
   var x0 = 90, y0 = 30, w = LW - x0 - 30, h = 230;
   txt(ctx, T("specTitle"), 24, 16, "#e6eefb", 12.5, "left", true);
   var f0 = S.helmOn ? helmFreq() : liveF0();
-  var fmin = 450;
-  var fmax = (f0 > 2700 || S.reg) ? 5800 : 2900;
+  var fmin = 450, fmax = 5800;
   var lx = function (f) { return x0 + Math.log(f / fmin) / Math.log(fmax / fmin) * w; };
-  var gridF = fmax > 4000 ? [500, 1000, 2000, 4000] : [500, 700, 1000, 1500, 2000, 2600];
+  var gridF = [500, 1000, 2000, 4000];
   for (var i = 0; i < gridF.length; i++) {
     if (gridF[i] <= fmin || gridF[i] >= fmax) continue;
     var gx = lx(gridF[i]);
@@ -1438,16 +1439,16 @@ function drawSpec() {
     ctx.beginPath(); ctx.moveTo(gx, y0); ctx.lineTo(gx, y0 + h); ctx.stroke();
     txt(ctx, gridF[i] >= 1000 ? (gridF[i] / 1000) + "k" : String(gridF[i]), gx, y0 + h + 14, "#6f81a3", 10, "center");
   }
-  var eAnch = [659.255, 1318.51, 2637.02];
-  if (fmax > 4000) eAnch.push(5274.04);
+  var eAnch = [659.255, 1318.51, 2637.02, 5274.04];
   for (var ea = 0; ea < eAnch.length; ea++) {
     if (eAnch[ea] < fmin * 1.02 || eAnch[ea] > fmax * 0.98) continue;
     var ex = lx(eAnch[ea]);
+    var al = (ex > x0 + w - 80) ? "right" : ((ex < x0 + 80) ? "left" : "center");
     ctx.strokeStyle = "rgba(127,224,160,0.45)"; ctx.lineWidth = 1.2; ctx.setLineDash([5, 4]);
     ctx.beginPath(); ctx.moveTo(ex, y0); ctx.lineTo(ex, y0 + h); ctx.stroke();
     ctx.setLineDash([]);
-    txt(ctx, noteName(eAnch[ea]), ex, y0 + 12, "#7be0a0", 9.5, "center", true);
-    txt(ctx, (Math.round(eAnch[ea])) + " Hz", ex, y0 + 24, "#6f81a3", 8.5, "center", false);
+    txt(ctx, noteName(eAnch[ea]), ex, y0 + 12, "#7be0a0", 9.5, al, true);
+    txt(ctx, (Math.round(eAnch[ea])) + " Hz", ex, y0 + 24, "#6f81a3", 8.5, al, false);
   }
   var playing = !!(S.playing || S.demo);
   if (playing && ANA && AC && AC.state === "running") {
@@ -1477,8 +1478,9 @@ function drawSpec() {
     txt(ctx, T("specH2"), x0 + 220, y0 + h + 30, "#8fa3c4", 10);
     txt(ctx, T("specNoise"), x0 + 400, y0 + h + 30, "#6f81a3", 10);
   } else {
-    /* expected pure-tone spectrum preview */
-    var peaks = [[f0, 0.95], [f0 * 2, 0.06], [f0 * 3, 0.02], [f0 * 4, 0.01]];
+    var peaks = (S.voice === "violin")
+      ? [[f0, 0.90], [f0 * 2, 0.48], [f0 * 3, 0.28], [f0 * 4, 0.16], [f0 * 5, 0.10]]
+      : [[f0, 0.95], [f0 * 2, 0.06], [f0 * 3, 0.02], [f0 * 4, 0.01]];
     ctx.strokeStyle = "rgba(255,207,110,0.8)"; ctx.lineWidth = 1.6;
     ctx.beginPath();
     ctx.moveTo(x0, y0 + h);
