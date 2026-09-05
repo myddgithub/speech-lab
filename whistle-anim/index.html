@@ -749,6 +749,10 @@ function setVoiceOn(on, forceVoice) {
   kick();
 }
 function stopAllVoice() { S.helmOn = false; stopDemo(); S.playing = false; var _pf = S.voice === "sine" ? true : (S.voice === "jet" ? "jet" : false); if (WV) updateWhistle(S.s, S.reg, S.lip, S.breath, S.vib, false, _pf); if (VG2) updateViolin(S.s, false); kick(); }
+function silenceAudio() {
+  try { stopAllVoice(); } catch (e) {}
+  if (AC && AC.state === "running") { try { AC.suspend(); } catch (e2) {} }
+}
 
 /* ==================== mouth geometry (local frame ~940x640) ==================== */
 var ROOF_P0 = { x: 214, y: 300 }, ROOF_C1 = { x: 400, y: 314 }, ROOF_C2 = { x: 560, y: 328 }, ROOF_P1 = { x: 700, y: 344 };
@@ -2132,9 +2136,11 @@ function bind() {
     rzT = setTimeout(function () { prepCrisp(); redrawAll(); drawSpec(); kick(); }, 120);
   });
   document.addEventListener("visibilitychange", function () {
-    if (document.hidden) { rafOn = false; }
+    if (document.hidden) { rafOn = false; silenceAudio(); }
     else { kick(); }
   });
+  window.addEventListener("pagehide", silenceAudio);
+  window.addEventListener("beforeunload", silenceAudio);
 }
 function prepCrisp() {
   var ids = ["cvMain", "cvFam", "cvLog", "cvCmp", "cvSpec", "cvRange", "cvTerms"];
