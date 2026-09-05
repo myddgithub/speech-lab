@@ -1,0 +1,2034 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="dark" />
+<title>吹口哨声学原理图 · 交互模拟 | 气簧发声 / 舌位·对数听觉 / 舌位↔把位 / 音色与音域</title>
+<style>
+  :root{
+    --bg:#0a0f18; --panel:#0f1a2c; --panel2:#162338; --line:#26344f;
+    --text:#e6eefb; --muted:#8fa3c4; --amber:#ffcf6e; --cyan:#62d7ff;
+    --green:#7be0a0; --red:#ff8b7a; --magenta:#ff9ce0; --violet:#b18cff; --warm:#ffb45e;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scrollbar-gutter:stable;}
+  body{
+    background:radial-gradient(1300px 700px at 50% -12%, #12233f 0%, var(--bg) 58%);
+    color:var(--text);
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    min-height:100vh; padding:64px 16px 46px; line-height:1.6;
+  }
+  .wrap{max-width:1280px; margin:0 auto;}
+  header{text-align:center; margin-bottom:18px;}
+  header h1{font-size:26px; font-weight:700; letter-spacing:1px;}
+  header p{color:var(--muted); font-size:13.5px; margin-top:8px; max-width:1080px; margin-left:auto; margin-right:auto;}
+  header p b{color:var(--amber); font-weight:600;}
+  .topbtns{position:fixed; top:14px; right:16px; z-index:50; display:flex; gap:8px;}
+  .topbtn{padding:7px 15px; border-radius:999px; font-size:13px;}
+  #btnLang{font-size:12px;}
+  .card{
+    background:linear-gradient(180deg, rgba(255,255,255,.018), rgba(255,255,255,0));
+    border:1px solid var(--line); border-radius:16px; padding:16px 18px 18px;
+    margin:20px 0; box-shadow:0 8px 30px rgba(0,0,0,.22);
+  }
+  .card-head{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin-bottom:4px;}
+  .card-title{font-size:17px; font-weight:700; letter-spacing:.4px;}
+  .card-title em{font-style:normal; color:var(--amber);}
+  .card-tag{color:var(--muted); font-size:12px;}
+  .cv{width:100%; border-radius:12px; overflow:hidden; border:1px solid var(--line); background:#070b12; margin-top:10px;}
+  canvas{display:block; width:100%; height:auto;}
+  .legend{display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; font-size:12.5px; color:var(--muted); align-items:center;}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .dot{width:11px; height:11px; border-radius:50%; flex:none;}
+  .bars{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px; row-gap:8px;}
+  .bars label{font-size:12.5px; color:var(--muted); flex:none;}
+  .bars input[type=range]{width:160px; accent-color:var(--amber);}
+  .bars input[type=range].wide{width:300px;}
+  .bars .val{font-size:13px; color:var(--cyan); min-width:46px; font-variant-numeric:tabular-nums; font-weight:600;}
+  .btn{
+    background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:9px;
+    padding:6px 13px; font-size:13px; cursor:pointer; transition:all .15s; font-family:inherit; line-height:1.3;
+  }
+  .btn:hover{border-color:var(--cyan); color:#fff;}
+  .btn.on{background:linear-gradient(135deg,#1e3a5f,#12243d); border-color:var(--cyan); color:#fff;}
+  .btn.warn{background:linear-gradient(135deg,#3a2a10,#241a08); border-color:#6b4f1d;}
+  .btn.warn.on{background:linear-gradient(135deg,#5f3112,#3d210d); border-color:var(--amber);}
+  .btn.warn:hover{border-color:var(--amber);}
+  .btn.big{padding:9px 20px; font-size:14.5px;}
+  .btn.stop{background:linear-gradient(135deg,#46201c,#2a1210); border-color:#7a3a33;}
+  .btn.stop:hover{border-color:var(--red);}
+  .read{font-size:17px; font-weight:700; color:#9fe8ff; font-variant-numeric:tabular-nums; letter-spacing:.3px;}
+  .read .rd2{color:var(--muted); font-weight:500; font-size:13px;}
+  .readBox{margin-top:10px; display:flex; gap:22px; flex-wrap:wrap; align-items:center; padding:10px 14px; border:1px dashed var(--line); border-radius:10px; background:rgba(98,215,255,.04);}
+  ul.bullets{margin-top:12px; padding-left:18px; color:#cfd9ea; font-size:13.5px;}
+  ul.bullets li{margin-top:7px;}
+  ul.bullets b{color:var(--amber); font-weight:600;}
+  ul.bullets .ky{color:var(--cyan);}
+  .note{margin-top:10px; font-size:12.5px; color:var(--muted); background:rgba(255,207,110,.05); border-left:3px solid var(--amber); padding:8px 12px; border-radius:6px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  .chiprow{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:12px; font-size:12.5px; color:var(--muted);}
+  .chiprow .cl{flex:none;}
+  .chips{display:flex; gap:8px; flex-wrap:wrap;}
+  .chip{background:var(--panel2); border:1px solid var(--line); border-radius:999px; padding:3px 11px; font-size:12px; cursor:pointer; color:var(--text);}
+  .chip.on{background:linear-gradient(135deg,#1e3a5f,#12243d); border-color:var(--cyan);}
+  .flexrow{display:flex; gap:14px; flex-wrap:wrap; align-items:center;}
+  .keybox{background:#0d1526; border:1px solid var(--line); border-radius:8px; padding:2px 8px; font-family:Consolas,monospace; font-size:11px; color:var(--cyan);}
+  .kv{display:flex; gap:8px; align-items:center;}
+  /* help */
+  #scrim{position:fixed; inset:0; background:rgba(4,8,15,.62); z-index:90; opacity:0; pointer-events:none; transition:opacity .2s;}
+  #scrim.show{opacity:1; pointer-events:auto;}
+  #helpPanel{
+    position:fixed; top:50%; left:50%; transform:translate(-50%,-46%) scale(.98); z-index:91;
+    background:linear-gradient(160deg,#13233c,#0c1424); border:1px solid var(--line); border-radius:16px;
+    width:min(860px,92vw); max-height:84vh; overflow:auto; padding:22px 26px;
+    opacity:0; pointer-events:none; transition:all .2s; box-shadow:0 24px 70px rgba(0,0,0,.5);
+  }
+  #helpPanel.show{opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1);}
+  .hHead{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:17px; font-weight:700;}
+  #helpPanel h4{color:var(--amber); font-size:13.5px; margin:12px 0 4px;}
+  #helpPanel p, #helpPanel li{font-size:13px; color:#cfd9ea;}
+  #helpPanel ul{padding-left:20px;}
+  .hidden{display:none !important;}
+  .xdet{margin-top:14px; border:1px dashed var(--line); border-radius:10px; background:rgba(255,255,255,0.02); padding:8px 14px;}
+  .xdet summary{cursor:pointer; color:var(--amber); font-size:13px; user-select:none; outline:none; font-weight:600;}
+  .xdet[open] summary{margin-bottom:6px;}
+  .xdet .note{margin:8px 0;}
+  .xdet ul.bullets{margin-top:8px;}
+  .subh{margin:16px 0 6px; padding-top:12px; border-top:1px dashed var(--line); display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
+  .subh .st{font-weight:700; font-size:15px; color:var(--cyan);}
+  .subh .tg{font-size:12px; color:var(--muted);}
+  footer{margin-top:26px; color:var(--muted); font-size:12px; text-align:center;}
+  footer b{color:var(--cyan);}
+  @media(max-width:900px){
+    body{padding-top:60px;}
+    .topbtn{padding:6px 11px;}
+    .grid2{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 data-i18n="pageTitle">🎺 吹口哨声学原理图（交互模拟）</h1>
+    <p data-i18n="sub">演示：<b>口哨 = “气簧”边棱音乐器</b>（与笛/管同族，不同于键盘与弦乐器）、<b>舌位控制 = 对数听觉的精密映射</b>（1/f 腔长尺）、<b>舌位感 ↔ 小提琴把位感</b>、<b>音色与音域</b>。可实时试听。</p>
+  </header>
+
+  <div class="topbtns">
+    <button class="topbtn btn" id="btnLang" type="button">EN</button>
+    <button class="topbtn btn" id="btnHelp" type="button" data-i18n="btnHelp">📖 帮助</button>
+  </div>
+
+  <!-- ============ 1) 发声原理 ============ -->
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title" data-i18n="c1Title">1. 发声原理：肺 → 气簧（边棱音）→ 口腔“可变管/腔”共鸣 —— 与笛同类、无弦无簧</div>
+      <div class="card-tag" data-i18n="c1Tag">拖拽调节舌位 / 唇孔 / 气息 · 实时发声 · 超吹翻高八度</div>
+    </div>
+
+    <div class="cv"><canvas id="cvMain" width="1240" height="620" role="img" aria-label="口腔剖面与发声链"></canvas></div>
+
+    <div class="readBox" id="readBox">
+      <div><span class="read" id="rdNote">…</span></div>
+      <div><span class="read" style="font-size:13.5px" id="rdCav">…</span></div>
+      <div><span style="font-size:12px;color:var(--muted)" id="rdHint"></span></div>
+    </div>
+
+    <div class="bars">
+      <button class="btn warn big" id="playBtn" type="button"><span id="playLbl">🎺 吹气（试听）</span></button>
+      <button class="btn" id="regBtn" type="button"><span id="regLbl">↗ 超吹：关（本调）</span></button>
+      <button class="btn" id="demoScaleBtn" type="button"><span data-i18n="demoScale">🎵 音阶示范 E5→E7</span></button>
+      <button class="btn" id="demoGlissBtn" type="button"><span data-i18n="demoGliss">↗ 滑奏示范</span></button>
+      <button class="btn" id="demoSongBtn" type="button"><span data-i18n="demoSong">🎶 《欢乐颂》</span></button>
+    </div>
+
+    <div class="bars">
+      <label data-i18n="lblS">舌位/等效腔长（半音数，0=E5 低 → 24=E7 高）</label>
+      <input class="wide" id="sldS" type="range" min="0" max="24" step="0.05" value="12" />
+      <span class="val" id="valS">12</span>
+      <label data-i18n="lblLip">唇孔（哨口大小·音色）</label>
+      <input id="sldLip" type="range" min="0" max="1" step="0.01" value="0.55" />
+      <span class="val" id="valLip">0.55</span>
+      <label data-i18n="lblBreath">气息量</label>
+      <input id="sldBreath" type="range" min="0" max="1" step="0.01" value="0.6" />
+      <span class="val" id="valBreath">0.6</span>
+      <label data-i18n="lblVib">颤音</label>
+      <input id="sldVib" type="range" min="0" max="1" step="0.01" value="0.12" />
+      <span class="val" id="valVib">0.12</span>
+    </div>
+
+    <div class="note" data-i18n="c1Note">读法：气从肺（下）经喉（声门开放）进入口腔腔体（青蓝色＝空气腔），从唇孔喷出为“射流”。射流拍击唇/齿边缘、在唇孔处形成交替涡旋＝<b>边棱音</b>（声源，每秒振荡次数≈基频）；口腔腔体像“可以变短变长的管/瓶”，把振荡“选频”成音高——这和长笛/竖笛/埙一样属于<b>气鸣·边棱音</b>乐器：没有弦、没有簧片，发声的是<b>气流本身</b>。舌向前上拱 → 腔变短小 → 音变高（类比：笛子按孔让“管”变短）。</div>
+
+    <ul class="bullets">
+      <li><b data-i18n="c1b1a">1) 与键盘乐器（如钢琴）的本质区别：</b><span data-i18n="c1b1b">钢琴靠琴槌“敲击”琴弦（冲击激励）发声，音高由一批<b>预先调好、离散排列</b>的弦决定——要换音必须“换一根弦/按一个键”。口哨只有一根“腔”，音高由<b>腔体几何连续无级</b>决定。</span></li>
+      <li><b data-i18n="c1b2a">2) 与弦乐器（如小提琴）的区别：</b><span data-i18n="c1b2b">弦乐器的声源是<b>琴弦的振动</b>（弓毛摩擦产生“粘-滑”自激振荡）；口哨没有弦——声源是<b>射流的空气动力失稳</b>。两者相似之处在于：发音点（指尖/舌）都可<b>连续滑动</b>、无刻度。详见第 3 节。</span></li>
+      <li><b data-i18n="c1b3a">3) 与簧片/人声的区别：</b><span data-i18n="c1b3b">口哨没有簧片、声带不振动（声门只是开放通道），与笛子同属“气簧”家族；而簧片乐器（双簧管、口琴）与唱歌（声带）另成一类。</span></li>
+      <li><b data-i18n="c1b4a">4) 试一试：</b><span data-i18n="c1b4b">把“气息量”推大并打开“超吹”开关——<b>舌位不动</b>、音高却翻一个八度（像长笛吹急了翻高八度）；这就是口哨高音区常用技巧“超吹/翻八度”。</span></li>
+    </ul>
+  </section>
+
+  <!-- ============ ①b 乐器族对比 ============ -->
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title" data-i18n="cFamTitle">1+. 乐器谱系对照：谁在“振”？</div>
+      <div class="card-tag" data-i18n="cFamTag">气鸣（边棱音）vs 弦鸣（擦弦/击弦）· 键盘（离散）vs 滑奏（连续）</div>
+    </div>
+    <div class="cv"><canvas id="cvFam" width="1240" height="240" role="img" aria-label="乐器族谱系对比"></canvas></div>
+    <div class="legend">
+      <span><i class="dot" style="background:#62d7ff"></i><span data-i18n="fam1">口哨 / 笛子 / 竖笛 / 埙 = 气鸣 · 边棱音（无弦无簧）</span></span>
+      <span><i class="dot" style="background:#ffcf6e"></i><span data-i18n="fam2">小提琴 / 钢琴 = 弦鸣（发声体是弦）</span></span>
+      <span><i class="dot" style="background:#7be0a0"></i><span data-i18n="fam3">键盘 = 离散音位；吹管/口哨/弓弦 = 可连续滑音</span></span>
+    </div>
+  </section>
+
+  <!-- ============ 2) 舌位 vs 对数听觉 ============ -->
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title" data-i18n="c2Title">2. 舌位控制 = 人耳“对数听觉”的精密映射</div>
+      <div class="card-tag" data-i18n="c2Tag">同一段音列画在三种尺上：线性 Hz 尺 / 听感对数尺 / 舌位“1÷频率”长度尺</div>
+    </div>
+    <div class="cv"><canvas id="cvLog" width="1240" height="404" role="img" aria-label="三种频率尺对比"></canvas></div>
+    <div class="bars">
+      <button class="btn warn" id="bOct" type="button"><span data-i18n="bOctL">🔊 试听：E5→E6→E7（听感每步等距）</span></button>
+      <button class="btn" id="bGliss2" type="button"><span data-i18n="bGlissL">▶ 滑奏 E5→E7</span></button>
+      <span style="font-size:12px;color:var(--muted)" data-i18n="logHint">在同一行标尺上点击可定位音高（口哨同步发声）。</span>
+    </div>
+    <div class="note" data-i18n="c2Note">读法：<b>上方线性 Hz 尺</b>上，低音八度（E5→E6 只差约 659 Hz）挤在左边、越往上“格”越宽；<b>中间听感尺</b>上每个八度、每个半音都等距——这就是耳朵（耳蜗频率编码≈对数）告诉我们的“同一句话”；<b>下方舌位长度尺</b>（等效腔长 ℓ ∝ 1/f）上，音程的“毫米数”随音高按几何级数收缩：同样的一个全音，在低音区舌要动约 6%，到高音区只动约 2–3%（越吹越高，舌位越“一毫米都不能差”）。吹口哨等于用一块会呼吸的肌肉去复现一把<b>对数刻度尺</b>。</div>
+    <ul class="bullets">
+      <li><b data-i18n="c2b1a">1) 听觉的对数本性：</b><span data-i18n="c2b1b">频率“×2”＝高八度（听感等距），不是“＋多少 Hz”。同一音程在高处绝对 Hz 差更大，听感却相等——所以乐理里的音程本质是“频率之比”。</span></li>
+      <li><b data-i18n="c2b2a">2) 舌头面对的是“倒数尺”：</b><span data-i18n="c2b2b">腔体共振频率 ≈ 常数 ÷ 有效长度 ℓ（越高越“短”）。于是要发出等音程，舌必须让 ℓ 按<b>等比数列</b>收缩（每高八度 ×½、每个半音 ×2^(−1/12)），等差的“毫米”是不准的。</span></li>
+      <li><b data-i18n="c2b3a">3) 精密性体现在高音区：</b><span data-i18n="c2b3b">音越高，每音分对应的舌位移越小。同一个 10 音分误差，在低音区“无伤大雅”，在高音区会明显偏高/偏低——吹口哨者靠耳朵（对数标尺）实时校准，舌与唇以亚毫米级精度配合，这是把“对数听觉”练成“运动控制”的极好例子。</span></li>
+      <li><b data-i18n="c2b4a">4) 不是“吹”而是“调”：</b><span data-i18n="c2b4b">气息只提供能量并选择“第几号泛音”（见第 1 节的“超吹”）；真正的“手指”是舌位与唇形的几何——所以吹口哨更像<b>吹一把没有按键的笛子</b>：指法＝舌位。</span></li>
+    </ul>
+  </section>
+
+  <!-- ============ 3) 舌位 ↔ 把位 ============ -->
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title" data-i18n="c34Title">3+4. 舌位↔把位 · 音色与音域 —— 同一屏联动观察（说明已收起，便于对照）</div>
+      <div class="card-tag" data-i18n="c34Tag">两个主题共用同一个音高控制：调节上方舌位/按弦并发声，下方频谱与音域读数即时跟随</div>
+    </div>
+    <div class="cv"><canvas id="cvCmp" width="1240" height="600" role="img" aria-label="舌位与把位对比"></canvas></div>
+    <div class="bars">
+      <label data-i18n="c3Sld">同一个音（相对 E5 的半音数，0…24 = 两个八度）</label>
+      <input class="wide" id="sldN2" type="range" min="0" max="24" step="0.2" value="12" />
+      <span class="val" id="valN2">12</span>
+      <button class="btn" id="cWhistleBtn" type="button"><span data-i18n="cWhisL">🎺 口哨音色试听</span></button>
+      <button class="btn" id="cViolinBtn" type="button"><span data-i18n="cViolL">🎻 小提琴音色试听</span></button>
+      <button class="btn warn" id="cAltBtn" type="button"><span data-i18n="cAltL">🔀 交替对比</span></button>
+    </div>
+    <div class="note" data-i18n="c3Note">读法：左=口哨口腔剖面，右=小提琴指板（示意，E 弦空弦 E5≈659 Hz）。两把“尺”本质相同：<b>音高越高，有效长度按 ×½ / ×¼ 收缩</b>，发音点要放的位置越来越靠前（口哨）或靠琴桥（小提琴）、间距越来越小。琴上叫“换把”，口里就是“移舌”：“把位感”其实是<b>由耳朵（对数听觉）校准的肌肉位置记忆</b>——两件乐器练的都是同一件事。</div>
+    <ul class="bullets">
+      <li><b data-i18n="c3b1a">1) 都“无级、无刻度”：</b><span data-i18n="c3b1b">小提琴指板无品，音准全靠指尖位置＋耳朵；口哨“口腔指板”也没有刻度，全靠舌位＋耳朵。任何中间音（滑音、微分音、揉弦的高低变化）都能发。</span></li>
+      <li><b data-i18n="c3b2a">2) 都靠“听觉闭环”训练位置感：</b><span data-i18n="c3b2b">位置放错了会听到“拍频/不准”→ 大脑立即微调舌或指。千百次练习后形成不需要思考的“手感/舌感”。</span></li>
+      <li><b data-i18n="c3b3a">3) 相同的几何：</b><span data-i18n="c3b3b">弦：f ∝ 1/弦长；口哨腔：f ≈ 常数/有效腔长。所以二者半音位间距的“收缩律”一模一样（等比），可互相打比方：<b>吹口哨的低/中/高“舌位”≈ 小提琴的一/二/五把位</b>。</span></li>
+      <li><b data-i18n="c3b4a">4) 技法互通：</b><span data-i18n="c3b4b">滑音（连续移动舌/指尖）、揉音（小提琴指尖滚压 ↔ 口哨用气息/下颌/舌的微小周期性变化）、换把瞬间的“落点准确”。差别：小提琴有四根弦与琴身放大，口哨是单腔直接辐射。</span></li>
+    </ul>
+    <div class="subh">
+      <span class="st" data-i18n="c4Title"></span>
+      <span class="tg" data-i18n="c4Tag"></span>
+    </div>
+    <div class="cv"><canvas id="cvSpec" width="1240" height="300" role="img" aria-label="实时频谱"></canvas></div>
+    <div class="cv"><canvas id="cvRange" width="1240" height="340" role="img" aria-label="音域范围图"></canvas></div>
+    <div class="bars" style="margin-top:14px; padding-top:6px; border-top:1px dashed var(--line)">
+      <span style="font-size:13px; color:var(--amber); font-weight:600" data-i18n="dToneLbl">🎚 同一音高试听不同音色（上方频谱实时变化）：</span>
+      <button class="btn" id="btnVoiceSine" type="button" data-i18n="dToneSine">● 纯音（正弦）</button>
+      <button class="btn warn" id="btnVoiceWhistle" type="button" data-i18n="dToneWhistle">🎺 口哨（气簧·本页音色）</button>
+      <button class="btn" id="btnVoiceViolin" type="button" data-i18n="dToneViolin">🎻 小提琴（谐波一串）</button>
+      <button class="btn" id="dToneCycle" type="button" data-i18n="dToneCycleBtn">🔀 循环对比：纯音→口哨→小提琴</button>
+    </div>
+    <div class="bars">
+      <button class="btn warn" id="dRangeX" type="button" data-i18n="dRangeBtn">🔊 听口哨全音域：E5→E7 再超吹上 E8（×2）</button>
+      <span style="font-size:12px;color:var(--muted)" data-i18n="dToneHint">点“纯音/口哨/小提琴”即以当前音高发声（再点一次停止）：纯音＝单根尖峰；口哨＝尖峰＋弱谐波＋少量气流噪声；小提琴＝一串递减谐波。</span>
+    </div>
+    <ul class="bullets">
+      <li><b data-i18n="c4b1a">1) 音质＝“纯” ：</b><span data-i18n="c4b1b">频谱上能量几乎全在基频（上图：基频尖峰 + 极弱的几个高次谐波 + 一点气流噪声），听感接近长笛/钟形纯音：没有琴弦的金属感、没有簧片的“哨气”。因为声源是气流（无固定质量-弹簧系统），振荡天然接近正弦。</span></li>
+      <li><b data-i18n="c4b2a">2) 影响音质的“旋钮”：</b><span data-i18n="c4b2b">唇孔小而圆 → 射流聚焦、音更清亮（口径大或嘴角漏气 → 噪声/“噗”声）；舌背中缝（“舌沟”）把气流拢成一束 → 更干净；唇面微湿、气息平稳 → 少杂音、可长音。这些旋钮同时也微微移动音高——它们必须与听觉闭环协同。</span></li>
+      <li><b data-i18n="c4b3a">3) 音域：</b><span data-i18n="c4b3b">成人常用本调基频约 0.7–2.6 kHz（1.5–2 个八度左右）；熟练者可跨约 2.5–3.5 个八度（约 0.5–4 kHz+），再靠超吹与腔形微调逼近 4–5 kHz；个体差异极大，世界级口哨手音域纪录更宽（下图）。低音要“大腔＋大唇孔＋缓气”，高音要“小腔＋小孔＋强而细的射流”——正好是第 1 节的几何规律。</span></li>
+      <li><b data-i18n="c4b4a">4) 为什么“听得远、刺耳”？</b><span data-i18n="c4b4b">口哨基频大多落在人耳最灵敏的 2–5 kHz 区（响度敏感峰），声压不高也“扎眼”；且方向性强（唇前），像一支小号角。这也是课堂/球场吹口哨能传得远的原因。</span></li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title" data-i18n="t5Title">5. 原理名词扩展：边棱音 · 亥姆霍兹共鸣器 · 气柱驻波 · 超吹</div>
+      <div class="card-tag" data-i18n="t5Tag">把“脚注”里的名词展开成小图＋一句话机制；每条的对应演示控件也一并标注</div>
+    </div>
+    <div class="cv"><canvas id="cvTerms" width="1240" height="356" role="img" aria-label="名词原理示意图"></canvas></div>
+    <div class="bars" style="margin-top:14px; padding-top:6px; border-top:1px dashed var(--line)">
+      <span style="font-size:13px; color:var(--amber); font-weight:600" data-i18n="d5Lbl">🔊 每条原理都带“有声小实验”（示意图随播放高亮）：</span>
+      <button class="btn warn" id="dEdge" type="button" data-i18n="d5Edge">1) 先“嘶”（射流噪声）→ 加腔定音</button>
+      <button class="btn" id="dBottle" type="button" data-i18n="d5Bottle">2) 瓶腔调音：V 大→小</button>
+      <button class="btn" id="dMode" type="button" data-i18n="d5Mode">3) 驻波：第1号→第2号(八度)</button>
+      <button class="btn warn" id="dOverb" type="button" data-i18n="d5Overb">4) 超吹：同舌位 ×2</button>
+    </div>
+    <div class="bars" style="margin-top:12px; padding-top:6px; border-top:1px dashed var(--line)">
+      <label data-i18n="aLbl">瓶口孔径 A（大 → 音更高）：</label>
+      <input id="aSld" type="range" min="0" max="1" step="0.02" value="0.5" />
+      <span class="val" id="valA">0.50</span>
+      <button class="btn warn" id="helBtn" type="button"><span>🔊 亥姆霍兹试音</span></button>
+      <span style="font-size:12px;color:var(--muted)" data-i18n="hHint"></span>
+    </div>
+    <div class="note" data-i18n="d5Hint">听法：1 和 2 用当前舌位/音高直接演示“无腔=嘶、有腔=定音 / 腔大→小 音低→高”；3 和 4 在舌位不变时把驻波从第1号推到第2号——音高×2（高八度），图上方框会高亮对应格子并显示阶段说明。</div>
+    <ul class="bullets">
+      <li><b data-i18n="t5L1">1) 边棱音（edge tone / 气簧）：</b><span data-i18n="t5B1">口腔/笛子的声源不是弦也不是簧片，而是“会自己振荡的空气”：从唇孔喷出的射流（jet）在唇齿棱上被周期性切开、交替卷出涡（主图唇口旋涡示意）。这层空气动力失稳产生宽频扰动，只有接近口腔共鸣频率的成分被放大存活——所以换腔形（舌位/唇孔）就能在同一口气上换音，这正是“气簧”乐器的核心。</span></li>
+      <li><b data-i18n="t5L2">2) 亥姆霍兹共鸣器（瓶腔）：</b><span data-i18n="t5B2">频率 f≈(c/2π)·√(A/(V·ℓ))：V＝瓶身（口腔主体）体积，A 与 ℓ＝瓶口（唇孔）的截面积与“颈长”。腔大音低（V↑f↓）、唇孔大音高（A↑f↑）。口哨＝一只“可变形的瓶子”：舌位滑杆≈把瓶子捏小捏大变音，唇孔滑杆≈调瓶口。无需“预先调好的弦”，谐振器本身连续可调。</span></li>
+      <li><b data-i18n="t5L3">3) 气柱驻波与泛音：</b><span data-i18n="t5B3">共振的本质是驻波：波在唇孔（近似开口端）与舌/软腭形成的“有效末端”之间往返叠加。一端开口的近似：f1≈c/(4ℓ)，于是“等效腔长 ℓ 越短音越高”——第 2 节的 1/f 舌位尺由此而来；同一腔还能驻出 f2=2f1、f3=3f1……（模式号 n＝半波数，上图画线：第 2 号模式中间有个不动的点＝节点）。</span></li>
+      <li><b data-i18n="t5L4">4) 超吹（overblowing）：</b><span data-i18n="t5B4">舌位/指法不动，只把气流加急（或微调射流与棱相遇的相位），驻波跳到更高的模式：音高×2（高八度）、×3……长笛、竖笛、埙与口哨都这样取高音。演示：主图“超吹”开关＝同舌位×2；下方“听口哨全音域”在 E7 处再次超吹上 E8≈5.3 kHz。</span></li>
+    </ul>
+  </section>
+  <footer>
+    <div data-i18n="foot1"><b>教学简化声明：</b>本页把口哨腔体近似为“一端开口、由舌/软腭决定长度的空气柱”以解释几何规律（音高≈常数÷有效长度）。真实口哨还包含唇孔声阻抗、射流与腔体的非线性耦合等细节，故 Hz 数值为演示值而非实测。口哨声合成＝WebAudio 正弦基频＋微量谐波＋气流噪声的近似。</div>
+    <div style="margin-top:6px" data-i18n="foot2">延伸关键词：边棱音 edge tone · 亥姆霍兹共鸣器 · 气柱驻波/超吹 overblowing · 等响曲线与对数听觉 · 1/f 弦长律 · 本体感觉与运动学习（听觉-运动闭环）。</div>
+  </footer>
+</div>
+
+<div id="scrim"></div>
+<aside id="helpPanel" role="dialog" aria-modal="true" aria-label="帮助">
+  <div class="hHead"><span data-i18n="helpTitle">📖 怎么读这张图</span><button id="helpClose" class="btn" type="button">✕</button></div>
+  <div id="helpZh">
+    <h4>页面结构（对应四个知识点）</h4>
+    <ul>
+      <li><b>1) 发声原理</b>（顶部大图）：剖开看“气簧·边棱音”发声链：肺(气源)→喉(声门开放)→口腔腔体(青蓝=空气腔，可变的“管/瓶”)→唇孔射流拍棱→边棱音+腔体共鸣选音。与笛同类，无弦无簧；与键盘/弦乐器的区别在下排对照图。</li>
+      <li><b>2) 舌位 × 对数听觉</b>：同一段 E5→E7 画在“线性 Hz / 听感对数 / 舌位长度(1/f)”三种尺上。点击中间行可试听。</li>
+      <li><b>3) 舌位感 ↔ 把位感</b>：左右对照“同一个音 n 半音”时，口里舌位与琴上指尖的几何收缩完全同构。</li>
+      <li><b>4) 音色与音域</b>：下方频谱在吹气时实时画出（能量集中基频≈纯音）；再下是口哨音域范围图。</li>
+    </ul>
+    <h4>操作</h4>
+    <ul>
+      <li>主图：直接在图内口部/舌区点按拖动＝调舌位（同时试听）；下方滑杆＝舌位(半音)/唇孔/气息/颤音。</li>
+      <li>“吹气”开/关发声；点“超吹”让音高×2（同一舌位翻八度）。</li>
+      <li>“音阶 / 滑奏 / 《欢乐颂》”会自动“吹”旋律，展示口哨的旋律能力。</li>
+      <li>右上角 EN 可切换英文。</li>
+    </ul>
+    <h4>常见疑问</h4>
+    <ul>
+      <li>为什么口腔能“定音”？射流拍棱产生宽频的振荡，只有腔体的共振频率能“存活”并被放大——腔体越大音越低（瓶口效应），腔越短小音越高（笛子按孔同理）。</li>
+      <li>为什么越吹越高越难？见第 2 节：舌位按等比收缩，高音区每个音只差“几毫米甚至更少”，还要顶着越来越强的气流。</li>
+      <li>听不到声音？首次点击“吹气”即可（浏览器要求用户操作后才有声）；若无声请换 Edge/Chrome。</li>
+    </ul>
+  </div>
+  <div id="helpEn" class="hidden">
+    <h4>Page map (the four points)</h4>
+    <ul>
+      <li><b>1) How whistling sounds</b> (top figure): the “air reed / edge tone” chain — lungs (pressure source) → larynx (open glottis) → mouth cavity (cyan = air, a tunable “pipe/bottle”) → lip jet hitting the lip/tooth edge → edge tone + cavity resonance picks the pitch. Same family as flute/recorder; no string, no reed. Bottom strip compares instrument families.</li>
+      <li><b>2) Tongue vs logarithmic hearing</b>: the same E5→E7 run drawn on “linear Hz / perceptual log / tongue-length (1/f)” rulers. Click on the middle row to hear.</li>
+      <li><b>3) Tongue position ≈ violin position sense</b>: same pitch n semitones ⇒ identical geometric shrinkage in mouth and on the fingerboard.</li>
+      <li><b>4) Timbre & range</b>: live spectrum while blowing (energy concentrated at the fundamental ≈ pure tone); range chart below.</li>
+    </ul>
+    <h4>Controls</h4>
+    <ul>
+      <li>Main figure: click/drag inside the mouth/tongue area = move tongue (hear it live).</li>
+      <li>Sliders: semitones (tongue), lip aperture (timbre), breath, vibrato.</li>
+      <li>“Blow” toggles sound; “Overblow” doubles the pitch (same tongue, +1 octave).</li>
+      <li>Scale / glissando / “Ode to Joy” demos show melody.</li>
+    </ul>
+  </div>
+</aside>
+
+<script>
+const I18N = {
+ zh: {
+  pageTitle: "🎺 吹口哨声学原理图（交互模拟）",
+  sub: "演示：<b>口哨 = “气簧”边棱音乐器</b>（与笛/管同族，不同于键盘与弦乐器）、<b>舌位控制 = 对数听觉的精密映射</b>（1/f 腔长尺）、<b>舌位感 ↔ 小提琴把位感</b>、<b>音色与音域</b>。可实时试听。",
+  btnHelp: "📖 帮助", helpTitle: "📖 怎么读这张图",
+  c1Title: "1. 发声原理：肺 → 气簧（边棱音）→ 口腔“可变管/腔”共鸣 —— 与笛同类、无弦无簧",
+  c1Tag: "拖拽调节舌位 / 唇孔 / 气息 · 实时发声 · 超吹翻高八度",
+  lblS: "舌位/等效腔长（半音数 0…24：低→高）", lblLip: "唇孔（哨口·音色）", lblBreath: "气息量", lblVib: "颤音",
+  c1Note: "读法：气从肺（下）经喉（声门开放）进入口腔腔体（青蓝色＝空气腔），从唇孔喷出为“射流”。射流拍击唇/齿边缘、在唇孔处形成交替涡旋＝<b>边棱音</b>（声源，每秒振荡次数≈基频）；口腔腔体像“可以变短变长的管”，把振荡“选频”成音高——这和长笛/竖笛/埙一样属于<b>气鸣·边棱音</b>乐器：没有弦、没有簧片，发声的是<b>气流本身</b>。舌向前上拱 → 腔变短小 → 音变高（类比：笛子按孔让“管”变短）。",
+  c1b1a: "1) 与键盘乐器（钢琴）的本质区别：", c1b1b: "钢琴靠琴槌“敲击”琴弦（冲击激励）发声，音高由一批预先调好、离散排列的弦决定——换音必须“换键”。口哨只有一根“腔”，音高由腔体几何连续无级决定。",
+  c1b2a: "2) 与弦乐器（小提琴）的区别：", c1b2b: "弦乐器的声源是琴弦的振动（弓毛摩擦产生“粘-滑”自激振荡）；口哨没有弦——声源是射流的空气动力失稳（边棱音）。两者的相似点：发音点（指尖/舌）都可连续滑动、无刻度。详见第 3 节。",
+  c1b3a: "3) 与簧片/人声的区别：", c1b3b: "口哨没有簧片、声带不振动（声门只是开放通道），与笛子同属“气簧”家族；簧片乐器（双簧管、口琴）与唱歌（声带振动）另成一类。",
+  c1b4a: "4) 试一试：", c1b4b: "把“气息量”推大并打开“超吹”——舌位不动、音高翻一个八度（像长笛吹急翻高八度）；这是口哨高音区的常用技巧“超吹”。",
+  cFamTitle: "1+. 乐器谱系对照：谁在“振”？",
+  cFamTag: "气鸣（边棱音）vs 弦鸣（擦弦/击弦）· 键盘（离散）vs 滑奏（连续）",
+  fam1: "口哨 / 笛子 / 竖笛 / 埙 = 气鸣 · 边棱音（无弦无簧）",
+  fam2: "小提琴 / 钢琴 = 弦鸣（发声体是弦）",
+  fam3: "键盘 = 离散音位；吹管/口哨/弓弦 = 可连续滑音",
+  c2Title: "2. 舌位控制 = 人耳“对数听觉”的精密映射",
+  c2Tag: "同一段音列画在三种尺上：线性 Hz 尺 / 听感对数尺 / 舌位“1÷频率”长度尺",
+  logHint: "点击三行标尺任一处可定位音高（口哨发声）。",
+  c2Note: "读法：三行是同一段<b>E5→E7 半音列（十二平均律：每 12 个半音＝×2 的八度）</b>，只是摆尺不同。<b>上行线性 Hz 尺</b>：低音八度挤在左边、越往上“格”越宽；<b>中间听感尺</b>：每八度等宽——这才是耳朵听到的“相等”；<b>下行舌位长度尺</b>（等效腔长 ℓ∝1/f）：每个音程占的“毫米”随音高按几何级数收缩（低音区一个全音约 6%，高音区只剩约 3%）。彩色高刻度＝E 大调音阶音：标出<b>实际音高音名</b>（E5、F#5、G#5、A5、B5、C#6、D#6…E7）；中尺每个音阶音下标<b>唱名</b>（do=E5、re=F#5、mi=G#5…），可直接把“舌位刻度”唱出来——吹口哨＝用一块会呼吸的肌肉复现这把对数刻度尺。",
+  c2b1a: "1) 听觉的对数本性：", c2b1b: "频率“×2”＝高八度（听感等距），而不是“＋多少 Hz”。同一音程在高处绝对 Hz 差更大、听感却相等——乐理中的音程本质是“频率之比”。",
+  c2b2a: "2) 舌头面对的是“倒数尺”：", c2b2b: "腔体共振频率 ≈ 常数 ÷ 有效长度 ℓ（越高越“短”）。要发等音程，舌必须让 ℓ 按等比数列收缩（每高八度 ×½，每个半音 ×2^(−1/12)）——等差的毫米是不准的。",
+  c2b3a: "3) 精密性体现在高音区：", c2b3b: "音越高，每个音分对应的舌位移越小。同样的位置误差，在低音区无伤大雅，在高音区就明显走音——吹奏者靠耳朵（对数标尺）实时校准，舌与唇以亚毫米精度配合：这是把“对数听觉”练成“运动控制”的标本。",
+  c2b4a: "4) 不是“吹”而是“调”：", c2b4b: "气息只提供能量并决定“第几号泛音”（见第 1 节“超吹”）；真正的“手指”是舌位与唇形的几何——吹口哨更像吹一把没有按键的笛子：指法＝舌位。",
+  c3Title: "3. 吹口哨的“舌位感” ↔ 小提琴的“把位感”",
+  c3Tag: "同一音高 n 半音：口里（舌）与琴上（指尖）的无级定位 · 都可滑音与揉音",
+  c3Sld: "同一个音（相对 E5 的半音数 0…24 ＝ 两个八度）",
+  c3Note: "读法：左＝口哨口腔剖面，右＝小提琴指板示意（E 弦空弦 E5≈659 Hz）。两把“尺”本质相同：音高越高，有效长度按 ×½、×¼ 收缩，发音点越靠前（口哨）或越靠琴桥（小提琴），且间距越来越小。琴上叫“换把”，口里就是“移舌”：“把位感”＝由耳朵（对数听觉）校准的肌肉位置记忆——两件乐器练的是同一件事。",
+  c3b1a: "1) 都“无级、无刻度”：", c3b1b: "小提琴指板无品、音准全靠指尖位置＋耳朵；口哨的“口腔指板”也没有刻度，全靠舌位＋耳朵。任何中间音（滑音、微分音）都能发。",
+  c3b2a: "2) 都靠“听觉闭环”练位置：", c3b2b: "放错了会听到“不准”→ 大脑立即微调舌/指。千百次练习后形成不用思考的“手感/舌感”。",
+  c3b3a: "3) 相同的几何：", c3b3b: "弦：f ∝ 1/弦长；口哨腔：f ≈ 常数/有效长度。两者半音间距的收缩律一模一样（等比），可互相打比方：口哨的低/中/高“舌位”≈ 小提琴的一/三/五把位。",
+  c3b4a: "4) 技法互通：", c3b4b: "滑音（连续移舌/指尖）、揉音（小提琴指尖滚压 ↔ 口哨气息/下颌微颤）、换把瞬间的落点准确。差别：小提琴四弦＋琴身放大，口哨单腔直接辐射。",
+  c4Title: "4. 音色与音域：接近纯音的“气笛”，基频正好落在人耳最敏感区",
+  c4Tag: "实时频谱（能量集中基频＝纯音性）· 音域范围 · 与长笛/人声对比",
+  c4b1a: "1) 音质＝“纯”：", c4b1b: "频谱上能量几乎全在基频（上图：基频尖峰＋极弱高次谐波＋少量气流噪声），听感接近长笛的纯音：没有琴弦的金属感、没有簧片的粗粝感——因为声源是气流，天然接近正弦。",
+  c4b2a: "2) 影响音质的“旋钮”：", c4b2b: "唇孔小而圆→射流聚焦、音更清亮（口径大/漏气→噪声与“噗”声）；舌背中缝（舌沟）把气流拢成一束→更干净；唇面微湿、气息平稳→少杂音、可长音。这些旋钮还微微移动音高，必须与听觉协同。",
+  c4b3a: "3) 音域：", c4b3b: "成人常用本调基频约 0.7–2.6 kHz（≈1.5–2 个八度）；熟练者约 2.5–3.5 个八度（0.5–4 kHz+）；世界级口哨手音域更宽。低音要“大腔＋大唇孔＋缓气”，高音要“小腔＋小孔＋强而细的射流”——正是第 1 节的几何规律。",
+  c4b4a: "4) 为什么“传得远、有点刺耳”？", c4b4b: "口哨基频大多落在人耳最灵敏的 2–5 kHz（响度敏感峰），声压不高也“扎耳”；且方向性强（唇前），像一支小号角。",
+  foot1: "<b>教学简化声明：</b>本页把口腔腔体近似为“一端开口、由舌位决定长度的空气柱/腔”来解释几何规律（音高≈常数÷有效长度）。真实口哨还含唇孔声阻抗与射流-腔体非线性耦合，Hz 数值为演示值而非实测。口哨声合成＝WebAudio 正弦基频＋微量谐波＋气流噪声。",
+  foot2: "延伸关键词：边棱音 edge tone · 亥姆霍兹共鸣器 · 气柱驻波 / 超吹 overblowing · 等响曲线与对数听觉 · 1/f 弦长律 · 本体感觉与听觉-运动闭环。",
+  // canvas labels (zh)
+  c_title: "口哨发声链剖面 · 点按/拖动口内＝移动舌位（青蓝＝空气腔）", c_hintTop: "肺→气管→喉(声门开)→咽→口腔腔体→唇孔射流拍棱：腔体即“可变管/瓶”，舌位=调音钮",
+  c_lungs: "肺(气源)", c_diaph: "横膈膜", c_trachea: "气管", c_larynx: "喉·声门开", c_pharynx: "咽",
+  c_roof: "硬腭/上齿", c_velum: "软腭(上抬)", c_nasal: "鼻腔(关闭)", c_nasoX: "鼻咽已封闭", c_teethU: "上齿",
+  c_lipUp: "上唇", c_lipLow: "下唇", c_edge: "唇/齿缘(棱)",
+  c_tongue: "舌(共鸣壁)", c_tip: "舌尖", c_dorsum: "舌背(隆起)", c_root: "舌根",
+  c_cav: "口腔空气腔", c_jet: "射流", c_edgeTone: "边棱音涡街", c_air: "声波→耳",
+  c_eff: "等效腔长 ℓ", c_wall: "舌隆起 = “有效末端”", c_wall2: "有效腔长端点",
+  c_open: "唇孔(哨口)", c_back: "咽",
+  c_flow: "气流路径", c_overblow: "超吹：同舌位 激发第2号泛音 → ×2 高八度",
+  c_mode1: "腔内驻波（第1号·本调）", c_mode2: "腔内驻波（第2号·超吹）",
+  c_noteLow: "腔大 → 音低", c_noteHigh: "腔短小 → 音高",
+  c_wave: "压力驻波(共鸣振荡)",
+  c_hintLow: "舌后低平", c_hintHigh: "舌前上拱",
+  octLbl: "八度：频率×2",
+  r1t: "1) 线性 Hz 尺（低音挤在左，格越往高越宽）", r2t: "2) 听感尺·对数（八度/半音都等距）", r3t: "3) 舌位长度尺 ℓ∝1/f（音程占的“毫米”等比收缩）",
+  r1note: "Hz 线性：659→1318 的距离 ＜ 1318→2637", r2note: "听感：E5→E6 与 E6→E7 “一样宽”", r3note: "舌：低音每步 ~6%，高音每步 ~3%——越细",
+  lowNote: "低音区", highNote: "高音区", moveTiny: "每一步只差几毫米",
+  cmpMouthTitle: "口哨“口腔指板”：舌位 = 把位", cmpViolinTitle: "小提琴 E 弦指板：手指 = 把位(示意)",
+  cmpNut: "琴枕", cmpBridge: "琴桥", cmpStrLive: "振动弦段", cmpStrDead: "按死的弦段(不振)",
+  cmpLow: "低(舌后)", cmpMid: "中", cmpHigh: "高(舌前近齿)",
+  cmpF1: "Ⅰ 把位", cmpF2: "Ⅱ", cmpF3: "Ⅲ", cmpF4: "Ⅳ", cmpF5: "Ⅴ+ 高位",
+  specTitle: "实时频谱（对数频率轴 · 绿虚线 = E5–E8 绝对音高参照 659/1319/2637/5274 Hz）",
+  specIdle: "（先点“吹气”或任意试听按钮——这里会画出该音的实时频谱）",
+  specFund: "基频(几乎全部能量)", specH2: "第2谐波(很弱)", specNoise: "气流噪声",
+  rangeTitle: "口哨音域范围（对数频率轴；标注为典型值）",
+  rangeHear: "人耳最灵敏区 2–5 kHz", rangeFlute: "长笛常规音域 C4–C7",
+  rangeVoice: "歌声基频区（对照）", rangeWhistMain: "口哨常用本调", rangeWhistHi: "超吹/高音技巧", rangeWhistX: "个别训练者/纪录",
+  rangeB1: "初学者 ≈1–1.5 八度", rangeB2: "一般熟练 ≈2 八度+", rangeB3: "训练有素 ≈3 八度+",
+  rangeNote: "注意：频率轴每向右一段 = ×2（八度）。口哨一开口就站在长笛中高音区：比“唱”高、比“长笛”还方便冲上 4 kHz。",
+  famStrip: "“谁在发声？”——口哨与笛类：气流拍棱（气簧），无弦无簧；小提琴/钢琴：琴弦振动（弦鸣）。口哨还“无键盘”：音高连续可滑。",
+  fam1t: "吹口哨  (本页)", fam2t: "长笛/竖笛/埙（同族）", fam3t: "小提琴", fam4t: "钢琴",
+  famWhistleSub: "声源＝气流拍唇缘\n腔＝口腔(无级)", famFluteSub: "声源＝气流拍棱\n腔＝指孔定管长", famViolinSub: "声源＝弓擦弦(粘滑)\n腔＝琴体(固定)", famPianoSub: "声源＝槌击弦\n离散琴键",
+  helpHint: "拖舌位 / 吹气 / 试听，随时可出声",
+  t_play: "🎺 吹气", t_stop: "⏹ 停", t_regOn: "↗ 超吹：开（×2 高八度）", t_regOff: "↗ 超吹：关（本调）",
+  t_octaveLbl: "八度", t_over: "超吹", t_effShort: "腔短", t_effLong: "腔长",
+  dToneLbl: "🎚 同一音高试听不同音色（上方频谱实时变化）：", dToneSine: "● 纯音（正弦）", dToneWhistle: "🎺 口哨（气簧·本页音色）", dToneViolin: "🎻 小提琴（谐波一串）", dToneCycleBtn: "🔀 循环对比：纯音→口哨→小提琴", dRangeBtn: "🔊 听口哨全音域：E5→E7 再超吹上 E8（×2）",
+  dToneHint: "点“●纯音 / 🎺口哨 / 🎻小提琴”即用当前音高发声（再点一次停止），频谱同步显示：纯音＝单根尖峰；口哨＝尖峰＋弱谐波＋少量气流噪声；小提琴＝一串递减谐波。",
+  t5Title: "5. 原理名词扩展：边棱音 · 亥姆霍兹共鸣器 · 气柱驻波 · 超吹",
+  t5Tag: "把“脚注”里的名词展开成小图＋一句话机制；每条的对应演示控件也一并标注",
+  t5L1: "1) 边棱音（edge tone / 气簧）：", t5L2: "2) 亥姆霍兹共鸣器（瓶腔）：", t5L3: "3) 气柱驻波与泛音：", t5L4: "4) 超吹（overblowing）：",
+  t5B1: "口腔/笛子的声源不是弦也不是簧片，而是“会自己振荡的空气”：从唇孔喷出的射流（jet）在唇齿棱上被周期性切开、交替卷出涡（主图唇口旋涡示意）。这层空气动力失稳产生宽频扰动，只有接近口腔共鸣频率的成分被放大存活——所以换腔形（舌位/唇孔）就能在同一口气上换音，这正是“气簧”乐器的核心。",
+  t5B2: "频率 f≈(c/2π)·√(A/(V·ℓ))：V＝瓶身（口腔主体）体积，A 与 ℓ＝瓶口（唇孔）的截面积与“颈长”。腔大音低（V↑f↓）、唇孔大音高（A↑f↑）。口哨＝一只“可变形的瓶子”：舌位滑杆≈把瓶子捏小变大变音，唇孔滑杆≈调瓶口。无需“预先调好的弦”，谐振器本身连续可调。",
+  t5B3: "共振的本质是驻波：波在唇孔（近似开口端）与舌/软腭形成的“有效末端”之间往返叠加。一端开口的近似：f1≈c/(4ℓ)，于是“等效腔长 ℓ 越短音越高”——第 2 节的 1/f 舌位尺由此而来；同一腔还能驻出 f2=2f1、f3=3f1……（模式号 n＝半波数，上图画线：第 2 号模式中间有个不动的点＝节点）。",
+  t5B4: "舌位/指法不动，只把气流加急（或微调射流与棱相遇的相位），驻波跳到更高的模式：音高×2（高八度）、×3……长笛、竖笛、埙与口哨都这样取高音。演示：主图“超吹”开关＝同舌位×2；下方“听口哨全音域”在 E7 处再次超吹上 E8≈5.3 kHz。",
+  t5p1: "边棱音（气簧）", t5p2: "亥姆霍兹共鸣器", t5p3: "气柱驻波", t5p4: "超吹",
+  t5a1: "缝/孔喷出＝射流", t5a2: "棱切开→涡街＝声源", t5a3: "腔体“选频”定音高",
+  t5b1: "体积 V＋瓶口 A、ℓ", t5b2: "腔大音低 孔大音高", t5b3: "f≈(c/2π)√(A/Vℓ)",
+  t5c1: "基频 f1≈c/(4ℓ)", t5c2: "模式 n：f＝n·f1", t5c3: "越高＝ℓ 越短（1/f）",
+  t5d1: "同一舌位/指法", t5d2: "气流加急→跳模式", t5d3: "音高×2、×3",
+  t5nod: "节点", t5air: "气流", t5Vbig: "V 大", t5Vsmall: "V 小", cmpNote2: "刻度：上方=绝对音名（E5…E7），下方=唱名（相对音高）", vsOpen: "E5 空弦", vsOpenHz: "E5 空弦 659 Hz · n 半音", demoScale: "🎵 音阶示范 E5→E7", demoGliss: "↗ 滑奏示范", demoSong: "🎶 《欢乐颂》", bOctL: "🔊 试听：E5→E6→E7（听感每步等距）", bGlissL: "▶ 滑奏 E5→E7", cWhisL: "🎺 口哨音色试听", cViolL: "🎻 小提琴音色试听", cAltL: "🔀 交替对比", fEdge: "吹口(棱)", fHole: "指孔", fBow: "弓", fHammer: "琴槌→弦",
+  mvsHint: "点/拖琴弦可调音高（与主图口哨同步）", mvsSame: "同一音高：小提琴靠按弦，口哨靠舌位",
+  d5Lbl: "🔊 每条原理都带“有声小实验”（示意图随播放高亮）：", d5Edge: "1) 先“嘶”（射流噪声）→ 加腔定音", d5Bottle: "2) 瓶腔调音：V 大→小", d5Mode: "3) 驻波：第1号→第2号(八度)", d5Overb: "4) 超吹：同舌位 ×2",
+  d5Hint: "听法：1 和 2 用当前舌位/音高直接演示“无腔＝嘶、加腔＝定音 / 腔大→小 音低→高”；3 和 4 在舌位不变时把驻波从第1号推到第2号——音高×2（高八度）。播放时上方示意图高亮对应格子并显示阶段说明。",
+  t5phIdle: "· 点上方四个按钮，这里会高亮当前原理并播报演示阶段 ·",
+  t5phE1: "1) 无腔：只有射流“嘶——”噪声（没有稳定音高）",
+  t5phE2: "1) 加上口腔腔体→同一口气变成稳定的音高（腔体“选频”）",
+  t5phH: "2) 等效腔体 V 从大变小→音从低滑到高（瓶腔调音）",
+  t5phS1: "3) 第 1 号驻波（基频）",
+  t5phS2: "3) 第 2 号驻波（中间出现节点）→ 音高 ×2",
+  t5phO1: "4) 本调（第 1 号泛音）",
+  t5phO2: "4) 超吹 → 第 2 号泛音，同舌位音高 ×2（高八度）",
+  xFold: "讲解与要点（点击展开）", c34Title: "3+4. 舌位↔把位 · 音色与音域 —— 同一屏联动观察（说明已收起，便于对照）", c34Tag: "两个主题共用同一个音高控制：调节上方舌位/按弦并发声，下方频谱与音域读数即时跟随",
+  rLeg: "绝对音高锚点 E5(659Hz)→E6(1319)→E7(2637)；高刻度＝E大调音阶音（下方唱名表示相对音高：do re mi…，′ 为高八度）",
+  aLbl: "瓶口孔径 A（大 → 音更高）：", hBtn: "🔊 亥姆霍兹试音（孔径调音高）", hBtnStop: "⏹ 停止亥姆霍兹试音", hHint: "按住试音后拖动“孔径 A”：孔越大音越高（f∝√A）；腔体 V 用主图舌位滑杆控制——V 越大音越低（f∝1/√V）。瓶子面板会同步张缩。", t5Asmall: "孔小", t5Abig: "孔大",
+  cur: "当前", pos: "位置",
+ },
+ en: {
+  pageTitle: "🎺 Whistle Acoustics — Interactive Diagram",
+  sub: "Shows: <b>whistling = “air-reed” edge-tone aerophone</b> (same family as flute/pipe, not keyboard/strings), <b>tongue control as a precise map of logarithmic hearing</b> (1/f cavity ruler), <b>tongue position ≈ violin “position sense”</b>, <b>timbre & range</b>. Playable in real time.",
+  btnHelp: "📖 Help", helpTitle: "📖 How to read this page",
+  c1Title: "1. Sound production: lungs → air reed (edge tone) → mouth as a tunable pipe/cavity — like a flute, no string, no reed",
+  c1Tag: "Drag tongue / lip aperture / breath · live audio · overblow = +1 octave",
+  lblS: "Tongue / effective cavity (semitones 0…24: low→high)", lblLip: "Lip hole (aperture·timbre)", lblBreath: "Breath", lblVib: "Vibrato",
+  c1Note: "How to read: air from the lungs (below) passes the open glottis into the mouth cavity (cyan = air). It exits the lip hole as a <b>jet</b>; the jet strikes the lip/tooth edge and sheds alternating vortices = <b>edge tone</b> (the sound source; its oscillation ≈ the fundamental). The mouth cavity acts as a tube that can be <b>shortened/reshaped</b> and picks the pitch by resonance — same as flute/recorder/ocarina: an <b>aerophone (edge/air-reed)</b> with no string and no reed: the air itself oscillates. Tongue forward & arched → cavity smaller → higher pitch (like uncovering flute holes shortens the tube).",
+  c1b1a: "1) vs keyboard (piano): ", c1b1b: "the piano is struck strings (impulse excitation) with a fixed, discrete set of pre-tuned strings — to change pitch you must press another key. The whistle has ONE cavity whose geometry sets pitch continuously, with no stepping.",
+  c1b2a: "2) vs strings (violin): ", c1b2b: "a string instrument’s source is the vibrating string (bow hair drives stick-slip self-oscillation). A whistle has no string — the source is aerodynamic instability of the jet (edge tone). What they share: the sounding point (finger / tongue) can slide continuously with no marks. See §3.",
+  c1b3a: "3) vs reeds / voice: ", c1b3b: "no reed, no vocal-fold vibration (the glottis is just an open passage) — same “air-reed” family as flutes; reeds (oboe, harmonica) and singing (vocal folds) are different classes.",
+  c1b4a: "4) Try it: ", c1b4b: "raise Breath and turn on Overblow — the tongue does NOT move, yet the pitch jumps one octave (like overblowing a flute); that is how whistlers reach their top register.",
+  cFamTitle: "1+. Instrument families: what actually vibrates?",
+  cFamTag: "Aerophones (edge tone) vs chordophones (bowed/struck) · discrete keys vs continuous slides",
+  fam1: "Whistle / flute / recorder / ocarina = aerophone · edge tone (no string, no reed)",
+  fam2: "Violin / piano = chordophone (a string vibrates)",
+  fam3: "Keyboard = discrete pitch; wind / whistle / bowed string = continuous slide",
+  c2Title: "2. Tongue control = a precise map of the ear’s logarithmic pitch scale",
+  c2Tag: "One run of notes drawn on three rulers: linear Hz / perceptual log / tongue “1÷f” length",
+  logHint: "Click anywhere on the three rulers to place the pitch (whistle sounds).",
+  c2Note: "How to read: all three rows show the same <b>E5→E7 semitone ladder (12-TET: every 12 semitones = one ×2 octave)</b> drawn differently. <b>Top linear-Hz ruler</b>: the low octave is squeezed left and gaps widen upward. <b>Middle perceptual ruler</b>: every octave is equally wide — that is what the ear calls “equal”. <b>Bottom tongue-length ruler</b> (effective cavity ℓ ∝ 1/f): the millimetres per interval shrink geometrically (~6% per whole tone down low, only ~3% up high). Tall coloured ticks are the E-major scale tones, labelled with their <b>actual note names</b> (E5, F#5, G#5, A5, B5, C#6, D#6 … E7); on the middle ruler each scale tone also carries its <b>solfège</b> (do=E5, re=F#5, mi=G#5…), so you can sing the tongue positions — whistling = recreating this logarithmic ruler with a breathing muscle.",
+  c2b1a: "1) Hearing is logarithmic: ", c2b1b: "doubling frequency = one octave up (perceptually equal), not “+X Hz”. Higher notes need larger Hz differences for the same interval — musical intervals are frequency RATIOS.",
+  c2b2a: "2) The tongue faces a reciprocal ruler: ", c2b2b: "cavity resonance ≈ constant ÷ effective length ℓ (higher = “shorter”). Equal musical steps therefore require ℓ to shrink in geometric series (×½ per octave, ×2^(−1/12) per semitone) — equal millimetres would be out of tune.",
+  c2b3a: "3) Precision lives up high: ", c2b3b: "the higher the pitch, the smaller the tongue travel per cent. The same positional error is harmless down low but clearly out of tune up high — players calibrate in real time by ear (their internal log ruler): a textbook case of turning logarithmic hearing into motor control.",
+  c2b4a: "4) It’s not “blowing”, it’s “tuning”: ", c2b4b: "breath supplies energy and selects the overtone (see overblow in §1); the real “fingers” are tongue position and lip geometry — whistling is like playing a fluteless flute: fingering = tongue position.",
+  c3Title: "3. Whistle “tongue position” ↔ violin “position sense”",
+  c3Tag: "The same pitch n semitones: continuous positioning in the mouth (tongue) and on the fingerboard (finger) — both slide & vibrate",
+  c3Sld: "Same pitch (semitones above E5, 0…24 = two octaves)",
+  c3Note: "How to read: left = whistle mouth profile, right = violin E-string fingerboard (open E5 ≈ 659 Hz). The two “rulers” are the same: as pitch rises the effective length shrinks by ×½, ×¼… and the sounding point moves forward (mouth) / toward the bridge (finger), with spacing getting tighter. On the violin we call it “shifting position”; in the mouth it is “moving the tongue”. Position sense = muscle memory calibrated by the logarithmic ear — the two instruments train the same skill.",
+  c3b1a: "1) Both are continuous and markless: ", c3b1b: "no frets on the violin, intonation from fingertip + ear; no marks in the mouth, intonation from tongue + ear. Every intermediate pitch (glissando, microtones) is available.",
+  c3b2a: "2) Both train position by auditory feedback: ", c3b2b: "a wrong placement sounds out of tune → the brain corrects tongue/finger by millimetres. After thousands of repetitions it becomes “feel” without thinking.",
+  c3b3a: "3) Same geometry: ", c3b3b: "string: f ∝ 1/string length; whistle cavity: f ≈ const/length. Their semitone spacings shrink identically (geometric). Analogy: low/mid/high “tongue positions” ≈ first/third/fifth positions on the violin.",
+  c3b4a: "4) Shared techniques: ", c3b4b: "glissando (slide tongue/finger), vibrato (finger roll ↔ breath/jaw ripple), and landing precisely when shifting. Difference: violin has 4 strings + body amplification; the whistle is a single cavity radiating directly.",
+  c4Title: "4. Timbre & range: an almost-pure “air whistle” sitting exactly in the ear’s most sensitive zone",
+  c4Tag: "Live spectrum (energy at the fundamental = pure tone) · range · compared with flute/voice",
+  c4b1a: "1) Timbre is “pure”: ", c4b1b: "almost all energy sits at the fundamental (live spectrum above: tall peak + very weak harmonics + breath noise). It sounds like a pure tone / flute — no string metallic edge, no reed roughness — because the source is the air stream itself, naturally near-sinusoidal.",
+  c4b2a: "2) Timbre “knobs”: ", c4b2b: "small round lip hole → focused jet, brighter tone (wide hole / leaking corners → noise); the tongue’s midline groove bundles the air stream → cleaner sound; slightly moist lips and steady breath → fewer artifacts, long notes. These knobs also nudge the pitch, so they must be coordinated by ear.",
+  c4b3a: "3) Range: ", c4b3b: "typical adult fundamentals ≈ 0.7–2.6 kHz (≈1.5–2 octaves); skilled ≈ 2.5–3.5 octaves (0.5–4 kHz+); world-class whistlers wider. Low notes need a large cavity + wide lip hole + gentle air; high notes need a small cavity + small hole + a strong, thin jet — exactly the geometry of §1.",
+  c4b4a: "4) Why so piercing / audible from afar? ", c4b4b: "fundamentals land mostly in the ear’s most sensitive 2–5 kHz region, so even low sound pressure is loud; the beam is directional (straight from the lips) like a tiny horn.",
+  foot1: "<b>Pedagogical simplification:</b> the mouth cavity is modelled as an open tube whose length is set by the tongue, to explain the geometry (pitch ≈ const ÷ effective length). Real whistling adds lip-aperture impedance and jet–cavity nonlinear coupling, so Hz values are demo values, not measurements. The whistle voice = WebAudio sine fundamental + faint harmonics + breath noise.",
+  foot2: "Keywords: edge tone · Helmholtz resonator · standing waves / overblowing · equal-loudness & logarithmic hearing · 1/f string law · proprioception & auditory–motor loop.",
+  c_title: "Whistle sound-production profile — click/drag in the mouth to move the tongue (cyan = air)", c_hintTop: "lungs → trachea → open glottis → pharynx → mouth cavity → lip-jet edge tone: the cavity is a tunable tube/bottle, the tongue is its tuning knob",
+  c_lungs: "lungs", c_diaph: "diaphragm", c_trachea: "Trachea", c_larynx: "larynx (open)", c_pharynx: "Pharynx",
+  c_roof: "palate", c_velum: "velum", c_nasal: "nasal (closed)", c_nasoX: "Nasopharynx sealed", c_teethU: "Teeth",
+  c_lipUp: "Upper lip", c_lipLow: "Lower lip", c_edge: "Lip/tooth edge",
+  c_tongue: "tongue", c_tip: "Tip", c_dorsum: "Dorsum (ridge)", c_root: "Root",
+  c_cav: "air cavity", c_jet: "air jet", c_edgeTone: "edge tone", c_air: "Sound → ear",
+  c_eff: "cavity length ℓ", c_wall: "Tongue ridge = “effective end”", c_wall2: "Effective end",
+  c_open: "lip hole", c_back: "pharynx",
+  c_flow: "Air path", c_overblow: "Overblow: same tongue → 2nd partial, ×2 (octave up)",
+  c_mode1: "Standing wave (1st partial)", c_mode2: "Standing wave (2nd partial, overblown)",
+  c_noteLow: "Big cavity → low pitch", c_noteHigh: "Small cavity → high pitch",
+  c_wave: "Standing pressure wave",
+  c_hintLow: "tongue low & back", c_hintHigh: "tongue front & arched",
+  octLbl: "octave: frequency ×2",
+  r1t: "1) Linear Hz ruler (low notes squeezed left; spacing widens)",
+  r2t: "2) Perceptual (log) ruler — octaves/semitones equally spaced",
+  r3t: "3) Tongue-length ruler ℓ ∝ 1/f (interval “mm” shrink geometrically)",
+  r1note: "Hz: 659→1318 shorter than 1318→2637", r2note: "Perception: E5→E6 = E6→E7 “same width”", r3note: "Tongue: ~6% per step low, ~3% high — finer & finer",
+  lowNote: "low register", highNote: "high register", moveTiny: "only millimetres per step",
+  cmpMouthTitle: "Whistle “mouth fingerboard”: tongue = position", cmpViolinTitle: "Violin E string: finger = position (schematic)",
+  cmpNut: "Nut", cmpBridge: "Bridge", cmpStrLive: "vibrating segment", cmpStrDead: "stopped segment (silent)",
+  cmpLow: "low (tongue back)", cmpMid: "mid", cmpHigh: "high (tongue near teeth)",
+  cmpF1: "1st pos.", cmpF2: "2nd", cmpF3: "3rd", cmpF4: "4th", cmpF5: "5th+ high",
+  specTitle: "Live spectrum (log frequency; green dashes = E5–E8 anchors 659/1319/2637/5274 Hz)",
+  specIdle: "(Press “Blow” or any demo button — the spectrum of the sounding note appears here)",
+  specFund: "fundamental (nearly all energy)", specH2: "2nd harmonic (weak)", specNoise: "breath noise",
+  rangeTitle: "Whistle range (log frequency axis; typical values)",
+  rangeHear: "ear’s most sensitive 2–5 kHz", rangeFlute: "flute C4–C7",
+  rangeVoice: "singing fundamentals (for comparison)", rangeWhistMain: "whistle usual register", rangeWhistHi: "overblown / advanced", rangeWhistX: "exceptional / record",
+  rangeB1: "beginner ≈1–1.5 oct.", rangeB2: "skilled ≈2 oct.+", rangeB3: "trained ≈3 oct.+",
+  rangeNote: "Each doubling rightward = one octave. A whistle starts already in the flute’s upper-mid register and can push past 4 kHz easily.",
+  famStrip: "What vibrates? Whistle & flutes: the air stream striking an edge (air reed), no string/reed. Violin/piano: a string. Whistling is also keyboard-less: pitch slides continuously.",
+  fam1t: "Whistle (this page)", fam2t: "Flute/recorder/ocarina", fam3t: "Violin", fam4t: "Piano",
+  famWhistleSub: "source: jet on lip edge\ncavity: mouth (continuous)", famFluteSub: "source: jet on edge\ncavity: tube (holes)", famViolinSub: "source: bowed string (stick-slip)\ncavity: body (fixed)", famPianoSub: "source: hammered string\ndiscrete keys",
+  helpHint: "drag tongue / blow / listen",
+  t_play: "🎺 Blow", t_stop: "⏹ Stop", t_regOn: "↗ Overblow: ON (×2 octave)", t_regOff: "↗ Overblow: OFF (fundamental)",
+  t_octaveLbl: "octave", t_over: "overblow", t_effShort: "short", t_effLong: "long",
+  dToneLbl: "🎚 Same pitch, different timbres (live spectrum above):", dToneSine: "● Pure sine", dToneWhistle: "🎺 Whistle (air reed)", dToneViolin: "🎻 Violin (harmonics ladder)", dToneCycleBtn: "🔀 Cycle: sine → whistle → violin", dRangeBtn: "🔊 Whistle range: E5→E7, then overblow to E8 (×2)",
+  dToneHint: "Press one timbre button to play at the current pitch (press again to stop); the spectrum shows it live — sine: one spike; whistle: spike + faint harmonics + breath noise; violin: a ladder of decreasing harmonics.",
+  t5Title: "5. Principle glossary: edge tone · Helmholtz resonator · standing waves · overblowing",
+  t5Tag: "The footnote terms expanded as mini-diagrams + one-line mechanics, with links to the demo controls",
+  t5L1: "1) Edge tone (air reed): ", t5L2: "2) Helmholtz resonator (bottle): ", t5L3: "3) Standing waves & partials: ", t5L4: "4) Overblowing: ",
+  t5B1: "The source of a whistle (or flute) is not a string or reed but “air that oscillates by itself”: the jet leaving the lip hole is sliced periodically by the lip/tooth edge, shedding alternating vortices (see the swirls at the lips in §1). That aerodynamic instability is broadband; only components near the mouth-cavity resonance survive and grow — so changing the cavity (tongue/lips) retunes the pitch on the same breath: the essence of air-reed instruments.",
+  t5B2: "f≈(c/2π)·√(A/(V·ℓ)): V = bottle (mouth cavity) volume; A and ℓ = area and “neck length” of the lip hole. Big cavity → low (V↑); bigger aperture → higher (A↑). A whistle is a “deformable bottle”: the tongue slider reshapes V, the lip slider reshapes A. No pre-tuned string needed — the resonator itself is continuously tunable.",
+  t5B3: "Resonance is a standing wave: waves bounce between the lip opening (≈ open end) and the “effective end” made by tongue/soft palate. One-end-open approximation: f1≈c/(4ℓ) — which is exactly the 1/f tongue ruler of §2. The same cavity also supports f2=2f1, f3=3f1… (mode number = number of half-waves; the 2nd mode has a stationary point in the middle = the node).",
+  t5B4: "Keep the tongue/fingering fixed and push more air (or shift the jet–edge phase): the standing wave jumps to a higher mode — pitch ×2 (octave), ×3… Flutes, recorders, ocarinas and whistles all use this trick for high notes. Demo: the Overblow switch in §1 doubles the pitch on the same tongue; the “full range” demo in §4 overblows E7 up to E8 ≈ 5.3 kHz.",
+  t5p1: "Edge tone (air reed)", t5p2: "Helmholtz resonator", t5p3: "Standing waves", t5p4: "Overblowing",
+  t5a1: "aperture → air jet", t5a2: "edge → vortex street", t5a3: "cavity locks the pitch",
+  t5b1: "volume V + neck A, ℓ", t5b2: "big V → low; big A → high", t5b3: "f≈(c/2π)√(A/Vℓ)",
+  t5c1: "f1 ≈ c/(4ℓ)", t5c2: "mode n: f = n·f1", t5c3: "higher = shorter ℓ (1/f)",
+  t5d1: "same tongue/fingering", t5d2: "more air → higher mode", t5d3: "pitch ×2, ×3",
+  t5nod: "node", t5air: "air stream", t5Vbig: "V big", t5Vsmall: "V small", cmpNote2: "Ticks: absolute pitch names above (E5…E7), solfège below (relative)", vsOpen: "E5 open", vsOpenHz: "E5 open 659 Hz · n semitones", demoScale: "🎵 Scale demo E5→E7", demoGliss: "↗ Glissando demo", demoSong: "🎶 “Ode to Joy”", bOctL: "🔊 Hear: E5→E6→E7 (equally spaced to the ear)", bGlissL: "▶ Gliss E5→E7", cWhisL: "🎺 Whistle timbre", cViolL: "🎻 Violin timbre", cAltL: "🔀 Alternate A/B", fEdge: "embouchure", fHole: "holes", fBow: "bow", fHammer: "hammer→string",
+  mvsHint: "click/drag the string to tune (synced with the mouth whistle)", mvsSame: "same pitch — violin by finger, whistle by tongue",
+  d5Lbl: "🔊 Each principle comes with an audible mini-demo (the panel highlights while playing):", d5Edge: "1) hiss (jet) → cavity locks a pitch", d5Bottle: "2) bottle tuning: V big→small", d5Mode: "3) standing wave: 1st → 2nd partial (octave)", d5Overb: "4) overblow: same tongue ×2",
+  d5Hint: "1) shows raw jet noise (no cavity = unstable hiss) then the cavity locking a stable pitch; 2) sweeps the effective cavity from large to small (low→high); 3 and 4 hold the tongue still and push the standing wave from the 1st to the 2nd partial — pitch ×2 (octave). The diagram above highlights the active panel and shows a phase caption.",
+  t5phIdle: "· Press the four buttons above — the active principle highlights here ·",
+  t5phE1: "1) no cavity: only the jet hiss (no stable pitch)",
+  t5phE2: "1) cavity added → the same breath becomes a stable pitch (cavity “selects”)",
+  t5phH: "2) effective cavity V shrinks → pitch glides low→high (bottle tuning)",
+  t5phS1: "3) 1st standing wave (fundamental)",
+  t5phS2: "3) 2nd standing wave (a node appears mid-tube) → pitch ×2",
+  t5phO1: "4) fundamental (1st partial)",
+  t5phO2: "4) overblown → 2nd partial, pitch ×2 (octave) on the same tongue",
+  xFold: "notes & key points (click to expand)", c34Title: "3+4. Tongue ↔ position & timbre/range — watched together on one screen (notes collapsed)",
+  c34Tag: "Both topics share one pitch control: adjust tongue/finger above while sounding; the spectrum & range readings below follow instantly",
+  rLeg: "Absolute anchors E5(659Hz)→E6(1319)→E7(2637); tall ticks = E-major scale tones labelled by solfège (relative pitch); ′ marks the next octave",
+  aLbl: "Aperture A of the bottle mouth (bigger → higher):", hBtn: "🔊 Helmholtz test tone (aperture tuning)", hBtnStop: "⏹ Stop Helmholtz test", hHint: "Keep the tone on and drag Aperture A: bigger mouth → higher pitch (f∝√A). Volume V is the tongue slider in §1 — bigger V → lower pitch (f∝1/√V); the bottle panel shrinks/grows with it.", t5Asmall: "small A", t5Abig: "big A",
+  cur: "now", pos: "position",
+ }
+};
+let LANG = "zh";
+function T(k){ const d = I18N[LANG]; return d ? (d[k] !== undefined ? d[k] : "?" + k) : "?" + k; }
+function setLang(l){
+  LANG = l;
+  document.documentElement.lang = (l === "zh") ? "zh-CN" : "en";
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const k = el.getAttribute("data-i18n");
+    if (I18N[l] && I18N[l][k] !== undefined) el.innerHTML = I18N[l][k];
+  });
+  const bt = document.getElementById("btnLang"); if (bt) bt.textContent = (l === "zh") ? "EN" : "中文";
+  var _pt = (I18N[l].pageTitle || "").replace(/<[^>]*>/g, ""); document.title = _pt;
+  var hz = document.getElementById("helpZh"), he = document.getElementById("helpEn");
+  if (hz && he) { hz.classList.toggle("hidden", l !== "zh"); he.classList.toggle("hidden", l !== "en"); }
+  document.querySelectorAll(".xdet summary").forEach(function (s) { s.textContent = "📖 " + T("xFold"); });
+  syncTexts();
+  redrawAll();
+}
+
+
+"use strict";
+/* ==================== helpers ==================== */
+var $ = function (id) { return document.getElementById(id); };
+function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+function lerp(a, b, t) { return a + (b - a) * t; }
+function r2(v) { var n = Math.round(v * 100) / 100; return String(n); }
+function hexA(hex, a) {
+  var r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+  return "rgba(" + r + "," + g + "," + b + "," + a + ")";
+}
+function rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+function noteName(f) {
+  var m = Math.round(69 + 12 * Math.log2(f / 440));
+  var nm = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+  var oct = Math.floor(m / 12) - 1;
+  return nm[((m % 12) + 12) % 12] + oct;
+}
+/* ==================== constants ==================== */
+var E5 = 659.255; // base pitch (E5)
+function s2f(s) { return E5 * Math.pow(2, s / 12); }
+function f2s(f) { return 12 * Math.log2(f / E5); }
+function lrOfS(s) { return Math.pow(2, -s / 12); } // relative effective length 1 .. 0.25
+var SCALE = [0, 2, 4, 5, 7, 9, 11]; // E major
+var NOTE_LETTERS = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+function semisToNote(s) {
+  /* s = semitones ABOVE E5 (the page's absolute reference), so note names are E5…E7 */
+  return noteName(E5 * Math.pow(2, s / 12));
+}
+/* ==================== state ==================== */
+var S = {
+  s: 12, reg: 0, lip: 0.55, breath: 0.6, vib: 0.12, a: 0.5, helmOn: false,
+  playing: false, voice: "whistle",
+  demo: null, demoSteps: null, demoT0: 0,
+  t: 0, lastT: 0,
+  runStart: performance.now()
+};
+function liveF0() { return s2f(S.s) * (S.reg ? 2 : 1); }
+function tongueState() { return { t: clamp(S.s / 24, 0, 1), lr: lrOfS(clamp(S.s, 0, 24)) }; }
+/* ==================== audio ==================== */
+var AC = null, ANA = null, MASTER = null;
+var WV = null, VG2 = null, NOISE = null;
+function ensureAudio() {
+  if (!AC) {
+    var C = window.AudioContext || window.webkitAudioContext;
+    if (!C) return false;
+    AC = new C();
+    MASTER = AC.createGain(); MASTER.gain.value = 0.85;
+    ANA = AC.createAnalyser(); ANA.fftSize = 4096; ANA.smoothingTimeConstant = 0.65;
+    MASTER.connect(AC.destination);
+    ANA.connect(MASTER);
+    // shared noise buffer
+    var len = AC.sampleRate * 2, buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0);
+    for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    NOISE = buf;
+  }
+  if (AC.state === "suspended") { AC.resume(); }
+  return true;
+}
+function buildVoiceWhistle() {
+  if (!ensureAudio()) return null;
+  if (WV) return WV;
+  var ctx = AC;
+  var out = ctx.createGain(); out.gain.value = 0;
+  out.connect(ANA);
+  var oscs = [], gains = [];
+  for (var i = 0; i < 4; i++) {
+    var o = ctx.createOscillator(); o.type = "sine"; o.frequency.value = 440;
+    var g = ctx.createGain(); g.gain.value = 0;
+    o.connect(g); g.connect(out); o.start();
+    oscs.push(o); gains.push(g);
+  }
+  var noise = ctx.createBufferSource(); noise.buffer = NOISE; noise.loop = true;
+  var bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 2600; bp.Q.value = 0.6;
+  var ng = ctx.createGain(); ng.gain.value = 0;
+  noise.connect(bp); bp.connect(ng); ng.connect(out); noise.start();
+  var vib = ctx.createOscillator(); vib.frequency.value = 5.2;
+  var vg = ctx.createGain(); vg.gain.value = 0;
+  vib.connect(vg);
+  for (var j = 0; j < oscs.length; j++) vg.connect(oscs[j].frequency);
+  vib.start();
+  WV = { out: out, oscs: oscs, gains: gains, noise: noise, bp: bp, ng: ng, vib: vib, vg: vg };
+  return WV;
+}
+function updateWhistle(s, reg, lip, breath, vib, on, pure) {
+  var v = WV; if (!v) return;
+  var ctx = AC, t = ctx.currentTime;
+  var f0 = s2f(s) * (reg ? 2 : 1);
+  if (f0 > 7600) f0 = 7600;
+  var b = clamp(breath, 0, 1);
+  for (var i = 0; i < v.oscs.length; i++) {
+    v.oscs[i].frequency.setTargetAtTime(f0 * (i + 1), t, 0.02);
+  }
+  // pure-sine / raw-jet modes (used by the timbre and glossary demos)
+  var isPure = (pure === true);
+  var isJet = (pure === "jet");
+  var br = clamp(0.25 * lip + 0.45 * b, 0.05, 0.9);
+  var amp = on ? (0.05 + 0.34 * b) : 0.0;
+  var g1 = isJet ? 0 : 1.0;
+  var g2 = (isPure || isJet) ? 0 : 0.035 + 0.16 * br;
+  var g3 = (isPure || isJet) ? 0 : 0.01 + 0.05 * br * br;
+  var g4 = (isPure || isJet) ? 0 : 0.004 + 0.02 * br * br;
+  var nz = on ? (isJet ? 0.30 : (isPure ? 0.002 : 0.012 + 0.05 * br * br)) : 0;
+  v.gains[0].gain.setTargetAtTime(g1 * amp, t, 0.03);
+  v.gains[1].gain.setTargetAtTime(g2 * amp, t, 0.03);
+  v.gains[2].gain.setTargetAtTime(g3 * amp, t, 0.03);
+  v.gains[3].gain.setTargetAtTime(g4 * amp, t, 0.03);
+  v.ng.gain.setTargetAtTime(nz, t, 0.05);
+  v.bp.frequency.setTargetAtTime(isJet ? 3000 : 1200 + 2600 * b, t, 0.1);
+  v.bp.Q.setTargetAtTime(isJet ? 0.3 : 0.6, t, 0.1);
+  v.vg.gain.setTargetAtTime(isJet ? 0 : (on ? vib : 0) * f0 * 0.006, t, 0.05);
+  v.vib.frequency.setTargetAtTime(4.6 + 1.6 * vib, t, 0.1);
+}
+function buildVoiceViolin() {
+  if (!ensureAudio()) return null;
+  if (VG2) return VG2;
+  var ctx = AC;
+  var out = ctx.createGain(); out.gain.value = 0; out.connect(ANA);
+  var o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.value = 440;
+  var lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1800; lp.Q.value = 1.2;
+  var g = ctx.createGain(); g.gain.value = 0;
+  o.connect(lp); lp.connect(g); g.connect(out); o.start();
+  var vib = ctx.createOscillator(); vib.frequency.value = 5.6;
+  var vg = ctx.createGain(); vg.gain.value = 24;
+  vib.connect(vg); vg.connect(o.frequency); vib.start();
+  VG2 = { out: out, o: o, lp: lp, g: g };
+  return VG2;
+}
+function updateViolin(s, on) {
+  var v = VG2; if (!v) return;
+  var ctx = AC, t = ctx.currentTime;
+  var f0 = s2f(s);
+  v.o.frequency.setTargetAtTime(f0, t, 0.03);
+  v.lp.frequency.setTargetAtTime(900 + 1500 * (1 - Math.min(1, s / 24)), t, 0.1);
+  v.g.gain.setTargetAtTime(on ? 0.16 : 0, t, on ? 0.05 : 0.25);
+}
+function setVoiceOn(on, forceVoice) {
+  if (!ensureAudio()) return;
+  var use = forceVoice || S.voice;
+  S.playing = on;
+  var isW = (use === "whistle" || use === "sine" || use === "jet");
+  var isV = (use === "violin");
+  if (isW || !VG2) { buildVoiceWhistle(); buildVoiceViolin(); }
+  if (isW) { WV.out.gain.setTargetAtTime(on ? 1 : 0, AC.currentTime, on ? 0.04 : 0.3); if (VG2) VG2.out.gain.setTargetAtTime(0, AC.currentTime, 0.3); }
+  else { if (VG2) VG2.out.gain.setTargetAtTime(on ? 1 : 0, AC.currentTime, on ? 0.08 : 0.3); WV.out.gain.setTargetAtTime(0, AC.currentTime, 0.3); }
+  var pf = use === "sine" ? true : (use === "jet" ? "jet" : false);
+  if (WV) updateWhistle(S.s, S.reg, S.lip, S.breath, S.vib, on && isW, pf);
+  if (VG2) updateViolin(S.s, on && isV);
+}
+function stopAllVoice() { S.helmOn = false; stopDemo(); S.playing = false; var _pf = S.voice === "sine" ? true : (S.voice === "jet" ? "jet" : false); if (WV) updateWhistle(S.s, S.reg, S.lip, S.breath, S.vib, false, _pf); if (VG2) updateViolin(S.s, false); }
+
+/* ==================== mouth geometry (local frame ~940x640) ==================== */
+var ROOF_P0 = { x: 214, y: 300 }, ROOF_C1 = { x: 400, y: 314 }, ROOF_C2 = { x: 560, y: 328 }, ROOF_P1 = { x: 700, y: 344 };
+var RX = [], RY = [];
+(function () {
+  for (var t = 0; t <= 1.0001; t += 0.01) {
+    var u = 1 - t;
+    var x = u * u * u * ROOF_P0.x + 3 * u * u * t * ROOF_C1.x + 3 * u * t * t * ROOF_C2.x + t * t * t * ROOF_P1.x;
+    var y = u * u * u * ROOF_P0.y + 3 * u * u * t * ROOF_C1.y + 3 * u * t * t * ROOF_C2.y + t * t * t * ROOF_P1.y;
+    RX.push(x); RY.push(y);
+  }
+})();
+function roofY(x) {
+  if (x <= RX[0]) return RY[0];
+  if (x >= RX[RX.length - 1]) return RY[RY.length - 1];
+  var lo = 0, hi = RX.length - 1;
+  while (hi - lo > 1) { var md = (lo + hi) >> 1; if (RX[md] <= x) lo = md; else hi = md; }
+  var f = (x - RX[lo]) / (RX[hi] - RX[lo] || 1);
+  return RY[lo] + (RY[hi] - RY[lo]) * f;
+}
+function wallXOf(s) {
+  var lr = lrOfS(clamp(s, 0, 24));
+  return 230 + 470 * (lr - 0.25) / 0.75; // s0->700 (long), s24->230 (short)
+}
+function surfY(x, s) {
+  var w = wallXOf(s), t = clamp(s / 24, 0, 1);
+  var base = 344 + (x - 214) * 0.15;
+  var A = 8 + t * 88, sig = 135;
+  var y = base - A * Math.exp(-Math.pow((x - w) / sig, 2));
+  var roof = roofY(x);
+  if (y < roof + 13) y = roof + 13;
+  return Math.min(y, 486);
+}
+function midCavityY(x, s) { return (roofY(x) + surfY(x, s)) / 2; }
+function drawMouthLocal(ctx, o) {
+  var s = o.s, reg = o.reg, lip = o.lip, br = o.breath, playing = o.playing, tt = o.t;
+  var labels = o.labels !== false;
+  var mode = o.mode || "full"; // full | lite
+  var wallX = wallXOf(s);
+  var openR = 5 + lip * 11; // lip aperture half gap
+  var openTop = 308 - openR, openBot = 308 + openR;
+  ctx.lineJoin = "round"; ctx.lineCap = "round";
+  if (mode === "full") {
+    ctx.fillStyle = "#0b1220";
+    rr(ctx, 12, 12, 922, 618, 16); ctx.fill();
+    ctx.strokeStyle = "rgba(46,64,102,0.55)"; ctx.lineWidth = 1.4; ctx.stroke();
+  }
+  /* ---- air cavity fill (roof -> tongue surface) ---- */
+  ctx.beginPath();
+  ctx.moveTo(RX[0], RY[0]);
+  for (var i = 1; i < RX.length; i++) ctx.lineTo(RX[i], RY[i]);
+  var pts = [];
+  for (var x = 214; x <= 700; x += 8) pts.push([x, surfY(x, s)]);
+  for (var j = pts.length - 1; j >= 0; j--) ctx.lineTo(pts[j][0], pts[j][1]);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(64,170,220,0.17)";
+  ctx.fill();
+  /* cavity outline */
+  ctx.strokeStyle = "rgba(98,215,255,0.42)"; ctx.lineWidth = 1;
+  ctx.stroke();
+  /* ---- pharynx / larynx / trachea duct ---- */
+  ctx.beginPath();
+  ctx.moveTo(702, 346); ctx.bezierCurveTo(708, 380, 712, 430, 714, 470);
+  ctx.lineTo(780, 470); ctx.bezierCurveTo(782, 430, 782, 400, 778, 360); ctx.lineTo(774, 350);
+  ctx.quadraticCurveTo(742, 338, 702, 346);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(150,120,220,0.12)"; ctx.fill();
+  ctx.strokeStyle = "rgba(177,140,255,0.35)"; ctx.lineWidth = 1.5; ctx.stroke();
+  /* glottis marker */
+  ctx.strokeStyle = "rgba(255,143,122,0.5)"; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(716, 398); ctx.quadraticCurveTo(748, 392, 780, 398);
+  ctx.moveTo(718, 412); ctx.quadraticCurveTo(748, 404, 778, 412);
+  ctx.stroke();
+  /* ---- lungs & diaphragm ---- */
+  ctx.fillStyle = "rgba(190,120,160,0.10)";
+  ctx.beginPath(); ctx.ellipse(716, 516, 62, 40, 0.2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(786, 520, 50, 34, -0.15, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "rgba(255,156,224,0.4)"; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.ellipse(716, 516, 62, 40, 0.2, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(786, 520, 50, 34, -0.15, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(610, 566); ctx.quadraticCurveTo(740, 596, 900, 566); ctx.stroke();
+  /* ---- nasal cavity (above roof) ---- */
+  ctx.beginPath();
+  ctx.moveTo(146, 252); ctx.bezierCurveTo(360, 234, 540, 240, 700, 274);
+  ctx.lineTo(700, 344); ctx.lineTo(RX[RX.length - 1], RY[RY.length - 1]);
+  for (var ni = RX.length - 2; ni >= 0; ni--) ctx.lineTo(RX[ni], RY[ni]);
+  ctx.lineTo(ROOF_P0.x, ROOF_P0.y); ctx.lineTo(210, 300); ctx.lineTo(160, 288);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(110,130,180,0.07)"; ctx.fill();
+  ctx.strokeStyle = "rgba(160,175,220,0.28)"; ctx.lineWidth = 1; ctx.setLineDash([5, 4]); ctx.stroke(); ctx.setLineDash([]);
+  /* nasal close cross (velum seal) */
+  ctx.strokeStyle = "rgba(255,139,122,0.85)"; ctx.lineWidth = 2.4;
+  ctx.beginPath(); ctx.moveTo(672, 300); ctx.lineTo(700, 322); ctx.moveTo(700, 300); ctx.lineTo(672, 322); ctx.stroke();
+  /* ---- roof & hard/soft palate ---- */
+  ctx.strokeStyle = "#dfe6f2"; ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(214, 300);
+  ctx.bezierCurveTo(400, 314, 560, 328, 700, 344);
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(223,230,242,0.5)"; ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(214, 300);
+  ctx.bezierCurveTo(400, 314, 560, 328, 700, 344);
+  ctx.stroke();
+  /* teeth (front upper) */
+  ctx.fillStyle = "#eef2fb";
+  rr(ctx, 258, roofY(270) + 1, 26, 22, 3); ctx.fill();
+  rr(ctx, 288, roofY(300) + 1, 26, 20, 3); ctx.fill();
+  ctx.strokeStyle = "rgba(238,242,251,0.6)"; ctx.lineWidth = 1; ctx.stroke();
+  /* ---- tongue ---- */
+  var tp = [];
+  for (var x2 = 214; x2 <= 700; x2 += 6) tp.push([x2, surfY(x2, s)]);
+  ctx.beginPath();
+  ctx.moveTo(tp[0][0], tp[0][1]);
+  for (var k = 1; k < tp.length; k++) ctx.lineTo(tp[k][0], tp[k][1]);
+  ctx.lineTo(700, 470);
+  for (var xb = 700; xb >= 214; xb -= 12) {
+    var yy = 452 + (xb - 214) * 0.055;
+    ctx.lineTo(xb, Math.min(yy, 492));
+  }
+  ctx.closePath();
+  var tg = ctx.createLinearGradient(214, 320, 700, 470);
+  tg.addColorStop(0, "#c9826f"); tg.addColorStop(0.5, "#b96f5e"); tg.addColorStop(1, "#9e5f55");
+  ctx.fillStyle = tg; ctx.fill();
+  ctx.strokeStyle = "#eda28b"; ctx.lineWidth = 1.6; ctx.stroke();
+  /* tongue texture hint */
+  ctx.strokeStyle = "rgba(237,162,139,0.25)"; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (var x3 = 300; x3 < 640; x3 += 34) { ctx.moveTo(x3 + 10, roofY(0) * 0 + 480); }
+  ctx.stroke();
+  /* ---- soft palate (velum, raised) ---- */
+  ctx.strokeStyle = "#c98f6f"; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(560, roofY(560) + 3); ctx.bezierCurveTo(620, roofY(620) - 6, 668, 306, 700, 296); ctx.stroke();
+  /* ---- tongue ridge marker (current wall) ---- */
+  ctx.strokeStyle = "#ffcf6e"; ctx.lineWidth = 1.6; ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(wallX, roofY(wallX)); ctx.lineTo(wallX, surfY(wallX, s) + 10); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = "#ffcf6e";
+  ctx.beginPath(); ctx.moveTo(wallX - 4, roofY(wallX) - 6); ctx.lineTo(wallX + 4, roofY(wallX) - 6); ctx.lineTo(wallX, roofY(wallX) - 1); ctx.closePath(); ctx.fill();
+  /* length bracket + octave ticks along the roof */
+  var bracketY = roofY(240) - 26;
+  ctx.strokeStyle = "rgba(255,207,110,0.8)"; ctx.lineWidth = 1.3;
+  ctx.beginPath(); ctx.moveTo(214, bracketY); ctx.lineTo(700, bracketY); ctx.stroke();
+  ctx.strokeStyle = "rgba(255,207,110,0.5)"; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (var st = 0; st <= 24; st++) {
+    var wx = wallXOf(st);
+    var deg = ((st % 12 + 12) % 12);
+    ctx.moveTo(wx, bracketY - 4);
+    ctx.lineTo(wx, bracketY + 4);
+  }
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(255,207,110,0.9)"; ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.moveTo(214, bracketY - 6); ctx.lineTo(214, bracketY + 6);
+  ctx.moveTo(700, bracketY - 6); ctx.lineTo(700, bracketY + 6);
+  ctx.stroke();
+  /* bracket endpoints */
+  ctx.fillStyle = "#ffcf6e";
+  ctx.beginPath(); ctx.moveTo(214, bracketY - 7); ctx.lineTo(214 + 7, bracketY); ctx.lineTo(214, bracketY + 7); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = "rgba(255,207,110,0.35)";
+  ctx.beginPath(); ctx.moveTo(700, bracketY - 7); ctx.lineTo(700 - 7, bracketY); ctx.lineTo(700, bracketY + 7); ctx.closePath(); ctx.fill();
+  /* standing wave inside cavity (m=1 or 2) */
+  if (playing) {
+    var m = reg ? 2 : 1;
+    ctx.strokeStyle = reg ? "rgba(127,224,160,0.85)" : "rgba(98,215,255,0.85)";
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    var x0w = 222, lenW = wallX - x0w;
+    for (var wx2 = x0w; wx2 <= wallX; wx2 += 4) {
+      var ph = Math.PI * m * ((wx2 - x0w) / (lenW || 1)) * 0.5;
+      var yy2 = midCavityY(wx2, s) - Math.sin(ph) * 16 * (0.55 + 0.45 * Math.sin(tt / 240));
+      if (wx2 === x0w) ctx.moveTo(wx2, yy2); else ctx.lineTo(wx2, yy2);
+    }
+    ctx.stroke();
+  }
+  /* ---- lips ---- */
+  ctx.fillStyle = "#b06a63";
+  rr(ctx, 132, 258, 62, openTop - 256, 14); ctx.fill();
+  ctx.fillStyle = "#a8625c";
+  rr(ctx, 132, openBot + 2, 64, 392 - openBot, 16); ctx.fill();
+  ctx.strokeStyle = "rgba(255,180,160,0.8)"; ctx.lineWidth = 1.6;
+  rr(ctx, 132, 258, 62, openTop - 256, 14); ctx.stroke();
+  rr(ctx, 132, openBot + 2, 64, 392 - openBot, 16); ctx.stroke();
+  /* aperture */
+  ctx.fillStyle = "#0b1526";
+  rr(ctx, 190, openTop - 2, 12, openBot - openTop + 4, 5); ctx.fill();
+  ctx.strokeStyle = "rgba(98,215,255,0.7)"; ctx.lineWidth = 1.2;
+  rr(ctx, 190, openTop - 2, 12, openBot - openTop + 4, 5); ctx.stroke();
+  /* ---- jet & edge-tone vortices (left side, outside) ---- */
+  if (playing) {
+    ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(202, openTop + 3); ctx.lineTo(64, 300 - openR * 0.3);
+    ctx.moveTo(202, openBot - 3); ctx.lineTo(70, 306 + openR * 0.3); ctx.stroke();
+  }
+  ctx.strokeStyle = "rgba(98,215,255,0.9)"; ctx.lineWidth = 1.7;
+  for (var vi = 0; vi < 2; vi++) {
+    var vc = vi === 0 ? { x: 148, y: openBot + 4 } : { x: 122, y: openTop - 8 };
+    ctx.beginPath();
+    ctx.arc(vc.x, vc.y, 7, tt / 300 + vi * Math.PI, tt / 300 + vi * Math.PI + 4.6);
+    ctx.stroke();
+  }
+  /* ---- air flow particles ---- */
+  if (playing || o.particlesAlways) {
+    var path = [
+      [748, 512], [748, 478], [748, 448], [748, 418], [748, 396], [742, 372], [724, 356], [700, 348],
+      [660, 341], [620, 336], [580, 332], [540, 328], [500, 324], [460, 321], [420, 318],
+      [380, 315], [340, 312], [300, 309], [260, 306], [228, 303], [206, 305], [170, 302], [120, 296], [70, 290]
+    ];
+    var total = 0, seg = [];
+    for (var pi = 0; pi < path.length - 1; pi++) {
+      var dx = path[pi + 1][0] - path[pi][0], dy = path[pi + 1][1] - path[pi][1];
+      seg.push(Math.sqrt(dx * dx + dy * dy)); total += seg[seg.length - 1];
+    }
+    var sp = 0.06 + br * 0.30;
+    ctx.fillStyle = "rgba(160,235,255,0.85)";
+    var nP = 8;
+    for (var np = 0; np < nP; np++) {
+      var uu = ((tt / 1000) * sp + np / nP) % 1;
+      var dist = uu * total, acc = 0, si = 0;
+      while (si < seg.length && acc + seg[si] < dist) { acc += seg[si]; si++; }
+      var fr = (dist - acc) / (seg[si] || 1);
+      var px = path[si][0] + (path[si + 1][0] - path[si][0]) * fr;
+      var py = path[si][1] + (path[si + 1][1] - path[si][1]) * fr;
+      if (px < 214 || px > wallX) { ctx.globalAlpha = 0.8; } else { ctx.globalAlpha = 0.25 + 0.6 * br; }
+      ctx.beginPath(); ctx.arc(px, py, 2.4, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+  /* ==================== labels ==================== */
+  if (labels) {
+    var fsF = mode === "lite" ? 11.5 : 15;
+    ctx.textBaseline = "middle";
+    ctx.lineJoin = "round";
+    /* halo text: dark outline keeps glyphs crisp against any drawing */
+    function cap(t2, x, y, col, align, fsz) {
+      var sz = fsz || fsF;
+      ctx.font = sz + "px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif";
+      ctx.textAlign = align || "left";
+      ctx.lineWidth = Math.max(2.4, sz * 0.26);
+      ctx.strokeStyle = "rgba(4,8,15,0.92)";
+      ctx.strokeText(t2, x, y);
+      ctx.fillStyle = col || "#f2f7ff";
+      ctx.fillText(t2, x, y);
+    }
+    function leader(tx, ty, lx, ly, col) {
+      ctx.strokeStyle = "rgba(170,198,240,0.30)";
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(tx, ty); ctx.stroke();
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.arc(tx, ty, 2.4, 0, Math.PI * 2); ctx.fill();
+    }
+    if (mode === "full") {
+      cap(T("c_title"), 40, 44, "#7fd4ff", "left", 15);
+      cap(T("c_hintTop"), 40, 72, "#9fb2d8", "left", 12);
+      /* right-side annotation column (no overlap, each row spaced) */
+      var gX = 838;
+      var rows = [
+        { k: "c_cav", t: [556, 338], col: "#62d7ff" },
+        { k: "c_tongue", t: [436, 428], col: "#f5a58c" },
+        { k: "c_roof", t: [302, 300], col: "#dfe6f2" },
+        { k: "c_nasal", t: [430, 246], col: "#9aa8d0" },
+        { k: "c_velum", t: [664, 300], col: "#e0a080" },
+        { k: "c_back", t: [750, 350], col: "#a88fdc" },
+        { k: "c_larynx", t: [750, 404], col: "#ffb0a0" },
+        { k: "c_lungs", t: [756, 518], col: "#e8c7d8" },
+        { k: "c_diaph", t: [812, 560], col: "#c9b6e8" }
+      ];
+      var yy = 252;
+      if (playing) { cap(reg ? T("c_mode2") : T("c_mode1"), gX, yy - 2, reg ? "#7be0a0" : "#62d7ff", "left", 13); }
+      for (var ri = 0; ri < rows.length; ri++) {
+        var row = rows[ri];
+        if (playing && ri === 0) yy += 30;
+        leader(row.t[0], row.t[1], gX + 5, yy, row.col);
+        cap(T(row.k), gX, yy, row.col, "left");
+        yy += 31;
+      }
+      /* left column: jet / lip hole / edge tone */
+      var lrows = [
+        { k: "c_jet", t: [118, 288], col: "#cfe9ff" },
+        { k: "c_open", t: [176, 306], col: "#9fe8ff" },
+        { k: "c_edgeTone", t: [128, 334], col: "#7be0a0" }
+      ];
+      var yyL = 258;
+      for (var li = 0; li < lrows.length; li++) {
+        var lr2 = lrows[li];
+        leader(lr2.t[0], lr2.t[1], 92, yyL, lr2.col);
+        cap(T(lr2.k), 92, yyL, lr2.col, "right");
+        yyL += 33;
+      }
+      /* bracket captions: cavity-length ℓ + current pitch (halo keeps them readable) */
+      cap(T("c_eff"), 216, bracketY - 24, "#ffcf6e", "left", 13);
+      var f0 = liveF0();
+      cap(noteName(f0) + " · " + Math.round(f0) + " Hz" + (reg ? "  ×2 " + T("t_over") : ""), 400, bracketY - 24, "#ffcf6e", "left", 13);
+    } else {
+      var f2 = liveF0();
+      cap(noteName(f2) + " " + Math.round(f2) + "Hz", 214, bracketY - 14, "#ffcf6e", "left", 13);
+    }
+  }
+}
+
+/* ==================== canvas draw wrappers ==================== */
+function bgc(ctx, w, h) {
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = "#070b12";
+  ctx.fillRect(0, 0, w, h);
+  ctx.restore();
+}
+function txt(ctx, s, x, y, col, size, align, weight, font) {
+  var sz = Math.max(11.5, Math.min(18, (size || 12) * 1.1));
+  ctx.font = (weight ? "600 " : "") + Math.round(sz) + "px " + (font || "'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif");
+  ctx.textAlign = align || "left";
+  ctx.textBaseline = "middle";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = Math.max(2, sz * 0.24);
+  ctx.strokeStyle = "rgba(4,8,15,0.9)";
+  ctx.strokeText(s, x, y);
+  ctx.fillStyle = col || "#eef4ff";
+  ctx.fillText(s, x, y);
+}
+/* ---------------- main mouth ---------------- */
+
+/* right column geometry for the vertical violin (used by draw & click mapping) */
+function sideVioGeo(LW, LH) {
+  var x1 = LW - 12, x0 = x1 - 296;
+  return { x0: x0, x1: x1, cx: x0 + (x1 - x0) * 0.42, nutY: 118, brY: LH - 74, top: 30 };
+}
+/* vertical movable violin drawn on the right of the mouth diagram (left-right layout) */
+function drawSideViolin(ctx, g) {
+  var x0 = g.x0, x1 = g.x1, cx = g.cx, nY = g.nutY, bY = g.brY, L = bY - nY;
+  var ySt = function (st) { return nY + L * (1 - Math.pow(2, -st / 12)); };
+  var s = clamp(S.s, 0, 24), fy = ySt(s);
+  ctx.fillStyle = "#0a101d";
+  rr(ctx, x0, 10, x1 - x0, bY - nY + 120, 12); ctx.fill();
+  ctx.strokeStyle = "rgba(46,64,102,0.8)"; ctx.lineWidth = 1.2; ctx.stroke();
+  txt(ctx, T("cmpViolinTitle"), x0 + 14, 32, "#ffcf6e", 12.5, "left", true);
+  txt(ctx, T("mvsHint"), x0 + 14, 54, "#8fa3c4", 10.5, "left");
+  var f0 = s2f(s);
+  txt(ctx, noteName(f0) + " · " + Math.round(f0) + " Hz" + (S.reg ? "  (×2)" : ""), x0 + 16, bY + 42, "#ffcf6e", 16, "left", true);
+  txt(ctx, T("mvsSame"), x0 + 16, bY + 64, "#7be0a0", 11, "left");
+  ctx.strokeStyle = "#3a4a68"; ctx.lineWidth = 20;
+  ctx.beginPath(); ctx.moveTo(cx, nY); ctx.lineTo(cx, bY); ctx.stroke();
+  ctx.strokeStyle = "#101a2c"; ctx.lineWidth = 15;
+  ctx.beginPath(); ctx.moveTo(cx, nY); ctx.lineTo(cx, bY); ctx.stroke();
+  ctx.strokeStyle = "#c9d4e8"; ctx.lineWidth = 6;
+  ctx.beginPath(); ctx.moveTo(cx - 15, nY); ctx.lineTo(cx + 15, nY); ctx.stroke();
+  ctx.fillStyle = "#e6a24c";
+  ctx.beginPath(); ctx.moveTo(cx - 13, bY + 1); ctx.lineTo(cx + 13, bY + 1); ctx.lineTo(cx, bY + 15); ctx.closePath(); ctx.fill();
+  for (var st = 0; st <= 24; st++) {
+    var yy = ySt(st);
+    var pc = st % 12;
+    var isScale = SCALE.indexOf(pc) >= 0;
+    var oct = st % 12 === 0;
+    ctx.strokeStyle = isScale ? "rgba(255,207,110,0.85)" : "rgba(255,207,110,0.28)";
+    ctx.lineWidth = oct ? 2 : (isScale ? 1.5 : 1);
+    ctx.beginPath(); ctx.moveTo(cx - (oct ? 15 : isScale ? 12 : 6), yy); ctx.lineTo(cx + (oct ? 15 : isScale ? 12 : 6), yy); ctx.stroke();
+    if (st === 0) txt(ctx, T("vsOpen"), cx + 20, nY - 2, "#9fe8ff", 10, "left", true);
+    if (st === 12) { txt(ctx, "E6 ×½", cx + 20, ySt(12), "#7be0a0", 10, "left", true); }
+    if (st === 24) { txt(ctx, "E7 ×¼", cx + 20, ySt(24), "#7be0a0", 10, "left", true); }
+  }
+  var playing = S.playing || !!S.demo;
+  ctx.strokeStyle = "rgba(98,215,255,0.5)"; ctx.lineWidth = 1.8;
+  ctx.beginPath(); ctx.moveTo(cx, nY); ctx.lineTo(cx, fy); ctx.stroke();
+  ctx.strokeStyle = playing ? "#62d7ff" : "#3f5a86"; ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  for (var qy = fy; qy <= bY; qy += 3) {
+    var ph = (qy - fy) / Math.max(1, (bY - fy));
+    var off = playing ? 5 * Math.sin(ph * Math.PI) * (0.6 + 0.4 * Math.sin(S.t / 70)) : 0;
+    if (qy === fy) ctx.moveTo(cx + off, qy); else ctx.lineTo(cx + off, qy);
+  }
+  ctx.stroke();
+  ctx.fillStyle = "#ffcf6e";
+  ctx.beginPath(); ctx.arc(cx, fy, 6.5, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "#0a0f18"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(cx, fy, 6.5, 0, Math.PI * 2); ctx.stroke();
+}
+function drawMain() {
+  var cv = $("cvMain"), ctx = cv.getContext("2d");
+  bgc(ctx, cv.width, cv.height);
+  var _dpr = cv._dpr || 1;
+  ctx.setTransform(_dpr, 0, 0, _dpr, 0, 0);
+  var LW = cv.width / _dpr, LH = cv.height / _dpr;
+  var geo = sideVioGeo(LW, LH);
+  var areaW = geo.x0 - 14;
+  var k = Math.min((areaW - 24) / 940, (LH - 16) / 640);
+  var ox = 14 + ((areaW - 24) - 940 * k) / 2;
+  var oy = 8 + ((LH - 16) - 640 * k) / 2;
+  ctx.save();
+  ctx.translate(ox, oy);
+  ctx.scale(k, k);
+  drawMouthLocal(ctx, { s: S.s, reg: S.reg, lip: S.lip, breath: S.breath, playing: S.playing || !!S.demo, t: S.t, labels: true, mode: "full" });
+  ctx.restore();
+  if (S.reg) txt(ctx, "×2 " + T("t_over"), ox + 10, LH - 14, "#7be0a0", 13, "left", true);
+  drawSideViolin(ctx, geo);
+}
+
+/* ---------------- instrument family strip ---------------- */
+function drawFam() {
+  var cv = $("cvFam"), ctx = cv.getContext("2d");
+  bgc(ctx, cv.width, cv.height);
+  var _dpr = cv._dpr || 1;
+  ctx.setTransform(_dpr, 0, 0, _dpr, 0, 0);
+  var cw = 285, gap = 18, x0 = 18, yTop = 64, yIcon = 120;
+  txt(ctx, T("famStrip"), x0 + 2, 28, "#9fe8ff", 12.5, "left", true);
+  var cells = [
+    { key: "fam1t", col: "#62d7ff", edge: "cyan" },
+    { key: "fam2t", col: "#62d7ff", edge: "cyan" },
+    { key: "fam3t", col: "#ffcf6e", edge: "amber" },
+    { key: "fam4t", col: "#ffcf6e", edge: "amber" }
+  ];
+  for (var i = 0; i < 4; i++) {
+    var cx = x0 + i * (cw + gap);
+    ctx.strokeStyle = "rgba(38,52,79,0.9)"; ctx.lineWidth = 1;
+    rr(ctx, cx, yTop, cw, 168, 10); ctx.stroke();
+    ctx.fillStyle = cells[i].col;
+    ctx.fillRect(cx + 8, yTop + 8, 26, 3);
+    txt(ctx, T(cells[i].key), cx + 10, yTop + 22, "#e6eefb", 13, "left", true);
+    drawFamIcon(ctx, i, cx + cw / 2, yIcon);
+    var sub = (i === 0 ? T("famWhistleSub") : i === 1 ? T("famFluteSub") : i === 2 ? T("famViolinSub") : T("famPianoSub")).split("\n");
+    for (var li = 0; li < sub.length; li++) {
+      txt(ctx, sub[li], cx + 10, yTop + 144 + li * 12, "#8fa3c4", 10.5, "left");
+    }
+  }
+}
+function drawFamIcon(ctx, i, cx, cy) {
+  ctx.save();
+  ctx.strokeStyle = "rgba(143,163,196,0.9)"; ctx.lineWidth = 1.6; ctx.fillStyle = "rgba(143,163,196,0.25)";
+  if (i === 0) { /* whistle: lips front + hole + jet */
+    ctx.strokeStyle = "#f0a090"; ctx.lineWidth = 3.4;
+    ctx.beginPath(); ctx.ellipse(cx, cy, 64, 44, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = "#1c2b47";
+    ctx.beginPath(); ctx.ellipse(cx + 30, cy - 2, 12, 9, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#9fe8ff";
+    ctx.beginPath(); ctx.moveTo(cx + 42, cy - 6); ctx.lineTo(cx + 112, cy - 14);
+    ctx.moveTo(cx + 42, cy + 2); ctx.lineTo(cx + 112, cy + 8); ctx.stroke();
+    ctx.strokeStyle = "#7be0a0"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(cx + 100, cy + 2, 8, 0, 4.4); ctx.stroke();
+    txt(ctx, "└ " + T("c_jet"), cx + 46, cy - 26, "#9fe8ff", 10);
+  } else if (i === 1) { /* flute: horizontal tube with embouchure & jet */
+    ctx.strokeStyle = "#9fb6d8"; ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.moveTo(cx - 90, cy); ctx.lineTo(cx + 90, cy); ctx.stroke();
+    ctx.fillStyle = "#0b1526";
+    ctx.beginPath(); ctx.ellipse(cx - 66, cy - 14, 11, 7, 0.5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#62d7ff"; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(cx - 112, cy + 12); ctx.lineTo(cx - 60, cy - 16); ctx.stroke();
+    ctx.fillStyle = "#9fe8ff"; ctx.beginPath(); ctx.arc(cx - 110, cy + 16, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#22334f";
+    for (var h = -40; h <= 40; h += 26) { ctx.beginPath(); ctx.arc(cx + h, cy, 6, 0, Math.PI * 2); ctx.fill(); }
+    txt(ctx, T("fEdge"), cx - 122, cy + 34, "#62d7ff", 10);
+    txt(ctx, T("fHole"), cx + 50, cy + 20, "#8fa3c4", 10);
+  } else if (i === 2) { /* violin */
+    ctx.fillStyle = "rgba(255,179,94,0.16)";
+    ctx.beginPath();
+    ctx.moveTo(cx - 34, cy - 74);
+    ctx.quadraticCurveTo(cx + 30, cy - 90, cx + 34, cy - 20);
+    ctx.quadraticCurveTo(cx + 56, cy - 30, cx + 62, cy + 8);
+    ctx.quadraticCurveTo(cx + 46, cy + 10, cx + 46, cy + 46);
+    ctx.quadraticCurveTo(cx + 30, cy + 92, cx - 6, cy + 78);
+    ctx.quadraticCurveTo(cx - 40, cy + 92, cx - 52, cy + 40);
+    ctx.quadraticCurveTo(cx - 62, cy + 6, cx - 52, cy - 18);
+    ctx.quadraticCurveTo(cx - 58, cy - 70, cx - 34, cy - 74);
+    ctx.fill(); ctx.strokeStyle = "#ffb45e"; ctx.lineWidth = 1.6; ctx.stroke();
+    ctx.strokeStyle = "#f7d9a8"; ctx.lineWidth = 1.6;
+    for (var s2 = -18; s2 <= 22; s2 += 6) { ctx.beginPath(); ctx.moveTo(cx + s2, cy - 62); ctx.lineTo(cx + s2 * 0.6, cy + 60); ctx.stroke(); }
+    ctx.strokeStyle = "#ffe9c0"; ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.moveTo(cx - 70, cy - 88); ctx.lineTo(cx + 78, cy + 92); ctx.stroke();
+    txt(ctx, T("fBow"), cx + 84, cy + 92, "#ffe9c0", 10);
+  } else { /* piano */
+    ctx.fillStyle = "#d9e2f0";
+    rr(ctx, cx - 84, cy - 52, 168, 12, 2); ctx.fill();
+    ctx.fillStyle = "#11161f";
+    for (var bk = 0; bk < 7; bk++) { ctx.fillRect(cx - 84 + 12 + bk * 24, cy - 52, 12, 7); }
+    ctx.strokeStyle = "#ffcf6e"; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(cx - 30, cy - 52); ctx.lineTo(cx - 30, cy - 90); ctx.stroke();
+    ctx.fillStyle = "#ffcf6e";
+    ctx.beginPath(); ctx.moveTo(cx - 34, cy - 92); ctx.lineTo(cx - 26, cy - 92); ctx.lineTo(cx - 30, cy - 102); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = "#9fb6d8"; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(cx - 84, cy - 90); ctx.lineTo(cx + 84, cy - 90); ctx.stroke();
+    txt(ctx, T("fHammer"), cx + 6, cy - 80, "#ffcf6e", 10);
+  }
+  ctx.restore();
+}
+/* ---------------- three rulers ---------------- */
+function drawLog() {
+  var cv = $("cvLog"), ctx = cv.getContext("2d");
+  bgc(ctx, cv.width, cv.height);
+  var _dpr = cv._dpr || 1;
+  ctx.setTransform(_dpr, 0, 0, _dpr, 0, 0);
+  var x0 = 300, W = 920, x1 = x0 + W;
+  var rows = [
+    { y: 100, mode: "lin", key: "r1t", noteKey: "r1note", col: "#62d7ff" },
+    { y: 216, mode: "log", key: "r2t", noteKey: "r2note", col: "#7be0a0" },
+    { y: 332, mode: "len", key: "r3t", noteKey: "r3note", col: "#ffcf6e" }
+  ];
+  var px = function (mode, st) {
+    var f = s2f(st);
+    if (mode === "lin") return x0 + (f - E5) / (3 * E5) * W;
+    if (mode === "log") return x0 + st / 24 * W;
+    return x0 + (1 - lrOfS(st)) / 0.75 * W;
+  };
+  var SOLF = ["do", "re", "mi", "fa", "sol", "la", "si"];
+  function tx(s, xx, yy, sz, col, align, bold) {
+    ctx.font = (bold ? "700 " : "") + sz + "px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif";
+    ctx.textAlign = align || "left";
+    ctx.textBaseline = "middle";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = Math.max(1.8, sz * 0.22);
+    ctx.strokeStyle = "rgba(4,8,15,0.9)";
+    ctx.strokeText(s, xx, yy);
+    ctx.fillStyle = col;
+    ctx.fillText(s, xx, yy);
+  }
+  txt(ctx, T("rLeg"), 20, 34, "#9fe8ff", 12, "left", true);
+  var curS = clamp(S.s, 0, 24);
+  txt(ctx, "◆ " + noteName(liveF0()) + " · " + Math.round(liveF0()) + " Hz", x1 - 8, 34, "#ffcf6e", 12, "right", true);
+  for (var r = 0; r < rows.length; r++) {
+    var R = rows[r], y = R.y;
+    txt(ctx, T(R.key), 12, y - 44, R.col, 11.5);
+    ctx.strokeStyle = "rgba(143,163,196,0.5)"; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
+    for (var st = 0; st <= 24; st++) {
+      var x = px(R.mode, st);
+      var pc = st % 12;
+      var isScale = SCALE.indexOf(pc) >= 0;
+      var oct = st % 12 === 0;
+      ctx.strokeStyle = isScale ? hexA(R.col, 0.95) : "rgba(143,163,196,0.4)";
+      ctx.lineWidth = oct ? 2.2 : (isScale ? 1.6 : 1);
+      var up = oct ? 17 : (isScale ? 12 : 6);
+      ctx.beginPath(); ctx.moveTo(x, y - up); ctx.lineTo(x, y + up); ctx.stroke();
+      if (isScale) {
+        /* 上：绝对音名（E5…E7 全音阶音）；下：唱名（相对音高） */
+        var octMark = st >= 24 ? "″" : (st >= 12 ? "′" : "");
+        var solIdx = SCALE.indexOf(pc);
+        if (oct) {
+          tx(noteName(E5 * Math.pow(2, st / 12)), x, y - 40, 13, "#9fe8ff", "center", true);
+          tx(SOLF[solIdx] + octMark, x, y + 16, 9.5, hexA(R.col, 0.95), "center", false);
+        } else {
+          tx(noteName(E5 * Math.pow(2, st / 12)), x, y - 22, 9.5, R.col, "center", true);
+          tx(SOLF[solIdx] + octMark, x, y + 16, 9.5, hexA(R.col, 0.95), "center", false);
+        }
+      }
+    }
+    txt(ctx, T(R.noteKey), x0, y + 44, "#6f81a3", 10);
+  }
+  for (var r2 = 0; r2 < rows.length; r2++) {
+    var R2 = rows[r2], xc = px(R2.mode, curS);
+    ctx.fillStyle = "rgba(255,207,110,0.18)";
+    ctx.fillRect(xc - 4, R2.y - 22, 8, 44);
+    ctx.fillStyle = "#ffcf6e";
+    ctx.fillRect(xc - 1.5, R2.y - 22, 3, 44);
+  }
+}
+
+/* click mapping for cvLog */
+function logSFromXY(ev) {
+  var cv = $("cvLog"), rect = cv.getBoundingClientRect();
+  var _d = cv._dpr || 1;
+  var mx = ((ev.clientX - rect.left) * (cv.width / rect.width)) / _d;
+  var my = ((ev.clientY - rect.top) * (cv.height / rect.height)) / _d;
+  var x0 = 300, W = 920;
+  var mode = my < 165 ? "lin" : (my < 282 ? "log" : "len");
+  var x = clamp(mx, x0, x0 + W), f;
+  if (mode === "lin") f = E5 + (x - x0) / W * 3 * E5;
+  else if (mode === "log") f = s2f((x - x0) / W * 24);
+  else { var lr = 1 - (x - x0) / W * 0.75; f = E5 / lr; }
+  return clamp(f2s(f), 0, 24);
+}
+/* ---------------- violin panel ---------------- */
+function drawCmp() {
+  var cv = $("cvCmp"), ctx = cv.getContext("2d");
+  bgc(ctx, cv.width, cv.height);
+  var _dpr = cv._dpr || 1;
+  ctx.setTransform(_dpr, 0, 0, _dpr, 0, 0);
+  txt(ctx, T("cmpMouthTitle"), 40, 26, "#62d7ff", 13.5, "left", true);
+  txt(ctx, T("cmpViolinTitle"), 770, 26, "#ffcf6e", 13.5, "left", true);
+  /* mouth (lite) — larger on the left */
+  var k = 0.6, ox = 20, oy = 96;
+  ctx.save();
+  ctx.translate(ox, oy);
+  ctx.scale(k, k);
+  drawMouthLocal(ctx, { s: S.s, reg: 0, lip: 0.5, breath: 0.5, playing: false, t: 0, labels: false, mode: "lite" });
+  ctx.restore();
+  txt(ctx, T("cmpLow"), 24, 78, "#7be0a0", 10.5);
+  txt(ctx, "E5 (n=0)", 56, 96, "#8fa3c4", 10);
+  txt(ctx, T("cmpHigh"), 620, 78, "#ff8b7a", 10.5);
+  txt(ctx, "E7 (n=24)", 500, 96, "#8fa3c4", 10);
+  /* violin (narrower, dual labels near the nut) */
+  var nx = 810, bx = 1170, ly = 300;
+  var stX = function (st) { return nx + (bx - nx) * (1 - Math.pow(2, -st / 12)); };
+  ctx.strokeStyle = "#3a4a68"; ctx.lineWidth = 22;
+  ctx.beginPath(); ctx.moveTo(nx, ly); ctx.lineTo(bx, ly); ctx.stroke();
+  ctx.strokeStyle = "#101a2c"; ctx.lineWidth = 17;
+  ctx.beginPath(); ctx.moveTo(nx, ly); ctx.lineTo(bx, ly); ctx.stroke();
+  for (var st = 0; st <= 24; st++) {
+    var xv = stX(st);
+    var isScale = SCALE.indexOf(st % 12) >= 0;
+    var oct = st % 12 === 0;
+    ctx.strokeStyle = isScale ? "rgba(255,207,110,0.85)" : "rgba(255,207,110,0.28)";
+    ctx.lineWidth = oct ? 2 : (isScale ? 1.5 : 1);
+    ctx.beginPath(); ctx.moveTo(xv, ly - (oct ? 18 : 12)); ctx.lineTo(xv, ly + (oct ? 18 : 12)); ctx.stroke();
+    if (st <= 9 && isScale) {
+      txt(ctx, semisToNote(st), xv, ly - 22, "#ffcf6e", 9, "center", true);
+    }
+    if (st === 12) { txt(ctx, "E6 ×½", stX(12) + 8, ly - 22, "#7be0a0", 10.5); }
+    if (st === 24) { txt(ctx, "E7 ×¼", stX(24) + 8, ly - 22, "#7be0a0", 10.5); }
+  }
+  ctx.fillStyle = "#c9d4e8";
+  ctx.fillRect(nx - 6, ly - 18, 8, 36);
+  ctx.fillStyle = "#e6a24c";
+  ctx.beginPath(); ctx.moveTo(bx - 4, ly - 26); ctx.lineTo(bx + 12, ly - 18); ctx.lineTo(bx + 12, ly + 18); ctx.lineTo(bx - 4, ly + 26); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = "rgba(127,224,160,0.8)"; ctx.lineWidth = 1.2; ctx.setLineDash([4, 3]);
+  ctx.beginPath(); ctx.moveTo(stX(12), ly - 26); ctx.lineTo(stX(12), ly + 26); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(stX(24), ly - 26); ctx.lineTo(stX(24), ly + 26); ctx.stroke();
+  ctx.setLineDash([]);
+  var curX = stX(clamp(S.s, 0, 24));
+  ctx.strokeStyle = "#ff5f4f"; ctx.lineWidth = 2.2;
+  ctx.beginPath(); ctx.moveTo(curX, ly - 26); ctx.lineTo(curX, ly + 26); ctx.stroke();
+  ctx.fillStyle = "#ffcf6e";
+  ctx.beginPath(); ctx.arc(curX, ly, 7, 0, Math.PI * 2); ctx.fill();
+  txt(ctx, T("cmpNut"), nx + 2, ly - 34, "#c9d4e8", 10);
+  txt(ctx, T("cmpBridge"), bx - 14, ly - 38, "#e6a24c", 10);
+  txt(ctx, T("vsOpenHz"), nx, ly + 84, "#9fe8ff", 10.5);
+  txt(ctx, T("cmpStrLive") + "  ", bx - 6, ly - 46, "#ffcf6e", 10, "right");
+  /* shared bottom ruler: absolute pitch above, solfège below (like §2) */
+  var yR = 552;
+  ctx.strokeStyle = "rgba(98,215,255,0.5)"; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(120, yR); ctx.lineTo(1120, yR); ctx.stroke();
+  for (var st2 = 0; st2 <= 24; st2++) {
+    var xs2 = 120 + st2 / 24 * 1000;
+    var pc2 = st2 % 12;
+    var isScale2 = SCALE.indexOf(pc2) >= 0;
+    ctx.strokeStyle = isScale2 ? "rgba(98,215,255,0.85)" : "rgba(98,215,255,0.3)";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(xs2, yR - 8); ctx.lineTo(xs2, yR + 8); ctx.stroke();
+    if (isScale2) {
+      txt(ctx, semisToNote(st2), xs2, yR - 20, "#9fe8ff", 9, "center", true);
+      var sIdx2 = SCALE.indexOf(pc2);
+      var om2 = st2 >= 24 ? "″" : (st2 >= 12 ? "′" : "");
+      txt(ctx, ["do", "re", "mi", "fa", "sol", "la", "si"][sIdx2] + om2, xs2, yR + 14, "#62d7ff", 9, "center", false);
+    }
+  }
+  var curX2 = 120 + clamp(S.s, 0, 24) / 24 * 1000;
+  ctx.fillStyle = "#ffcf6e";
+  ctx.fillRect(curX2 - 1.5, yR - 10, 3, 20);
+  txt(ctx, T("cmpNote2"), 120, yR + 34, "#6f81a3", 10);
+}
+function cmpSFromXY(ev) {
+  var cv = $("cvCmp"), rect = cv.getBoundingClientRect();
+  var _d = cv._dpr || 1;
+  var mx = ((ev.clientX - rect.left) * (cv.width / rect.width)) / _d;
+  var my = ((ev.clientY - rect.top) * (cv.height / rect.height)) / _d;
+  if (my > 500 && my < 606 && mx > 120 && mx < 1120) {
+    return clamp((mx - 120) / 1000 * 24, 0, 24);
+  }
+  if (my > 90 && my < 360 && mx > 810 && mx < 1170) {
+    var nx = 810, bx = 1170;
+    var ratio = clamp(1 - (mx - nx) / (bx - nx), 0.26, 1);
+    return clamp(-12 * Math.log2(ratio), 0, 24);
+  }
+  return null;
+}
+/* ---------------- spectrum ---------------- */
+function drawSpec() {
+  var cv = $("cvSpec"), ctx = cv.getContext("2d");
+  bgc(ctx, cv.width, cv.height);
+  var _dpr = cv._dpr || 1;
+  ctx.setTransform(_dpr, 0, 0, _dpr, 0, 0);
+  var LW = cv.width / (cv._dpr || 1);
+  var x0 = 90, y0 = 30, w = LW - x0 - 30, h = 230;
+  txt(ctx, T("specTitle"), 24, 16, "#e6eefb", 12.5, "left", true);
+  var fmin = 300, fmax = 8000;
+  var lx = function (f) { return x0 + Math.log(f / fmin) / Math.log(fmax / fmin) * w; };
+  /* grid & freq labels (Hz) */
+  var gridF = [300, 500, 1000, 2000, 4000, 8000];
+  for (var i = 0; i < gridF.length; i++) {
+    var gx = lx(gridF[i]);
+    ctx.strokeStyle = "rgba(60,80,110,0.5)"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(gx, y0); ctx.lineTo(gx, y0 + h); ctx.stroke();
+    txt(ctx, gridF[i] >= 1000 ? (gridF[i] / 1000) + "k" : String(gridF[i]), gx, y0 + h + 14, "#6f81a3", 10, "center");
+  }
+  /* E5–E8 absolute anchors (same reference as every other chart) */
+  var eAnch = [659.255, 1318.51, 2637.02, 5274.04];
+  for (var ea = 0; ea < eAnch.length; ea++) {
+    if (eAnch[ea] < fmin * 1.05 || eAnch[ea] > fmax * 0.95) continue;
+    var ex = lx(eAnch[ea]);
+    ctx.strokeStyle = "rgba(127,224,160,0.4)"; ctx.lineWidth = 1.2; ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(ex, y0); ctx.lineTo(ex, y0 + h); ctx.stroke();
+    ctx.setLineDash([]);
+    txt(ctx, noteName(eAnch[ea]), ex, y0 + 12, "#7be0a0", 9.5, "center", true);
+    txt(ctx, (Math.round(eAnch[ea])) + " Hz", ex, y0 + 24, "#6f81a3", 8.5, "center", false);
+  }
+  var f0 = liveF0();
+  var playing = !!(S.playing || S.demo);
+  if (playing && ANA && AC && AC.state === "running") {
+    var data = new Uint8Array(ANA.frequencyBinCount);
+    ANA.getByteFrequencyData(data);
+    var sr = AC.sampleRate;
+    ctx.strokeStyle = "#ffcf6e"; ctx.lineWidth = 2;
+    ctx.beginPath();
+    var started = false;
+    var prevX = null, prevY = null;
+    for (var fx = x0; fx <= x0 + w; fx += 3) {
+      var fl = fmin * Math.pow(fmax / fmin, (fx - x0) / w);
+      var fr = fl * Math.pow(fmax / fmin, 3 / w);
+      var v = 0;
+      var nb = ANA.frequencyBinCount;
+      for (var bi = Math.max(1, Math.floor(fl / sr * 4096)); bi < Math.min(nb, Math.ceil(fr / sr * 4096) + 1); bi++) {
+        if (data[bi] > v) v = data[bi];
+      }
+      var yv = y0 + h - Math.pow(v / 255, 0.9) * h;
+      if (prevX !== null && v > 0.5) {
+        ctx.lineTo(fx, yv);
+      } else if (v > 0.5) {
+        ctx.moveTo(fx, yv);
+      }
+      prevX = fx;
+    }
+    ctx.stroke();
+    txt(ctx, T("specFund"), x0, y0 + h + 30, "#7be0a0", 10);
+  } else {
+    /* expected pure-tone spectrum preview */
+    var peaks = [[f0, 0.95], [f0 * 2, 0.06], [f0 * 3, 0.02], [f0 * 4, 0.01]];
+    ctx.strokeStyle = "rgba(255,207,110,0.8)"; ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0 + h);
+    for (var fx2 = x0; fx2 <= x0 + w; fx2 += 4) {
+      var fl2 = fmin * Math.pow(fmax / fmin, (fx2 - x0) / w);
+      var amp = 0.001;
+      for (var p = 0; p < peaks.length; p++) {
+        var d = Math.log(fl2 / peaks[p][0]) / Math.log(Math.pow(2, 1 / 12));
+        amp += peaks[p][1] * Math.exp(-d * d / 2);
+      }
+      var yv2 = y0 + h - Math.pow(Math.min(1, amp), 0.8) * h;
+      ctx.lineTo(fx2, yv2);
+    }
+    ctx.stroke();
+    txt(ctx, T("specIdle"), 24, y0 + h + 30, "#6f81a3", 11);
+  }
+  /* fundamental marker */
+  if (f0 > fmin * 1.05 && f0 < fmax * 0.95) {
+    ctx.strokeStyle = "rgba(127,224,160,0.9)"; ctx.lineWidth = 1.2; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(lx(f0), y0); ctx.lineTo(lx(f0), y0 + h); ctx.stroke(); ctx.setLineDash([]);
+    txt(ctx, noteName(f0) + "  " + Math.round(f0) + "Hz", lx(f0), y0 - 6, "#7be0a0", 10.5, "center");
+  }
+}
+/* ---------------- range chart ---------------- */
+function drawRange() {
+  var cv = $("cvRange"), ctx = cv.getContext("2d");
+  bgc(ctx, cv.width, cv.height);
+  var _dpr = cv._dpr || 1;
+  ctx.setTransform(_dpr, 0, 0, _dpr, 0, 0);
+  txt(ctx, T("rangeTitle"), 24, 18, "#e6eefb", 12.5, "left", true);
+  var LW = cv.width / (cv._dpr || 1);
+  var x0 = 120, w = LW - x0 - 40, yTop = 46, hgt = 210;
+  var fmin = 100, fmax = 8000;
+  var lx = function (f) { return x0 + Math.log(f / fmin) / Math.log(fmax / fmin) * w; };
+  var yA = yTop + 24, yB = yTop + 64, yC = yTop + 104;
+  /* background bands */
+  var drawBand = function (a, b, yy, hh, col, alpha) {
+    ctx.fillStyle = hexA(col, alpha);
+    var xa = lx(a), xb = lx(b);
+    rr(ctx, xa, yy, Math.max(4, xb - xa), hh, 4);
+    ctx.fill();
+  };
+  /* hearing sensitivity hint 2-5k */
+  ctx.strokeStyle = "rgba(255,255,255,0.28)"; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.2;
+  rr(ctx, lx(2000), yA - 14, lx(5000) - lx(2000), yC - yA + 68, 8); ctx.stroke();
+  ctx.setLineDash([]);
+  txt(ctx, T("rangeHear"), lx(2050), yA - 22, "#e8ecf4", 10);
+  /* bands */
+  drawBand(262, 2093, yTop, 14, "#8fa3c4", 0.35);
+  txt(ctx, T("rangeFlute"), x0 - 8, yTop + 7, "#8fa3c4", 10.5, "right");
+  drawBand(110, 1100, yTop + 20, 10, "#9aa8d0", 0.25);
+  txt(ctx, T("rangeVoice"), x0 - 8, yTop + 25, "#9aa8d0", 10.5, "right");
+  drawBand(700, 2600, yA, 34, "#7be0a0", 0.55);
+  drawBand(2600, 5200, yB, 34, "#b18cff", 0.5);
+  drawBand(5200, 7900, yC, 34, "#ff9ce0", 0.35);
+  txt(ctx, T("rangeWhistMain"), lx(700) + 4, yA + 17, "#7be0a0", 10.5);
+  txt(ctx, T("rangeWhistHi"), lx(2600) + 4, yB + 17, "#b18cff", 10.5);
+  txt(ctx, T("rangeWhistX"), lx(5250) + 4, yC + 17, "#ff9ce0", 10.5);
+  /* octave ticks E5..E8 & note ruler */
+  ctx.strokeStyle = "rgba(98,215,255,0.6)"; ctx.lineWidth = 1.2;
+  var baseNotes = [659, 1318, 2637, 5274];
+  for (var i = 0; i < baseNotes.length; i++) {
+    var xg = lx(baseNotes[i]);
+    ctx.beginPath(); ctx.moveTo(xg, yA - 14); ctx.lineTo(xg, yC + 50); ctx.stroke();
+    txt(ctx, noteName(baseNotes[i]), xg, yC + 60, "#9fe8ff", 10, "center");
+  }
+  /* skill bars bottom */
+  var ySkill = yC + 90;
+  var skills = [
+    { a: 900, b: 2050, col: "#62d7ff", key: "rangeB1" },
+    { a: 700, b: 3000, col: "#7be0a0", key: "rangeB2" },
+    { a: 550, b: 4200, col: "#ffcf6e", key: "rangeB3" }
+  ];
+  for (var sk = 0; sk < skills.length; sk++) {
+    var sb = skills[sk], yy = ySkill + sk * 24;
+    ctx.fillStyle = hexA(sb.col, 0.5);
+    rr(ctx, lx(sb.a), yy, Math.max(4, lx(sb.b) - lx(sb.a)), 12, 6); ctx.fill();
+    txt(ctx, T(sb.key), lx(sb.b) + 8, yy + 6, sb.col, 10);
+  }
+  /* bottom frequency axis — Hz ticks only (note names stay E-based via the dashed E5..E8 lines) */
+  var axY = ySkill + 78;
+  ctx.strokeStyle = "rgba(143,163,196,0.6)"; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(x0, axY); ctx.lineTo(x0 + w, axY); ctx.stroke();
+  var ticks = [200, 500, 1000, 2000, 4000, 8000];
+  for (var n2 = 0; n2 < ticks.length; n2++) {
+    var xn = lx(ticks[n2]);
+    ctx.beginPath(); ctx.moveTo(xn, axY - 6); ctx.lineTo(xn, axY + 6); ctx.stroke();
+    txt(ctx, ticks[n2] >= 1000 ? (ticks[n2] / 1000) + "k" : String(ticks[n2]), xn, axY + 16, "#6f81a3", 9.5, "center");
+  }
+  txt(ctx, "Hz", x0 + w - 6, axY + 16, "#6f81a3", 9.5, "right");
+  txt(ctx, T("rangeNote"), x0, axY + 34, "#6f81a3", 10.5);
+}
+/* ---------------- principle terms diagram (⑤) ---------------- */
+function drawTerms() {
+  var cv = $("cvTerms"), ctx = cv.getContext("2d");
+  bgc(ctx, cv.width, cv.height);
+  var dpr = cv._dpr || 1;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  var tm = performance.now() / 1000;
+  var cw = 286, gxs = [20, 320, 620, 920];
+  var capt = function (s, x, y, col) { txt(ctx, s, x, y, col || "#cfd9ea", 11, "left", false); };
+  var title = function (s, x) { txt(ctx, s, x, 22, "#ffcf6e", 14, "left", true); };
+  var act = -1, phTxt = T("t5phIdle");
+  if (S.demo === "edge") { act = 0; phTxt = S.voice === "jet" ? T("t5phE1") : T("t5phE2"); }
+  else if (S.demo === "bottle") { act = 1; phTxt = T("t5phH"); }
+  else if (S.demo === "mode") { act = 2; phTxt = S.reg ? T("t5phS2") : T("t5phS1"); }
+  else if (S.demo === "overb") { act = 3; phTxt = S.reg ? T("t5phO2") : T("t5phO1"); }
+  ctx.strokeStyle = "rgba(46,64,102,0.7)"; ctx.lineWidth = 1.2;
+  for (var i = 0; i < 4; i++) { rr(ctx, gxs[i], 8, cw, 318, 10); ctx.stroke(); }
+  title(T("t5p1"), gxs[0] + 10);
+  title(T("t5p2"), gxs[1] + 10);
+  title(T("t5p3"), gxs[2] + 10);
+  title(T("t5p4"), gxs[3] + 10);
+  /* ============ P1 edge tone (animated jet + vortices) ============ */
+  var c1 = gxs[0] + 143;
+  ctx.strokeStyle = "#b06a63"; ctx.lineWidth = 8;
+  ctx.beginPath(); ctx.moveTo(c1 - 105, 96); ctx.lineTo(c1 - 8, 96); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(c1 - 105, 152); ctx.lineTo(c1 - 8, 152); ctx.stroke();
+  ctx.strokeStyle = "rgba(159,232,255,0.9)"; ctx.lineWidth = 1.8;
+  ctx.setLineDash([7, 6]);
+  ctx.lineDashOffset = -tm * 120;
+  for (var j = 0; j < 3; j++) {
+    var yy0 = 106 + j * 17;
+    ctx.beginPath();
+    ctx.moveTo(c1 - 104, yy0);
+    for (var x2 = -80; x2 <= 34; x2 += 6) {
+      var yv = yy0 + Math.sin((x2 + 80) / 14 + tm * 9 + j) * 2.6 + (x2 + 80) * 0.05;
+      if (x2 === -80) ctx.moveTo(c1 + x2, yv); else ctx.lineTo(c1 + x2, yv);
+    }
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  ctx.strokeStyle = "#7be0a0"; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(c1 + 30, 92); ctx.lineTo(c1 + 30, 158); ctx.stroke();
+  ctx.strokeStyle = "rgba(127,224,160,0.95)"; ctx.lineWidth = 1.8;
+  for (var k2 = 0; k2 < 2; k2++) {
+    var rr0 = 8 + Math.sin(tm * 5 + k2 * 1.7) * 2;
+    ctx.beginPath();
+    ctx.arc(c1 + 50 + k2 * 28, 128 + k2 * 9, rr0, tm * 3.2 + k2 * 2.6, tm * 3.2 + k2 * 2.6 + 4.4);
+    ctx.stroke();
+  }
+  capt(T("t5a1"), gxs[0] + 10, 220);
+  capt(T("t5a2"), gxs[0] + 10, 240);
+  capt(T("t5a3"), gxs[0] + 10, 260);
+  /* ============ P2 Helmholtz bottle: V and A both drive the pitch ============ */
+  var c2 = gxs[1] + 143;
+  var sT = clamp(S.s, 0, 24) / 24;          // 0 = large volume (low) ... 1 = small (high)
+  var lipA = clamp(S.a, 0, 1);             // aperture size (A) from the §5 slider
+  var sc = 1 - sT * 0.45;                   // belly scale: shrinks as pitch rises
+  var neckHalf = 7 + lipA * 7;              // bottle mouth (A) follows the lip slider
+  var puls = 1 + Math.sin(tm * 4) * 0.05;
+  ctx.strokeStyle = "#62d7ff"; ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  ctx.moveTo(c2 - neckHalf, 88); ctx.lineTo(c2 - neckHalf, 120);
+  ctx.quadraticCurveTo(c2 - neckHalf, 142, c2 - 64 * sc, 152);
+  ctx.quadraticCurveTo(c2 - 84 * sc, 166, c2 - 78 * sc, 196);
+  ctx.quadraticCurveTo(c2 - 72 * sc, 228, c2 - 30 * sc, 228);
+  ctx.lineTo(c2 + 30 * sc, 228);
+  ctx.quadraticCurveTo(c2 + 72 * sc, 228, c2 + 78 * sc, 196);
+  ctx.quadraticCurveTo(c2 + 84 * sc, 166, c2 + 64 * sc, 152);
+  ctx.quadraticCurveTo(c2 + neckHalf, 142, c2 + neckHalf, 120);
+  ctx.lineTo(c2 + neckHalf, 88);
+  ctx.stroke();
+  ctx.fillStyle = "rgba(98,215,255," + (0.07 + 0.11 * (1 - sT)) + ")";
+  ctx.fill();
+  ctx.fillStyle = "rgba(159,232,255,0.6)";
+  if (S.playing || S.demo) {
+    for (var wi = 0; wi < 3; wi++) {
+      ctx.globalAlpha = 0.5 + 0.5 * Math.sin(tm * 8 - wi * 1.2);
+      var wxx = c2 - 30 * sc + wi * 26 * sc;
+      ctx.beginPath(); ctx.ellipse(wxx, 150, 3 + wi * 2, 22, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+  txt(ctx, "V", c2 - 64 * sc - 8, 200, "#62d7ff", 14, "left", true);
+  txt(ctx, sT < 0.5 ? T("t5Vbig") : T("t5Vsmall"), c2 - 92, 178, "#62d7ff", 10, "right", true);
+  txt(ctx, "A", c2 + neckHalf + 8, 88, "#7be0a0", 13, "left", true);
+  txt(ctx, "ℓ", c2 - neckHalf - 8, 88, "#ffcf6e", 13, "right", true);
+  var hf0 = helmFreq();
+  txt(ctx, "≈ " + noteName(hf0) + " " + Math.round(hf0) + " Hz  (A×" + Math.pow(2, S.a - 0.5).toFixed(2) + ")", gxs[1] + 10, 46, "#ffcf6e", 11, "left", true);
+  txt(ctx, (S.a < 0.45 ? T("t5Asmall") : S.a > 0.55 ? T("t5Abig") : "") + "  " + (sT < 0.5 ? T("t5Vbig") : T("t5Vsmall")), gxs[1] + 10, 62, "#7be0a0", 10, "left", true);
+  capt(T("t5b1"), gxs[1] + 10, 220);
+  capt(T("t5b2"), gxs[1] + 10, 240);
+  capt(T("t5b3"), gxs[1] + 10, 260);
+  /* ============ P3 standing waves (breathing modes, node pulses) ============ */
+  var c3 = gxs[2] + 143;
+  ctx.strokeStyle = "#8fa3c4"; ctx.lineWidth = 2;
+  rr(ctx, c3 - 100, 100, 200, 64, 10); ctx.stroke();
+  var a1 = 20 + 4 * Math.sin(tm * 4.5), a2 = 20 + 4 * Math.sin(tm * 4.5 + 1.4);
+  ctx.strokeStyle = "#62d7ff"; ctx.lineWidth = (act === 2 && S.reg === 0) ? 3 : 2;
+  ctx.beginPath();
+  for (var x3 = -86; x3 <= 86; x3 += 4) {
+    var yv3 = 132 + Math.sin(Math.PI * (x3 + 86) / 172) * a1;
+    if (x3 === -86) ctx.moveTo(c3 + x3, yv3); else ctx.lineTo(c3 + x3, yv3);
+  }
+  ctx.stroke();
+  txt(ctx, "f1", c3 + 62, 66, "#62d7ff", 12, "left", true);
+  ctx.strokeStyle = "#7be0a0"; ctx.lineWidth = (act === 2 && S.reg === 1) ? 3 : 2;
+  ctx.beginPath();
+  for (var x4 = -86; x4 <= 86; x4 += 4) {
+    var yv4 = 188 + Math.sin(Math.PI * 2 * (x4 + 86) / 172) * a2;
+    if (x4 === -86) ctx.moveTo(c3 + x4, yv4); else ctx.lineTo(c3 + x4, yv4);
+  }
+  ctx.stroke();
+  txt(ctx, "f2 = 2f1", c3 - 42, 224, "#7be0a0", 12, "left", true);
+  ctx.fillStyle = "#ffcf6e";
+  ctx.beginPath(); ctx.arc(c3, 188, 3 + Math.sin(tm * 6) * 1.4, 0, Math.PI * 2); ctx.fill();
+  txt(ctx, T("t5nod"), c3 - 8, 208, "#ffcf6e", 11, "left", true);
+  capt(T("t5c1"), gxs[2] + 10, 246);
+  capt(T("t5c2"), gxs[2] + 10, 266);
+  capt(T("t5c3"), gxs[2] + 10, 286);
+  /* ============ P4 overblow ladder (air stream + active partial) ============ */
+  var c4 = gxs[3] + 143;
+  ctx.strokeStyle = "#9fb6d8"; ctx.lineWidth = 8;
+  ctx.beginPath(); ctx.moveTo(c4 - 100, 92); ctx.lineTo(c4 + 100, 92); ctx.stroke();
+  ctx.strokeStyle = "#0b1526"; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.ellipse(c4 + 60, 92, 8, 12, 0.2, 0, Math.PI * 2); ctx.stroke();
+  ctx.strokeStyle = "rgba(255,139,122,0.9)"; ctx.lineWidth = 2.6;
+  ctx.setLineDash([6, 5]); ctx.lineDashOffset = -tm * 140;
+  ctx.beginPath(); ctx.moveTo(c4 - 108, 126); ctx.lineTo(c4 + 46, 94); ctx.stroke();
+  ctx.setLineDash([]);
+  txt(ctx, T("t5air"), c4 - 106, 146, "#ff8b7a", 12, "left", true);
+  var lads = [["×1", "#62d7ff", 112], ["×2", "#7be0a0", 152], ["×3", "#ffcf6e", 192]];
+  for (var la = 0; la < 3; la++) {
+    var on = (act === 3 && ((la === 1 && S.reg === 1) || (la === 0 && S.reg === 0)));
+    ctx.strokeStyle = lads[la][1];
+    ctx.lineWidth = on ? 3.2 : 1.8;
+    ctx.beginPath();
+    for (var x5 = c4 - 96; x5 <= c4 + 96; x5 += 5) {
+      var yn = lads[la][2] + Math.sin((la + 1) * Math.PI * (x5 - (c4 - 96)) / 192) * (8 + Math.sin(tm * 5 + la) * 2);
+      if (x5 === c4 - 96) ctx.moveTo(x5, yn); else ctx.lineTo(x5, yn);
+    }
+    ctx.stroke();
+    txt(ctx, lads[la][0] + (on ? " ◀" : ""), c4 + 104, lads[la][2], lads[la][1], 12, "center", true);
+  }
+  capt(T("t5d1"), gxs[3] + 10, 226);
+  capt(T("t5d2"), gxs[3] + 10, 246);
+  capt(T("t5d3"), gxs[3] + 10, 266);
+  if (act >= 0) {
+    ctx.strokeStyle = "#ffcf6e"; ctx.lineWidth = 3;
+    rr(ctx, gxs[act], 8, cw, 318, 10); ctx.stroke();
+  }
+  txt(ctx, phTxt, 20, 344, act >= 0 ? "#ffcf6e" : "#6f81a3", 13, "left", true);
+}
+function drawStatic() {
+  drawFam(); drawLog(); drawCmp(); drawRange(); drawTerms();
+}
+
+/* ==================== UI ==================== */
+function syncTexts() {
+  var f0 = S.helmOn ? helmFreq() : liveF0();
+  var nm = noteName(f0);
+  var s = clamp(S.s, 0, 24);
+  var t = s / 24;
+  var cavStr;
+  if (t < 0.28) cavStr = (LANG === "zh" ? "腔长 ℓ≈×1 · 舌后低平 → 低音区" : "cavity long ×1 · tongue low/back → low");
+  else if (t < 0.55) cavStr = (LANG === "zh" ? "腔中长 · 舌中位 → 中音区" : "mid cavity · tongue middle");
+  else if (t < 0.8) cavStr = (LANG === "zh" ? "腔较短 · 舌前上拱 → 高音区" : "shorter cavity · tongue front/arched → high");
+  else cavStr = (LANG === "zh" ? "腔短小(≈×¼) · 舌几乎贴前腭 → 极高音" : "tiny cavity ≈×¼ · tongue near palate → very high");
+  if (S.reg) cavStr += "  ·  " + T("t_over");
+  if (S.helmOn) cavStr += "  ·  " + (LANG === "zh" ? "亥姆霍兹 A/V 试音" : "Helmholtz A/V test");
+  var n1 = $("rdNote"); if (n1) n1.innerHTML = nm + " &nbsp;·&nbsp; <span class='rd2'>" + Math.round(f0) + " Hz · " + (LANG === "zh" ? "E5 以上" : "above E5") + " " + r2(s) + (LANG === "zh" ? " 半音" : " semitones") + "</span>";
+  var n2 = $("rdCav"); if (n2) n2.textContent = cavStr;
+  var n3 = $("rdHint"); if (n3) n3.textContent = (LANG === "zh" ? "耳朵按“对数尺”听音：半音 = 频率比 2^(1/12)。拖动上滑杆 = 移动舌位（舌前移上拱 = 音高）。" : "The ear hears ratios: a semitone = ×2^(1/12). Drag the slider = move the tongue (forward/up = higher).");
+  var pL = $("playLbl"); if (pL) pL.textContent = (S.playing && !S.demo) ? T("t_stop") : T("t_play");
+  var rL = $("regLbl"); if (rL) rL.textContent = S.reg ? T("t_regOn") : T("t_regOff");
+  var b1 = $("valS"); if (b1) b1.textContent = r2(S.s);
+  var b2 = $("valLip"); if (b2) b2.textContent = r2(S.lip);
+  var b3 = $("valBreath"); if (b3) b3.textContent = r2(S.breath);
+  var b4 = $("valVib"); if (b4) b4.textContent = r2(S.vib);
+  var b5 = $("valN2"); if (b5) b5.textContent = r2(S.s);
+  var b6 = $("valA"); if (b6) b6.textContent = r2(S.a);
+  var hb = $("helBtn"); if (hb) hb.textContent = S.helmOn ? T("hBtnStop") : T("hBtn");
+}
+function syncSliderFromState() {
+  var a = $("sldS"), b = $("sldN2");
+  if (a && Math.abs(parseFloat(a.value) - S.s) > 0.001) a.value = String(S.s);
+  if (b && Math.abs(parseFloat(b.value) - S.s) > 0.001) b.value = String(S.s);
+}
+function redrawAll() { drawStatic(); drawMain(); syncTexts(); }
+function helmFreq() {
+  var f = s2f(S.s) * (S.reg ? 2 : 1) * Math.pow(2, 1.0 * (S.a - 0.5));
+  return clamp(f, 260, 7800);
+}
+function updateAudioFromState() {
+  if (!AC || !S.playing) return;
+  if (S.helmOn) {
+    buildVoiceWhistle();
+    if (WV) { WV.out.gain.setTargetAtTime(1, AC.currentTime, 0.05); updateWhistle(f2s(helmFreq()), 0, S.lip, S.breath, S.vib, true, false); }
+    if (VG2) VG2.out.gain.setTargetAtTime(0, AC.currentTime, 0.12);
+    return;
+  }
+  if (S.voice === "violin") {
+    if (VG2) updateViolin(S.s, true);
+    if (WV) WV.out.gain.setTargetAtTime(0, AC.currentTime, 0.12);
+  } else {
+    buildVoiceWhistle();
+    if (WV) { WV.out.gain.setTargetAtTime(1, AC.currentTime, 0.05); updateWhistle(S.s, S.reg, S.lip, S.breath, S.vib, true, S.voice === "sine" ? true : (S.voice === "jet" ? "jet" : false)); }
+    if (VG2) VG2.out.gain.setTargetAtTime(0, AC.currentTime, 0.12);
+  }
+}
+function setPitch(sv) {
+  S.s = clamp(sv, 0, 24);
+  syncSliderFromState();
+  syncTexts();
+  drawStatic();
+  drawMain();
+  updateAudioFromState();
+}
+/* ==================== demos ==================== */
+var DR = null;
+var MEL_DEGS = [3, 3, 4, 5, 5, 4, 3, 2, 1, 1, 2, 3, 3, 2, 2, 3, 3, 4, 5, 5, 4, 3, 2, 1, 1, 2, 3, 2, 1, 1];
+var DEG_SEMI = [0, 2, 4, 5, 7];
+function stopDemo() {
+  if (DR && DR.changedReg) S.reg = DR.initReg;
+  DR = null; S.demo = null;
+}
+function startDemo(type) {
+  stopAllVoice();
+  if (!ensureAudio()) return;
+  S.voice = "whistle";
+  setVoiceOn(true, "whistle");
+  DR = { type: type, kind: "seq", t0: performance.now(), steps: null, dur: 0, idx: 0, a: 0, b: 24 };
+  if (type === "oct") {
+    DR.steps = [[0, 0], [0.85, 12], [1.7, 24], [2.55, 12], [3.4, 0]];
+    DR.dur = 4.3;
+  } else if (type === "scale") {
+    DR.steps = [];
+    for (var i = 0; i <= 24; i++) DR.steps.push([i * 0.21, i]);
+    DR.dur = 24 * 0.21 + 0.6;
+  } else if (type === "gliss") {
+    DR.kind = "ramp"; DR.a = 0; DR.b = 24; DR.dur = 4.4; DR.hold = 0.6;
+  } else if (type === "song") {
+    DR.steps = [];
+    var tAcc = 0;
+    for (var m = 0; m < MEL_DEGS.length; m++) {
+      var isLast = m === MEL_DEGS.length - 1;
+      var dur = isLast ? 1.15 : (m % 4 === 3 ? 0.62 : 0.42);
+      DR.steps.push([tAcc, DEG_SEMI[MEL_DEGS[m] - 1]]);
+      tAcc += dur;
+    }
+    DR.dur = tAcc + 0.4;
+  } else if (type === "alt") {
+    DR.kind = "alt"; DR.dur = 8.2;
+  } else if (type === "tone") {
+    DR.kind = "cycle"; DR.dur = 3.6; DR.period = 1.1; DR.voices = ["sine", "whistle", "violin"]; DR.cur = -1;
+  } else if (type === "rangex") {
+    DR.steps = [];
+    for (var q = 0; q <= 24; q++) DR.steps.push([q * 0.16, q, 0]);
+    DR.steps.push([3.95, 24, 0]);
+    DR.steps.push([4.9, 24, 1]);
+    DR.steps.push([6.1, 24, 0]);
+    DR.dur = 7.4;
+  } else if (type === "edge") {
+    /* §⑤①: first only the raw jet (no cavity = hiss), then the cavity locks a pitch */
+    DR.steps = [[0, 12, 0, "jet"], [1.9, 12, 0, "whistle"]];
+    DR.dur = 3.6;
+  } else if (type === "bottle") {
+    /* §⑤②: sweep the effective cavity volume big -> small (bottle effect) */
+    DR.kind = "ramp"; DR.a = 0; DR.b = 24; DR.dur = 3.2; DR.hold = 0.4;
+  } else if (type === "mode") {
+    /* §⑤③: same cavity, 1st partial then 2nd partial (octave, node appears) */
+    DR.steps = [[0, 12, 0], [1.6, 12, 1], [3.1, 12, 0]];
+    DR.dur = 4.2;
+  } else if (type === "overb") {
+    /* §⑤④: fixed tongue, overblow -> x2 octave and back */
+    var s0 = clamp(S.s, 0, 24);
+    DR.steps = [[0, s0, 0], [1.3, s0, 1], [2.6, s0, 0]];
+    DR.dur = 3.9;
+  }
+  DR.initReg = S.reg; DR.changedReg = false;
+  S.demo = type;
+}
+function stepDemo() {
+  if (!DR) return;
+  var t = (performance.now() - DR.t0) / 1000;
+  if (t > DR.dur) {
+    stopDemo();
+    if (S.playing) setVoiceOn(false);
+    syncTexts(); drawStatic(); drawMain();
+    return;
+  }
+  if (DR.kind === "ramp") {
+    var u = clamp(t / (DR.dur - (DR.hold || 0)), 0, 1);
+    S.s = DR.a + (DR.b - DR.a) * u;
+    syncSliderFromState();
+  } else if (DR.kind === "cycle") {
+    var ci = Math.floor(t / (DR.period || 1)) % DR.voices.length;
+    if (DR.cur !== ci) { DR.cur = ci; S.voice = DR.voices[ci]; setVoiceOn(true, S.voice); syncTexts(); }
+  } else if (DR.kind === "alt") {
+    var want = (Math.floor(t / 0.9) % 2) === 0 ? "whistle" : "violin";
+    if (want !== S.voice) { S.voice = want; setVoiceOn(true, want); }
+  } else {
+    while (DR.idx < DR.steps.length - 1 && t >= DR.steps[DR.idx + 1][0]) DR.idx++;
+    var target = DR.steps[DR.idx][1];
+    if (Math.abs(S.s - target) > 0.005) { S.s = target; syncSliderFromState(); }
+    var tr = DR.steps[DR.idx][2];
+    if (tr !== undefined && tr !== S.reg) { S.reg = tr; DR.changedReg = true; syncTexts(); }
+    var tv = DR.steps[DR.idx][3];
+    if (tv !== undefined && tv !== S.voice) { S.voice = tv; setVoiceOn(true, tv); syncTexts(); }
+  }
+}
+/* ==================== pointer ==================== */
+function mainPointer(ev) {
+  if (ev.type === "pointerdown") { var cv0 = $("cvMain"); try { cv0.setPointerCapture(ev.pointerId); } catch (e) {} }
+  var cv = $("cvMain"), rect = cv.getBoundingClientRect();
+  var _d = cv._dpr || 1;
+  var mx = ((ev.clientX - rect.left) * (cv.width / rect.width)) / _d;
+  var my = ((ev.clientY - rect.top) * (cv.height / rect.height)) / _d;
+  var LWp = cv.width / (cv._dpr || 1), LHp = cv.height / (cv._dpr || 1);
+  var geoP = sideVioGeo(LWp, LHp);
+  var k = Math.min((geoP.x0 - 14 - 24) / 940, (LHp - 16) / 640);
+  var ox = 14 + ((geoP.x0 - 14 - 24) - 940 * k) / 2;
+  var oy = 8 + ((LHp - 16) - 640 * k) / 2;
+  var lx2 = (mx - ox) / k, ly2 = (my - oy) / k;
+  if (lx2 > 214 && lx2 < 720 && ly2 > 250 && ly2 < 520) {
+    var lr = 0.25 + 0.75 * (clamp(lx2, 230, 700) - 230) / 470;
+    var sv = -12 * Math.log2(lr);
+    setPitch(sv);
+  } else if (mx >= geoP.x0 && mx <= geoP.x1 && my >= geoP.nutY && my <= geoP.brY) {
+    var yy = clamp(my, geoP.nutY, geoP.brY);
+    var ratio = clamp(1 - (yy - geoP.nutY) / (geoP.brY - geoP.nutY), 0.26, 1);
+    setPitch(clamp(-12 * Math.log2(ratio), 0, 24));
+  }
+}
+function blipPitch(sv) {
+  S.s = clamp(sv, 0, 24);
+  if (S.playing && !S.demo) { setPitch(S.s); return; }
+  if (!ensureAudio()) return;
+  stopDemo(); S.helmOn = false; S.voice = "whistle";
+  setVoiceOn(true, "whistle");
+  if (S._blipT) clearTimeout(S._blipT);
+  S._blipT = setTimeout(function () { if (S.playing && !S.demo) { S.playing = false; if (WV) updateWhistle(S.s, S.reg, S.lip, S.breath, S.vib, false, false); syncTexts(); } }, 1100);
+  syncTexts();
+}
+function logPointer(ev) {
+  var sv = logSFromXY(ev);
+  if (sv !== null && isFinite(sv)) blipPitch(sv);
+}
+function cmpPointer(ev) {
+  var sv = cmpSFromXY(ev);
+  if (sv !== null && isFinite(sv)) blipPitch(sv);
+}
+/* ==================== main loop ==================== */
+function frame() {
+  requestAnimationFrame(frame);
+  stepDemo();
+  if (S.playing) { updateAudioFromState(); syncTexts(); }
+  if (S.playing || S.demo) { drawStatic(); }
+  drawMain();
+  drawSpec();
+  drawTerms();
+  S.t = (performance.now()) % 1000000;
+}
+/* ==================== events & init ==================== */
+function foldSetup() {
+  document.querySelectorAll(".card").forEach(function (card) {
+    var kids = Array.prototype.slice.call(card.children);
+    var i = 0;
+    while (i < kids.length) {
+      var el = kids[i];
+      var isT = el && el.classList && (el.classList.contains("note") || el.tagName === "UL");
+      if (!isT) { i++; continue; }
+      var j0 = i;
+      while (i < kids.length && kids[i] && kids[i].classList && (kids[i].classList.contains("note") || kids[i].tagName === "UL")) i++;
+      var items = kids.slice(j0, i);
+      var det = document.createElement("details");
+      det.className = "xdet";
+      var sum = document.createElement("summary");
+      sum.textContent = "📖 " + T("xFold");
+      det.appendChild(sum);
+      card.insertBefore(det, kids[j0]);
+      for (var k = 0; k < items.length; k++) det.appendChild(items[k]);
+    }
+  });
+}
+function toggleHelm() {
+  if (S.helmOn) { S.helmOn = false; stopAllVoice(); }
+  else {
+    stopDemo(); stopAllVoice();
+    if (!ensureAudio()) return;
+    S.helmOn = true; S.voice = "whistle"; S.playing = true;
+    updateAudioFromState();
+  }
+  syncTexts();
+}
+function bind() {
+  $("btnLang").addEventListener("click", function () { setLang(LANG === "zh" ? "en" : "zh"); });
+  $("btnHelp").addEventListener("click", function () { $("scrim").classList.add("show"); $("helpPanel").classList.add("show"); });
+  function closeHelp() { $("scrim").classList.remove("show"); $("helpPanel").classList.remove("show"); }
+  $("helpClose").addEventListener("click", closeHelp);
+  $("scrim").addEventListener("click", closeHelp);
+  $("playBtn").addEventListener("click", function () {
+    if (S.playing && !S.demo) { stopAllVoice(); }
+    else {
+      stopDemo();
+      if (!ensureAudio()) return;
+      S.voice = "whistle";
+      setVoiceOn(true, "whistle");
+    }
+    syncTexts();
+  });
+  $("regBtn").addEventListener("click", function () {
+    S.reg = S.reg ? 0 : 1;
+    if (S.playing) updateAudioFromState();
+    redrawAll();
+  });
+  var demoBtns = [
+    ["demoScaleBtn", "scale"], ["demoGlissBtn", "gliss"], ["demoSongBtn", "song"],
+    ["bOct", "oct"], ["bGliss2", "gliss"], ["cAltBtn", "alt"],
+    ["dToneCycle", "tone"], ["dRangeX", "rangex"], ["dEdge", "edge"], ["dBottle", "bottle"], ["dMode", "mode"], ["dOverb", "overb"]
+  ];
+  demoBtns.forEach(function (pr) {
+    var el = $(pr[0]);
+    if (el) el.addEventListener("click", function () {
+      if (S.demo === pr[1]) { stopAllVoice(); } else { startDemo(pr[1]); }
+      syncTexts();
+    });
+  });
+  function playVoice(v) {
+    if (S.playing && S.voice === v && !S.demo) { stopAllVoice(); }
+    else {
+      stopDemo();
+      if (!ensureAudio()) return;
+      S.voice = v;
+      setVoiceOn(true, v);
+    }
+    syncTexts();
+  }
+  $("cWhistleBtn").addEventListener("click", function () { playVoice("whistle"); });
+  $("cViolinBtn").addEventListener("click", function () { playVoice("violin"); });
+  $("btnVoiceSine").addEventListener("click", function () { playVoice("sine"); });
+  $("btnVoiceWhistle").addEventListener("click", function () { playVoice("whistle"); });
+  $("btnVoiceViolin").addEventListener("click", function () { playVoice("violin"); });
+  var sliders = [
+    ["sldS", function (v) { setPitch(parseFloat(v)); }],
+    ["sldN2", function (v) { setPitch(parseFloat(v)); }],
+    ["sldLip", function (v) { S.lip = parseFloat(v); if (S.playing) updateAudioFromState(); redrawAll(); }],
+    ["sldBreath", function (v) { S.breath = parseFloat(v); if (S.playing) updateAudioFromState(); syncTexts(); }],
+    ["sldVib", function (v) { S.vib = parseFloat(v); if (S.playing) updateAudioFromState(); syncTexts(); }]
+  ];
+  sliders.forEach(function (pr) {
+    var el = $(pr[0]);
+    if (el) el.addEventListener("input", function () { pr[1](el.value); });
+  });
+  var aS = $("aSld");
+  if (aS) aS.addEventListener("input", function () {
+    S.a = parseFloat(aS.value);
+    if (S.playing) updateAudioFromState();
+    syncTexts();
+  });
+  var hB = $("helBtn");
+  if (hB) hB.addEventListener("click", toggleHelm);
+  var cv1 = $("cvMain"); cv1.addEventListener("pointerdown", mainPointer);
+  cv1.addEventListener("pointermove", function (ev) { if (ev.buttons) mainPointer(ev); });
+  var cv2 = $("cvLog"); cv2.addEventListener("pointerdown", logPointer);
+  var cv3 = $("cvCmp"); cv3.addEventListener("pointerdown", cmpPointer);
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "ArrowLeft" || ev.key === "ArrowDown") { ev.preventDefault(); setPitch(S.s - 1); }
+    if (ev.key === "ArrowRight" || ev.key === "ArrowUp") { ev.preventDefault(); setPitch(S.s + 1); }
+  });
+}
+function prepCrisp() {
+  var ids = ["cvMain", "cvFam", "cvLog", "cvCmp", "cvSpec", "cvRange", "cvTerms"];
+  for (var i = 0; i < ids.length; i++) {
+    var c = $(ids[i]);
+    if (!c) continue;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    c._dpr = dpr;
+    var lw = parseInt(c.getAttribute("width"), 10) || c.width;
+    var lh = parseInt(c.getAttribute("height"), 10) || c.height;
+    if (c.width !== lw * dpr) { c.width = lw * dpr; c.height = lh * dpr; }
+  }
+}
+function init() {
+  prepCrisp();
+  S.s = clamp(parseFloat($("sldS").value), 0, 24);
+  S.lip = parseFloat($("sldLip").value);
+  S.breath = parseFloat($("sldBreath").value);
+  S.vib = parseFloat($("sldVib").value);
+  bind();
+  setLang("zh");
+  foldSetup();
+  redrawAll();
+  requestAnimationFrame(frame);
+}
+init();
+
+
+</script>
+</body>
+</html>
