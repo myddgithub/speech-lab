@@ -126,24 +126,24 @@
       <div class="card-tag" data-i18n="c1Tag">拖拽调节舌位 / 唇孔 / 气息 · 实时发声 · 超吹翻高八度</div>
     </div>
 
-    <div class="cv"><canvas id="cvMain" width="1240" height="620" role="img" aria-label="口腔剖面与发声链"></canvas></div>
+    <div class="cv"><canvas id="cvMain" width="1240" height="620" role="img" data-aria-i18n="ariaMain" aria-label="口腔剖面与发声链"></canvas></div>
 
-    <div class="readBox" id="readBox">
+    <div class="readBox" id="readBox" aria-live="polite">
       <div><span class="read" id="rdNote">…</span></div>
       <div><span class="read" style="font-size:13.5px" id="rdCav">…</span></div>
       <div><span style="font-size:12px;color:var(--muted)" id="rdHint"></span></div>
     </div>
 
     <div class="bars">
-      <button class="btn warn big" id="playBtn" type="button"><span id="playLbl">🎺 吹气（试听）</span></button>
-      <button class="btn" id="regBtn" type="button"><span id="regLbl">↗ 超吹：关（本调）</span></button>
-      <button class="btn" id="demoScaleBtn" type="button"><span data-i18n="demoScale">🎵 音阶示范 E5→E7</span></button>
-      <button class="btn" id="demoGlissBtn" type="button"><span data-i18n="demoGliss">↗ 滑奏示范</span></button>
-      <button class="btn" id="demoSongBtn" type="button"><span data-i18n="demoSong">🎶 《欢乐颂》</span></button>
+      <button class="btn warn big" id="playBtn" type="button" aria-pressed="false"><span id="playLbl">🎺 吹气（试听）</span></button>
+      <button class="btn" id="regBtn" type="button" aria-pressed="false"><span id="regLbl">↗ 超吹：关（本调）</span></button>
+      <button class="btn" id="demoScaleBtn" type="button" aria-pressed="false"><span data-i18n="demoScale">🎵 音阶示范（E 大调 E5→E7）</span></button>
+      <button class="btn" id="demoGlissBtn" type="button" aria-pressed="false"><span data-i18n="demoGliss">↗ 滑奏示范</span></button>
+      <button class="btn" id="demoSongBtn" type="button" aria-pressed="false"><span data-i18n="demoSong">🎶 《欢乐颂》</span></button>
     </div>
 
     <div class="bars">
-      <label data-i18n="lblS">舌位/等效腔长（半音数，0=E5 低 → 24=E7 高）</label>
+      <label data-i18n="lblS">舌位/等效腔长（半音数 0…24：0=E5 低 → 24=E7 高）</label>
       <input class="wide" id="sldS" type="range" min="0" max="24" step="0.05" value="12" />
       <span class="val" id="valS">12</span>
       <label data-i18n="lblLip">唇孔（哨口大小·音色）</label>
@@ -153,7 +153,7 @@
       <input id="sldBreath" type="range" min="0" max="1" step="0.01" value="0.6" />
       <span class="val" id="valBreath">0.6</span>
       <label data-i18n="lblVib">颤音</label>
-      <input id="sldVib" type="range" min="0" max="1" step="0.01" value="0.12" />
+      <input id="sldVib" type="range" min="0" max="1" step="0.01" value="0.25" />
       <span class="val" id="valVib">0.12</span>
     </div>
 
@@ -163,7 +163,7 @@
       <li><b data-i18n="c1b1a">1) 与键盘乐器（如钢琴）的本质区别：</b><span data-i18n="c1b1b">钢琴靠琴槌“敲击”琴弦（冲击激励）发声，音高由一批<b>预先调好、离散排列</b>的弦决定——要换音必须“换一根弦/按一个键”。口哨只有一根“腔”，音高由<b>腔体几何连续无级</b>决定。</span></li>
       <li><b data-i18n="c1b2a">2) 与弦乐器（如小提琴）的区别：</b><span data-i18n="c1b2b">弦乐器的声源是<b>琴弦的振动</b>（弓毛摩擦产生“粘-滑”自激振荡）；口哨没有弦——声源是<b>射流的空气动力失稳</b>。两者相似之处在于：发音点（指尖/舌）都可<b>连续滑动</b>、无刻度。详见第 3 节。</span></li>
       <li><b data-i18n="c1b3a">3) 与簧片/人声的区别：</b><span data-i18n="c1b3b">口哨没有簧片、声带不振动（声门只是开放通道），与笛子同属“气簧”家族；而簧片乐器（双簧管、口琴）与唱歌（声带）另成一类。</span></li>
-      <li><b data-i18n="c1b4a">4) 试一试：</b><span data-i18n="c1b4b">把“气息量”推大并打开“超吹”开关——<b>舌位不动</b>、音高却翻一个八度（像长笛吹急了翻高八度）；这就是口哨高音区常用技巧“超吹/翻八度”。</span></li>
+      <li><b data-i18n="c1b4a">4) 试一试：</b><span data-i18n="c1b4b">打开“超吹”开关——<b>舌位不动</b>、音高翻一个八度。这是本页对<b>长笛开管超吹</b>的开关演示，不是把“气息量”推大就会自动翻八度（气息滑杆只改响度与气流噪声）。真出口哨才用急气触发；人口腔也更接近第 5.2 节的亥姆霍兹瓶腔，而不是一根长笛。</span></li>
     </ul>
   </section>
 
@@ -173,7 +173,7 @@
       <div class="card-title" data-i18n="cFamTitle">1+. 乐器谱系对照：谁在“振”？</div>
       <div class="card-tag" data-i18n="cFamTag">气鸣（边棱音）vs 弦鸣（擦弦/击弦）· 键盘（离散）vs 滑奏（连续）</div>
     </div>
-    <div class="cv"><canvas id="cvFam" width="1240" height="240" role="img" aria-label="乐器族谱系对比"></canvas></div>
+    <div class="cv"><canvas id="cvFam" width="1240" height="240" role="img" data-aria-i18n="ariaFam" aria-label="乐器族谱系对比"></canvas></div>
     <div class="legend">
       <span><i class="dot" style="background:#62d7ff"></i><span data-i18n="fam1">口哨 / 笛子 / 竖笛 / 埙 = 气鸣 · 边棱音（无弦无簧）</span></span>
       <span><i class="dot" style="background:#ffcf6e"></i><span data-i18n="fam2">小提琴 / 钢琴 = 弦鸣（发声体是弦）</span></span>
@@ -187,18 +187,18 @@
       <div class="card-title" data-i18n="c2Title">2. 舌位控制 = 人耳“对数听觉”的精密映射</div>
       <div class="card-tag" data-i18n="c2Tag">同一段音列画在三种尺上：线性 Hz 尺 / 听感对数尺 / 舌位“1÷频率”长度尺</div>
     </div>
-    <div class="cv"><canvas id="cvLog" width="1240" height="404" role="img" aria-label="三种频率尺对比"></canvas></div>
+    <div class="cv"><canvas id="cvLog" width="1240" height="404" role="img" data-aria-i18n="ariaLog" aria-label="三种频率尺对比"></canvas></div>
     <div class="bars">
-      <button class="btn warn" id="bOct" type="button"><span data-i18n="bOctL">🔊 试听：E5→E6→E7（听感每步等距）</span></button>
-      <button class="btn" id="bGliss2" type="button"><span data-i18n="bGlissL">▶ 滑奏 E5→E7</span></button>
-      <span style="font-size:12px;color:var(--muted)" data-i18n="logHint">在同一行标尺上点击可定位音高（口哨同步发声）。</span>
+      <button class="btn warn" id="bOct" type="button" aria-pressed="false"><span data-i18n="bOctL">🔊 试听：E5→E6→E7（听感每步等距）</span></button>
+      <button class="btn" id="bGliss2" type="button" aria-pressed="false"><span data-i18n="bGlissL">▶ 滑奏 E5→E7</span></button>
+      <span style="font-size:12px;color:var(--muted)" data-i18n="logHint">点击三行标尺任一处可定位音高（口哨发声）。</span>
     </div>
-    <div class="note" data-i18n="c2Note">读法：<b>上方线性 Hz 尺</b>上，低音八度（E5→E6 只差约 659 Hz）挤在左边、越往上“格”越宽；<b>中间听感尺</b>上每个八度、每个半音都等距——这就是耳朵（耳蜗频率编码≈对数）告诉我们的“同一句话”；<b>下方舌位长度尺</b>（等效腔长 ℓ ∝ 1/f）上，音程的“毫米数”随音高按几何级数收缩：同样的一个全音，在低音区舌要动约 6%，到高音区只动约 2–3%（越吹越高，舌位越“一毫米都不能差”）。吹口哨等于用一块会呼吸的肌肉去复现一把<b>对数刻度尺</b>。</div>
+    <div class="note" data-i18n="c2Note">读法：三行是同一段<b>E5→E7 半音列（十二平均律：每 12 个半音＝×2 的八度）</b>，只是摆尺不同。<b>上行线性 Hz 尺</b>：低音八度挤在左边、越往上“格”越宽；<b>中间听感尺</b>：每八度等宽——这才是耳朵听到的“相等”；<b>下行舌位长度尺</b>（等效腔长 ℓ∝1/f 的几何示意）：每个半音都把<b>当前</b>腔长缩短约 5.6%（全音约 10.9%），这个百分比不随音高变；变小的是毫米——E7 的腔长是 E5 的 ¼，所以同样 5.6% 的绝对位移约只有低音的 ¼。彩色高刻度＝E 大调音阶音，标<b>音名</b>（E5、F#5…E7）与<b>唱名</b>（do=E5…）。这把 1/f 尺是与弦长/开管相同的几何类比，不是亥姆霍兹公式（见第 5 节）。</div>
     <ul class="bullets">
       <li><b data-i18n="c2b1a">1) 听觉的对数本性：</b><span data-i18n="c2b1b">频率“×2”＝高八度（听感等距），不是“＋多少 Hz”。同一音程在高处绝对 Hz 差更大，听感却相等——所以乐理里的音程本质是“频率之比”。</span></li>
-      <li><b data-i18n="c2b2a">2) 舌头面对的是“倒数尺”：</b><span data-i18n="c2b2b">腔体共振频率 ≈ 常数 ÷ 有效长度 ℓ（越高越“短”）。于是要发出等音程，舌必须让 ℓ 按<b>等比数列</b>收缩（每高八度 ×½、每个半音 ×2^(−1/12)），等差的“毫米”是不准的。</span></li>
+      <li><b data-i18n="c2b2a">2) 舌头面对的是“倒数尺”：</b><span data-i18n="c2b2b">几何示意（与弦/开管相同）：共振频率 ≈ 常数 ÷ 有效长度 ℓ。要发等音程，ℓ 必须按等比收缩（每高八度 ×½，每个半音 ×2^(−1/12)）。这不是亥姆霍兹定律（f∝1/√V，见第 5.2 节）；第 1–4 节用 1/ℓ 只为了和对数听觉、小提琴弦长对照。</span></li>
       <li><b data-i18n="c2b3a">3) 精密性体现在高音区：</b><span data-i18n="c2b3b">音越高，每音分对应的舌位移越小。同一个 10 音分误差，在低音区“无伤大雅”，在高音区会明显偏高/偏低——吹口哨者靠耳朵（对数标尺）实时校准，舌与唇以亚毫米级精度配合，这是把“对数听觉”练成“运动控制”的极好例子。</span></li>
-      <li><b data-i18n="c2b4a">4) 不是“吹”而是“调”：</b><span data-i18n="c2b4b">气息只提供能量并选择“第几号泛音”（见第 1 节的“超吹”）；真正的“手指”是舌位与唇形的几何——所以吹口哨更像<b>吹一把没有按键的笛子</b>：指法＝舌位。</span></li>
+      <li><b data-i18n="c2b4a">4) 不是“吹”而是“调”：</b><span data-i18n="c2b4b">本页里气息只提供能量（响度/噪声）；“第几号泛音”由“超吹”开关选择，不会因气息量自动跳变。真正的“手指”仍是舌位与唇形。</span></li>
     </ul>
   </section>
 
@@ -206,44 +206,44 @@
   <section class="card">
     <div class="card-head">
       <div class="card-title" data-i18n="c34Title">3+4. 舌位↔把位 · 音色与音域 —— 同一屏联动观察（说明已收起，便于对照）</div>
-      <div class="card-tag" data-i18n="c34Tag">两个主题共用同一个音高控制：调节上方舌位/按弦并发声，下方频谱与音域读数即时跟随</div>
+      <div class="card-tag" data-i18n="c34Tag">两个主题共用同一个音高控制：点/拖左侧口腔或右侧琴弦、底尺；频谱与音域读数即时跟随</div>
     </div>
-    <div class="cv"><canvas id="cvCmp" width="1240" height="600" role="img" aria-label="舌位与把位对比"></canvas></div>
+    <div class="cv"><canvas id="cvCmp" width="1240" height="600" role="img" data-aria-i18n="ariaCmp" aria-label="舌位与把位对比"></canvas></div>
     <div class="bars">
       <label data-i18n="c3Sld">同一个音（相对 E5 的半音数，0…24 = 两个八度）</label>
       <input class="wide" id="sldN2" type="range" min="0" max="24" step="0.2" value="12" />
       <span class="val" id="valN2">12</span>
-      <button class="btn" id="cWhistleBtn" type="button"><span data-i18n="cWhisL">🎺 口哨音色试听</span></button>
-      <button class="btn" id="cViolinBtn" type="button"><span data-i18n="cViolL">🎻 小提琴音色试听</span></button>
-      <button class="btn warn" id="cAltBtn" type="button"><span data-i18n="cAltL">🔀 交替对比</span></button>
+      <button class="btn" id="cWhistleBtn" type="button" aria-pressed="false"><span data-i18n="cWhisL">🎺 口哨音色试听</span></button>
+      <button class="btn" id="cViolinBtn" type="button" aria-pressed="false"><span data-i18n="cViolL">🎻 小提琴音色试听</span></button>
+      <button class="btn warn" id="cAltBtn" type="button" aria-pressed="false"><span data-i18n="cAltL">🔀 交替对比</span></button>
     </div>
     <div class="note" data-i18n="c3Note">读法：左=口哨口腔剖面，右=小提琴指板（示意，E 弦空弦 E5≈659 Hz）。两把“尺”本质相同：<b>音高越高，有效长度按 ×½ / ×¼ 收缩</b>，发音点要放的位置越来越靠前（口哨）或靠琴桥（小提琴）、间距越来越小。琴上叫“换把”，口里就是“移舌”：“把位感”其实是<b>由耳朵（对数听觉）校准的肌肉位置记忆</b>——两件乐器练的都是同一件事。</div>
     <ul class="bullets">
       <li><b data-i18n="c3b1a">1) 都“无级、无刻度”：</b><span data-i18n="c3b1b">小提琴指板无品，音准全靠指尖位置＋耳朵；口哨“口腔指板”也没有刻度，全靠舌位＋耳朵。任何中间音（滑音、微分音、揉弦的高低变化）都能发。</span></li>
       <li><b data-i18n="c3b2a">2) 都靠“听觉闭环”训练位置感：</b><span data-i18n="c3b2b">位置放错了会听到“拍频/不准”→ 大脑立即微调舌或指。千百次练习后形成不需要思考的“手感/舌感”。</span></li>
-      <li><b data-i18n="c3b3a">3) 相同的几何：</b><span data-i18n="c3b3b">弦：f ∝ 1/弦长；口哨腔：f ≈ 常数/有效腔长。所以二者半音位间距的“收缩律”一模一样（等比），可互相打比方：<b>吹口哨的低/中/高“舌位”≈ 小提琴的一/二/五把位</b>。</span></li>
+      <li><b data-i18n="c3b3a">3) 相同的几何：</b><span data-i18n="c3b3b">弦：f ∝ 1/弦长；本页口哨几何尺：f ≈ 常数/有效长度（与弦同构，便于对照）。半音间距的收缩律一模一样（等比）。请看图上已标的<b>空弦 E5 / 八度 E6（×½）/ 两个八度 E7（×¼）</b>——不要把它读成小提琴第 1/3/5 把（E6 大约在 7–8 把，E7 靠近琴桥）。</span></li>
       <li><b data-i18n="c3b4a">4) 技法互通：</b><span data-i18n="c3b4b">滑音（连续移动舌/指尖）、揉音（小提琴指尖滚压 ↔ 口哨用气息/下颌/舌的微小周期性变化）、换把瞬间的“落点准确”。差别：小提琴有四根弦与琴身放大，口哨是单腔直接辐射。</span></li>
     </ul>
     <div class="subh">
-      <span class="st" data-i18n="c4Title"></span>
-      <span class="tg" data-i18n="c4Tag"></span>
+      <span class="st" data-i18n="c4Title">4. 音色与音域：接近纯音的“气笛”，基频正好落在人耳最敏感区</span>
+      <span class="tg" data-i18n="c4Tag">实时频谱（能量集中基频＝纯音性）· 音域范围 · 与长笛/人声对比</span>
     </div>
-    <div class="cv"><canvas id="cvSpec" width="1240" height="300" role="img" aria-label="实时频谱"></canvas></div>
-    <div class="cv"><canvas id="cvRange" width="1240" height="340" role="img" aria-label="音域范围图"></canvas></div>
+    <div class="cv"><canvas id="cvSpec" width="1240" height="300" role="img" data-aria-i18n="ariaSpec" aria-label="实时频谱"></canvas></div>
+    <div class="cv"><canvas id="cvRange" width="1240" height="340" role="img" data-aria-i18n="ariaRange" aria-label="音域范围图"></canvas></div>
     <div class="bars" style="margin-top:14px; padding-top:6px; border-top:1px dashed var(--line)">
       <span style="font-size:13px; color:var(--amber); font-weight:600" data-i18n="dToneLbl">🎚 同一音高试听不同音色（上方频谱实时变化）：</span>
-      <button class="btn" id="btnVoiceSine" type="button" data-i18n="dToneSine">● 纯音（正弦）</button>
-      <button class="btn warn" id="btnVoiceWhistle" type="button" data-i18n="dToneWhistle">🎺 口哨（气簧·本页音色）</button>
-      <button class="btn" id="btnVoiceViolin" type="button" data-i18n="dToneViolin">🎻 小提琴（谐波一串）</button>
-      <button class="btn" id="dToneCycle" type="button" data-i18n="dToneCycleBtn">🔀 循环对比：纯音→口哨→小提琴</button>
+      <button class="btn" id="btnVoiceSine" type="button" data-i18n="dToneSine" aria-pressed="false">● 纯音（正弦）</button>
+      <button class="btn warn" id="btnVoiceWhistle" type="button" data-i18n="dToneWhistle" aria-pressed="false">🎺 口哨（气簧·本页音色）</button>
+      <button class="btn" id="btnVoiceViolin" type="button" data-i18n="dToneViolin" aria-pressed="false">🎻 小提琴（谐波一串）</button>
+      <button class="btn" id="dToneCycle" type="button" data-i18n="dToneCycleBtn" aria-pressed="false">🔀 循环对比：纯音→口哨→小提琴</button>
     </div>
     <div class="bars">
-      <button class="btn warn" id="dRangeX" type="button" data-i18n="dRangeBtn">🔊 听口哨全音域：E5→E7 再超吹上 E8（×2）</button>
+      <button class="btn warn" id="dRangeX" type="button" data-i18n="dRangeBtn" aria-pressed="false">🔊 听口哨全音域：E5→E7 再超吹上 E8（×2）</button>
       <span style="font-size:12px;color:var(--muted)" data-i18n="dToneHint">点“纯音/口哨/小提琴”即以当前音高发声（再点一次停止）：纯音＝单根尖峰；口哨＝尖峰＋弱谐波＋少量气流噪声；小提琴＝一串递减谐波。</span>
     </div>
     <ul class="bullets">
       <li><b data-i18n="c4b1a">1) 音质＝“纯” ：</b><span data-i18n="c4b1b">频谱上能量几乎全在基频（上图：基频尖峰 + 极弱的几个高次谐波 + 一点气流噪声），听感接近长笛/钟形纯音：没有琴弦的金属感、没有簧片的“哨气”。因为声源是气流（无固定质量-弹簧系统），振荡天然接近正弦。</span></li>
-      <li><b data-i18n="c4b2a">2) 影响音质的“旋钮”：</b><span data-i18n="c4b2b">唇孔小而圆 → 射流聚焦、音更清亮（口径大或嘴角漏气 → 噪声/“噗”声）；舌背中缝（“舌沟”）把气流拢成一束 → 更干净；唇面微湿、气息平稳 → 少杂音、可长音。这些旋钮同时也微微移动音高——它们必须与听觉闭环协同。</span></li>
+      <li><b data-i18n="c4b2a">2) 影响音质的“旋钮”：</b><span data-i18n="c4b2b">唇孔小而圆 → 射流聚焦、音更清亮（口径大或嘴角漏气 → 噪声/“噗”声）。本页合成器里，唇孔还会把音高微移大约几十音分（孔小略高）；气息滑杆改响度与气流噪声，不改音高。真实口哨里这些旋钮都会耦合，必须靠听觉协同。</span></li>
       <li><b data-i18n="c4b3a">3) 音域：</b><span data-i18n="c4b3b">成人常用本调基频约 0.7–2.6 kHz（1.5–2 个八度左右）；熟练者可跨约 2.5–3.5 个八度（约 0.5–4 kHz+），再靠超吹与腔形微调逼近 4–5 kHz；个体差异极大，世界级口哨手音域纪录更宽（下图）。低音要“大腔＋大唇孔＋缓气”，高音要“小腔＋小孔＋强而细的射流”——正好是第 1 节的几何规律。</span></li>
       <li><b data-i18n="c4b4a">4) 为什么“听得远、刺耳”？</b><span data-i18n="c4b4b">口哨基频大多落在人耳最灵敏的 2–5 kHz 区（响度敏感峰），声压不高也“扎眼”；且方向性强（唇前），像一支小号角。这也是课堂/球场吹口哨能传得远的原因。</span></li>
     </ul>
@@ -252,81 +252,92 @@
   <section class="card">
     <div class="card-head">
       <div class="card-title" data-i18n="t5Title">5. 原理名词扩展：边棱音 · 亥姆霍兹共鸣器 · 气柱驻波 · 超吹</div>
-      <div class="card-tag" data-i18n="t5Tag">把“脚注”里的名词展开成小图＋一句话机制；每条的对应演示控件也一并标注</div>
+      <div class="card-tag" data-i18n="t5Tag">三种模型分开对照：边棱音声源 · 亥姆霍兹（真出口哨的一阶模型）· 开管驻波/长笛超吹（几何类比，不是同一个腔）</div>
     </div>
-    <div class="cv"><canvas id="cvTerms" width="1240" height="356" role="img" aria-label="名词原理示意图"></canvas></div>
+    <div class="cv"><canvas id="cvTerms" width="1240" height="356" role="img" data-aria-i18n="ariaTerms" aria-label="名词原理示意图"></canvas></div>
     <div class="bars" style="margin-top:14px; padding-top:6px; border-top:1px dashed var(--line)">
       <span style="font-size:13px; color:var(--amber); font-weight:600" data-i18n="d5Lbl">🔊 每条原理都带“有声小实验”（示意图随播放高亮）：</span>
-      <button class="btn warn" id="dEdge" type="button" data-i18n="d5Edge">1) 先“嘶”（射流噪声）→ 加腔定音</button>
-      <button class="btn" id="dBottle" type="button" data-i18n="d5Bottle">2) 瓶腔调音：V 大→小</button>
-      <button class="btn" id="dMode" type="button" data-i18n="d5Mode">3) 驻波：第1号→第2号(八度)</button>
-      <button class="btn warn" id="dOverb" type="button" data-i18n="d5Overb">4) 超吹：同舌位 ×2</button>
+      <button class="btn warn" id="dEdge" type="button" data-i18n="d5Edge" aria-pressed="false">1) 先“嘶”（射流噪声）→ 加腔定音</button>
+      <button class="btn" id="dBottle" type="button" data-i18n="d5Bottle" aria-pressed="false">2) 瓶腔调音：V 大→小</button>
+      <button class="btn" id="dMode" type="button" data-i18n="d5Mode" aria-pressed="false">3) 驻波：第1号→第2号(八度)</button>
+      <button class="btn warn" id="dOverb" type="button" data-i18n="d5Overb" aria-pressed="false">4) 超吹：同舌位 ×2</button>
     </div>
     <div class="bars" style="margin-top:12px; padding-top:6px; border-top:1px dashed var(--line)">
       <label data-i18n="aLbl">瓶口孔径 A（大 → 音更高）：</label>
       <input id="aSld" type="range" min="0" max="1" step="0.02" value="0.5" />
       <span class="val" id="valA">0.50</span>
-      <button class="btn warn" id="helBtn" type="button"><span>🔊 亥姆霍兹试音</span></button>
-      <span style="font-size:12px;color:var(--muted)" data-i18n="hHint"></span>
+      <button class="btn warn" id="helBtn" type="button" data-i18n="hBtn" aria-pressed="false">🔊 亥姆霍兹试音（孔径调音高）</button>
+      <span style="font-size:12px;color:var(--muted)" data-i18n="hHint">点一下开/关试音（不是按住）。拖动本节“孔径 A”：孔越大音越高（f∝√A）。体积 V 由第 1 节舌位滑杆控制——V 越大音越低（f∝1/√V）。此试音不叠加“超吹”。</span>
     </div>
-    <div class="note" data-i18n="d5Hint">听法：1 和 2 用当前舌位/音高直接演示“无腔=嘶、有腔=定音 / 腔大→小 音低→高”；3 和 4 在舌位不变时把驻波从第1号推到第2号——音高×2（高八度），图上方框会高亮对应格子并显示阶段说明。</div>
+    <div class="note" data-i18n="d5Hint">听法：1) 无腔＝嘶、加腔＝定音（边棱音+选频）。2) 亥姆霍兹：V 大→小，同样舌位行程大约只滑一个八度（f∝1/√V），孔径 A 越大音越高。3–4) 开管类比：舌位不动，第 1 号→第 2 号，音高×2。播放时上方示意图高亮对应格子。</div>
     <ul class="bullets">
       <li><b data-i18n="t5L1">1) 边棱音（edge tone / 气簧）：</b><span data-i18n="t5B1">口腔/笛子的声源不是弦也不是簧片，而是“会自己振荡的空气”：从唇孔喷出的射流（jet）在唇齿棱上被周期性切开、交替卷出涡（主图唇口旋涡示意）。这层空气动力失稳产生宽频扰动，只有接近口腔共鸣频率的成分被放大存活——所以换腔形（舌位/唇孔）就能在同一口气上换音，这正是“气簧”乐器的核心。</span></li>
-      <li><b data-i18n="t5L2">2) 亥姆霍兹共鸣器（瓶腔）：</b><span data-i18n="t5B2">频率 f≈(c/2π)·√(A/(V·ℓ))：V＝瓶身（口腔主体）体积，A 与 ℓ＝瓶口（唇孔）的截面积与“颈长”。腔大音低（V↑f↓）、唇孔大音高（A↑f↑）。口哨＝一只“可变形的瓶子”：舌位滑杆≈把瓶子捏小捏大变音，唇孔滑杆≈调瓶口。无需“预先调好的弦”，谐振器本身连续可调。</span></li>
-      <li><b data-i18n="t5L3">3) 气柱驻波与泛音：</b><span data-i18n="t5B3">共振的本质是驻波：波在唇孔（近似开口端）与舌/软腭形成的“有效末端”之间往返叠加。一端开口的近似：f1≈c/(4ℓ)，于是“等效腔长 ℓ 越短音越高”——第 2 节的 1/f 舌位尺由此而来；同一腔还能驻出 f2=2f1、f3=3f1……（模式号 n＝半波数，上图画线：第 2 号模式中间有个不动的点＝节点）。</span></li>
-      <li><b data-i18n="t5L4">4) 超吹（overblowing）：</b><span data-i18n="t5B4">舌位/指法不动，只把气流加急（或微调射流与棱相遇的相位），驻波跳到更高的模式：音高×2（高八度）、×3……长笛、竖笛、埙与口哨都这样取高音。演示：主图“超吹”开关＝同舌位×2；下方“听口哨全音域”在 E7 处再次超吹上 E8≈5.3 kHz。</span></li>
+      <li><b data-i18n="t5L2">2) 亥姆霍兹共鸣器（瓶腔）：</b><span data-i18n="t5B2">真出口哨更接近亥姆霍兹共鸣器，不是一根开管。f≈(c/2π)·√(A/(V·ℓ_neck))：V＝瓶身体积（本页用舌位滑杆代表，V∝ℓ），A＝瓶口面积（用本节的“孔径 A”滑杆，不是上面的唇孔音色滑杆）。于是 f∝1/√V、f∝√A：同样把 V 缩到 ¼，音高只翻一个八度（E5→E6），而 1/ℓ 尺会翻两个八度。亥姆霍兹基本上只有一个峰，没有“超吹 ×2”的谐波梯子。点“亥姆霍兹试音”开关后拖动 A 和舌位，听的就是这条公式。</span></li>
+      <li><b data-i18n="t5L3">3) 气柱驻波与泛音：</b><span data-i18n="t5B3">第 1–4 节的 1/f 尺来自开管/弦的几何类比：两端开口时 f1≈c/(2ℓ)，f2=2f1、f3=3f1（模式号＝半波数；第 2 号中间有节点）。闭管（一端开口）则是 f、3f、5f，超吹到十二度而不是八度——本页不采用闭管模型。这套驻波图画的是开管，用来解释“为什么长度减半音高翻倍”，不是说口腔就是一根长笛。</span></li>
+      <li><b data-i18n="t5L4">4) 超吹（overblowing）：</b><span data-i18n="t5B4">长笛、竖笛等开管气簧乐器：指法不动、气流加急，驻波跳到第 2 号模式，音高×2。本页主图“超吹”开关演示的就是这个同族技巧，不是亥姆霍兹瓶腔的行为（埙/陶笛更接近亥姆霍兹，通常不能像长笛那样干净地翻八度）。下方“听口哨全音域”在 E7 再 ×2 到 E8≈5.3 kHz，是演示用的开管超吹，不是主张人口腔真能稳定驻出第 2 谐波。</span></li>
     </ul>
   </section>
   <footer>
-    <div data-i18n="foot1"><b>教学简化声明：</b>本页把口哨腔体近似为“一端开口、由舌/软腭决定长度的空气柱”以解释几何规律（音高≈常数÷有效长度）。真实口哨还包含唇孔声阻抗、射流与腔体的非线性耦合等细节，故 Hz 数值为演示值而非实测。口哨声合成＝WebAudio 正弦基频＋微量谐波＋气流噪声的近似。</div>
+    <div data-i18n="foot1"><b>教学简化声明：</b>本页并用两套模型，请勿合成一套公式。(1) 第 1–4 节：把“有效长度 ℓ”按开管/弦的 1/ℓ 几何来画对数尺，并与小提琴 E 弦对照；超吹开关按长笛开管 ×2。(2) 第 5.2 节：亥姆霍兹 f∝√(A/V)，更接近真出口哨（体积+瓶口），没有谐波梯子。真实口哨还有射流–腔体非线性耦合，Hz 为演示值。合成＝正弦基频＋微量谐波＋气流噪声。</div>
     <div style="margin-top:6px" data-i18n="foot2">延伸关键词：边棱音 edge tone · 亥姆霍兹共鸣器 · 气柱驻波/超吹 overblowing · 等响曲线与对数听觉 · 1/f 弦长律 · 本体感觉与运动学习（听觉-运动闭环）。</div>
   </footer>
 </div>
 
 <div id="scrim"></div>
-<aside id="helpPanel" role="dialog" aria-modal="true" aria-label="帮助">
-  <div class="hHead"><span data-i18n="helpTitle">📖 怎么读这张图</span><button id="helpClose" class="btn" type="button">✕</button></div>
+<aside id="helpPanel" role="dialog" aria-modal="true" aria-labelledby="helpTitleText" tabindex="-1">
+  <div class="hHead"><span id="helpTitleText" data-i18n="helpTitle">📖 怎么读这张图</span><button id="helpClose" class="btn" type="button">✕</button></div>
   <div id="helpZh">
     <h4>页面结构（对应四个知识点）</h4>
     <ul>
       <li><b>1) 发声原理</b>（顶部大图）：剖开看“气簧·边棱音”发声链：肺(气源)→喉(声门开放)→口腔腔体(青蓝=空气腔，可变的“管/瓶”)→唇孔射流拍棱→边棱音+腔体共鸣选音。与笛同类，无弦无簧；与键盘/弦乐器的区别在下排对照图。</li>
-      <li><b>2) 舌位 × 对数听觉</b>：同一段 E5→E7 画在“线性 Hz / 听感对数 / 舌位长度(1/f)”三种尺上。点击中间行可试听。</li>
-      <li><b>3) 舌位感 ↔ 把位感</b>：左右对照“同一个音 n 半音”时，口里舌位与琴上指尖的几何收缩完全同构。</li>
+      <li><b>2) 舌位 × 对数听觉</b>：同一段 E5→E7 画在“线性 Hz / 听感对数 / 舌位长度(1/f)”三种尺上。点击<b>三行任一处</b>可试听。</li>
+      <li><b>3) 舌位感 ↔ 把位感</b>：左右对照“同一个音 n 半音”时，口里舌位与琴上指尖的几何收缩（空弦 / ×½ / ×¼）完全同构。点左侧口腔或右侧琴弦、底尺均可调音。</li>
       <li><b>4) 音色与音域</b>：下方频谱在吹气时实时画出（能量集中基频≈纯音）；再下是口哨音域范围图。</li>
+      <li><b>5) 三种模型分开</b>：边棱音声源；亥姆霍兹 √(A/V)（更接近真出口哨）；开管驻波 + 长笛式超吹 ×2（几何类比，不是同一个腔）。</li>
     </ul>
     <h4>操作</h4>
     <ul>
       <li>主图：直接在图内口部/舌区点按拖动＝调舌位（同时试听）；下方滑杆＝舌位(半音)/唇孔/气息/颤音。</li>
-      <li>“吹气”开/关发声；点“超吹”让音高×2（同一舌位翻八度）。</li>
-      <li>“音阶 / 滑奏 / 《欢乐颂》”会自动“吹”旋律，展示口哨的旋律能力。</li>
-      <li>右上角 EN 可切换英文。</li>
+      <li>“吹气”开/关发声；点“超吹”让音高×2（同一舌位翻八度，长笛开管类比）。</li>
+      <li>“音阶 / 滑奏 / 《欢乐颂》”会自动“吹”旋律。音阶示范走 E 大调音阶音，不是半音阶。</li>
+      <li>右上角 EN 可切换英文。Esc 关闭本帮助。</li>
     </ul>
     <h4>常见疑问</h4>
     <ul>
-      <li>为什么口腔能“定音”？射流拍棱产生宽频的振荡，只有腔体的共振频率能“存活”并被放大——腔体越大音越低（瓶口效应），腔越短小音越高（笛子按孔同理）。</li>
-      <li>为什么越吹越高越难？见第 2 节：舌位按等比收缩，高音区每个音只差“几毫米甚至更少”，还要顶着越来越强的气流。</li>
-      <li>听不到声音？首次点击“吹气”即可（浏览器要求用户操作后才有声）；若无声请换 Edge/Chrome。</li>
+      <li>为什么口腔能“定音”？射流拍棱产生宽频振荡，只有接近共鸣频率的成分被放大。瓶腔（亥姆霍兹）越大音越低；几何尺上腔越短小音越高（1/ℓ）。</li>
+      <li>为什么越吹越高越难？每个半音都缩短当前腔长约 5.6%，但高音区腔已经很短，同样百分比只有更少的毫米。</li>
+      <li>听不到声音？首次点击“吹气”即可（浏览器要求用户手势后才有声）；若无声请换 Edge/Chrome。</li>
     </ul>
   </div>
   <div id="helpEn" class="hidden">
     <h4>Page map (the four points)</h4>
     <ul>
       <li><b>1) How whistling sounds</b> (top figure): the “air reed / edge tone” chain — lungs (pressure source) → larynx (open glottis) → mouth cavity (cyan = air, a tunable “pipe/bottle”) → lip jet hitting the lip/tooth edge → edge tone + cavity resonance picks the pitch. Same family as flute/recorder; no string, no reed. Bottom strip compares instrument families.</li>
-      <li><b>2) Tongue vs logarithmic hearing</b>: the same E5→E7 run drawn on “linear Hz / perceptual log / tongue-length (1/f)” rulers. Click on the middle row to hear.</li>
-      <li><b>3) Tongue position ≈ violin position sense</b>: same pitch n semitones ⇒ identical geometric shrinkage in mouth and on the fingerboard.</li>
+      <li><b>2) Tongue vs logarithmic hearing</b>: the same E5→E7 run drawn on “linear Hz / perceptual log / tongue-length (1/f)” rulers. Click <b>any of the three rows</b> to hear.</li>
+      <li><b>3) Tongue position ≈ violin geometry</b>: same pitch n semitones ⇒ identical 1/L shrinkage (open / ×½ / ×¼). Click the left-hand mouth or the string/ruler.</li>
       <li><b>4) Timbre & range</b>: live spectrum while blowing (energy concentrated at the fundamental ≈ pure tone); range chart below.</li>
+      <li><b>5) Three models, kept apart</b>: edge-tone source; Helmholtz √(A/V) (closer to a real mouth); open-pipe standing wave + flute-style ×2 overblow (geometry analogy, not the same cavity).</li>
     </ul>
     <h4>Controls</h4>
     <ul>
       <li>Main figure: click/drag inside the mouth/tongue area = move tongue (hear it live).</li>
-      <li>Sliders: semitones (tongue), lip aperture (timbre), breath, vibrato.</li>
-      <li>“Blow” toggles sound; “Overblow” doubles the pitch (same tongue, +1 octave).</li>
-      <li>Scale / glissando / “Ode to Joy” demos show melody.</li>
+      <li>Sliders: semitones (tongue), lip aperture (timbre + a few cents), breath (loudness/noise), vibrato.</li>
+      <li>“Blow” toggles sound; “Overblow” doubles the pitch (same tongue, flute-style +1 octave).</li>
+      <li>Scale / glissando / “Ode to Joy” demos show melody. The scale demo is E major, not chromatic.</li>
+      <li>Esc closes this help.</li>
+    </ul>
+    <h4>FAQ</h4>
+    <ul>
+      <li>Why does the cavity “pick” a pitch? The jet is broadband; only the resonance survives. Bigger Helmholtz volume → lower; shorter effective length on the 1/ℓ ruler → higher.</li>
+      <li>Why is high whistling hard? Each semitone is always ≈5.6% of the <em>current</em> length, but that percentage is fewer millimetres as the cavity shrinks (E7 is ¼ of E5).</li>
+      <li>No sound? Click “Blow” once first (browsers require a gesture). Prefer Edge/Chrome.</li>
+      <li>Two models on purpose: §§1–4 use 1/ℓ + flute ×2 as a geometry demo; §5.2 is Helmholtz √(A/V), with no overblow ladder.</li>
     </ul>
   </div>
 </aside>
 
 <script>
+"use strict";
 const I18N = {
  zh: {
   pageTitle: "🎺 吹口哨声学原理图（交互模拟）",
@@ -334,12 +345,12 @@ const I18N = {
   btnHelp: "📖 帮助", helpTitle: "📖 怎么读这张图",
   c1Title: "1. 发声原理：肺 → 气簧（边棱音）→ 口腔“可变管/腔”共鸣 —— 与笛同类、无弦无簧",
   c1Tag: "拖拽调节舌位 / 唇孔 / 气息 · 实时发声 · 超吹翻高八度",
-  lblS: "舌位/等效腔长（半音数 0…24：低→高）", lblLip: "唇孔（哨口·音色）", lblBreath: "气息量", lblVib: "颤音",
+  lblS: "舌位/等效腔长（半音数 0…24：0=E5 低 → 24=E7 高）", lblLip: "唇孔（哨口·音色）", lblBreath: "气息量", lblVib: "颤音",
   c1Note: "读法：气从肺（下）经喉（声门开放）进入口腔腔体（青蓝色＝空气腔），从唇孔喷出为“射流”。射流拍击唇/齿边缘、在唇孔处形成交替涡旋＝<b>边棱音</b>（声源，每秒振荡次数≈基频）；口腔腔体像“可以变短变长的管”，把振荡“选频”成音高——这和长笛/竖笛/埙一样属于<b>气鸣·边棱音</b>乐器：没有弦、没有簧片，发声的是<b>气流本身</b>。舌向前上拱 → 腔变短小 → 音变高（类比：笛子按孔让“管”变短）。",
   c1b1a: "1) 与键盘乐器（钢琴）的本质区别：", c1b1b: "钢琴靠琴槌“敲击”琴弦（冲击激励）发声，音高由一批预先调好、离散排列的弦决定——换音必须“换键”。口哨只有一根“腔”，音高由腔体几何连续无级决定。",
   c1b2a: "2) 与弦乐器（小提琴）的区别：", c1b2b: "弦乐器的声源是琴弦的振动（弓毛摩擦产生“粘-滑”自激振荡）；口哨没有弦——声源是射流的空气动力失稳（边棱音）。两者的相似点：发音点（指尖/舌）都可连续滑动、无刻度。详见第 3 节。",
   c1b3a: "3) 与簧片/人声的区别：", c1b3b: "口哨没有簧片、声带不振动（声门只是开放通道），与笛子同属“气簧”家族；簧片乐器（双簧管、口琴）与唱歌（声带振动）另成一类。",
-  c1b4a: "4) 试一试：", c1b4b: "把“气息量”推大并打开“超吹”——舌位不动、音高翻一个八度（像长笛吹急翻高八度）；这是口哨高音区的常用技巧“超吹”。",
+  c1b4a: "4) 试一试：", c1b4b: "打开“超吹”开关——<b>舌位不动</b>、音高翻一个八度。这是本页对<b>长笛开管超吹</b>的开关演示，不是把“气息量”推大就会自动翻八度（气息滑杆只改响度与气流噪声）。真出口哨才用急气触发；人口腔也更接近第 5.2 节的亥姆霍兹瓶腔，而不是一根长笛。",
   cFamTitle: "1+. 乐器谱系对照：谁在“振”？",
   cFamTag: "气鸣（边棱音）vs 弦鸣（擦弦/击弦）· 键盘（离散）vs 滑奏（连续）",
   fam1: "口哨 / 笛子 / 竖笛 / 埙 = 气鸣 · 边棱音（无弦无簧）",
@@ -348,26 +359,26 @@ const I18N = {
   c2Title: "2. 舌位控制 = 人耳“对数听觉”的精密映射",
   c2Tag: "同一段音列画在三种尺上：线性 Hz 尺 / 听感对数尺 / 舌位“1÷频率”长度尺",
   logHint: "点击三行标尺任一处可定位音高（口哨发声）。",
-  c2Note: "读法：三行是同一段<b>E5→E7 半音列（十二平均律：每 12 个半音＝×2 的八度）</b>，只是摆尺不同。<b>上行线性 Hz 尺</b>：低音八度挤在左边、越往上“格”越宽；<b>中间听感尺</b>：每八度等宽——这才是耳朵听到的“相等”；<b>下行舌位长度尺</b>（等效腔长 ℓ∝1/f）：每个音程占的“毫米”随音高按几何级数收缩（低音区一个全音约 6%，高音区只剩约 3%）。彩色高刻度＝E 大调音阶音：标出<b>实际音高音名</b>（E5、F#5、G#5、A5、B5、C#6、D#6…E7）；中尺每个音阶音下标<b>唱名</b>（do=E5、re=F#5、mi=G#5…），可直接把“舌位刻度”唱出来——吹口哨＝用一块会呼吸的肌肉复现这把对数刻度尺。",
+  c2Note: "读法：三行是同一段<b>E5→E7 半音列（十二平均律：每 12 个半音＝×2 的八度）</b>，只是摆尺不同。<b>上行线性 Hz 尺</b>：低音八度挤在左边、越往上“格”越宽；<b>中间听感尺</b>：每八度等宽——这才是耳朵听到的“相等”；<b>下行舌位长度尺</b>（等效腔长 ℓ∝1/f 的几何示意）：每个半音都把<b>当前</b>腔长缩短约 5.6%（全音约 10.9%），这个百分比不随音高变；变小的是毫米——E7 的腔长是 E5 的 ¼，所以同样 5.6% 的绝对位移约只有低音的 ¼。彩色高刻度＝E 大调音阶音，标<b>音名</b>（E5、F#5…E7）与<b>唱名</b>（do=E5…）。这把 1/f 尺是与弦长/开管相同的几何类比，不是亥姆霍兹公式（见第 5 节）。",
   c2b1a: "1) 听觉的对数本性：", c2b1b: "频率“×2”＝高八度（听感等距），而不是“＋多少 Hz”。同一音程在高处绝对 Hz 差更大、听感却相等——乐理中的音程本质是“频率之比”。",
-  c2b2a: "2) 舌头面对的是“倒数尺”：", c2b2b: "腔体共振频率 ≈ 常数 ÷ 有效长度 ℓ（越高越“短”）。要发等音程，舌必须让 ℓ 按等比数列收缩（每高八度 ×½，每个半音 ×2^(−1/12)）——等差的毫米是不准的。",
+  c2b2a: "2) 舌头面对的是“倒数尺”：", c2b2b: "几何示意（与弦/开管相同）：共振频率 ≈ 常数 ÷ 有效长度 ℓ。要发等音程，ℓ 必须按等比收缩（每高八度 ×½，每个半音 ×2^(−1/12)）。这不是亥姆霍兹定律（f∝1/√V，见第 5.2 节）；第 1–4 节用 1/ℓ 只为了和对数听觉、小提琴弦长对照。",
   c2b3a: "3) 精密性体现在高音区：", c2b3b: "音越高，每个音分对应的舌位移越小。同样的位置误差，在低音区无伤大雅，在高音区就明显走音——吹奏者靠耳朵（对数标尺）实时校准，舌与唇以亚毫米精度配合：这是把“对数听觉”练成“运动控制”的标本。",
-  c2b4a: "4) 不是“吹”而是“调”：", c2b4b: "气息只提供能量并决定“第几号泛音”（见第 1 节“超吹”）；真正的“手指”是舌位与唇形的几何——吹口哨更像吹一把没有按键的笛子：指法＝舌位。",
+  c2b4a: "4) 不是“吹”而是“调”：", c2b4b: "本页里气息只提供能量（响度/噪声）；“第几号泛音”由“超吹”开关选择，不会因气息量自动跳变。真正的“手指”仍是舌位与唇形。",
   c3Title: "3. 吹口哨的“舌位感” ↔ 小提琴的“把位感”",
   c3Tag: "同一音高 n 半音：口里（舌）与琴上（指尖）的无级定位 · 都可滑音与揉音",
   c3Sld: "同一个音（相对 E5 的半音数 0…24 ＝ 两个八度）",
   c3Note: "读法：左＝口哨口腔剖面，右＝小提琴指板示意（E 弦空弦 E5≈659 Hz）。两把“尺”本质相同：音高越高，有效长度按 ×½、×¼ 收缩，发音点越靠前（口哨）或越靠琴桥（小提琴），且间距越来越小。琴上叫“换把”，口里就是“移舌”：“把位感”＝由耳朵（对数听觉）校准的肌肉位置记忆——两件乐器练的是同一件事。",
   c3b1a: "1) 都“无级、无刻度”：", c3b1b: "小提琴指板无品、音准全靠指尖位置＋耳朵；口哨的“口腔指板”也没有刻度，全靠舌位＋耳朵。任何中间音（滑音、微分音）都能发。",
   c3b2a: "2) 都靠“听觉闭环”练位置：", c3b2b: "放错了会听到“不准”→ 大脑立即微调舌/指。千百次练习后形成不用思考的“手感/舌感”。",
-  c3b3a: "3) 相同的几何：", c3b3b: "弦：f ∝ 1/弦长；口哨腔：f ≈ 常数/有效长度。两者半音间距的收缩律一模一样（等比），可互相打比方：口哨的低/中/高“舌位”≈ 小提琴的一/三/五把位。",
+  c3b3a: "3) 相同的几何：", c3b3b: "弦：f ∝ 1/弦长；本页口哨几何尺：f ≈ 常数/有效长度（与弦同构，便于对照）。半音间距的收缩律一模一样（等比）。请看图上已标的<b>空弦 E5 / 八度 E6（×½）/ 两个八度 E7（×¼）</b>——不要把它读成小提琴第 1/3/5 把（E6 大约在 7–8 把，E7 靠近琴桥）。",
   c3b4a: "4) 技法互通：", c3b4b: "滑音（连续移舌/指尖）、揉音（小提琴指尖滚压 ↔ 口哨气息/下颌微颤）、换把瞬间的落点准确。差别：小提琴四弦＋琴身放大，口哨单腔直接辐射。",
   c4Title: "4. 音色与音域：接近纯音的“气笛”，基频正好落在人耳最敏感区",
   c4Tag: "实时频谱（能量集中基频＝纯音性）· 音域范围 · 与长笛/人声对比",
   c4b1a: "1) 音质＝“纯”：", c4b1b: "频谱上能量几乎全在基频（上图：基频尖峰＋极弱高次谐波＋少量气流噪声），听感接近长笛的纯音：没有琴弦的金属感、没有簧片的粗粝感——因为声源是气流，天然接近正弦。",
-  c4b2a: "2) 影响音质的“旋钮”：", c4b2b: "唇孔小而圆→射流聚焦、音更清亮（口径大/漏气→噪声与“噗”声）；舌背中缝（舌沟）把气流拢成一束→更干净；唇面微湿、气息平稳→少杂音、可长音。这些旋钮还微微移动音高，必须与听觉协同。",
+  c4b2a: "2) 影响音质的“旋钮”：", c4b2b: "唇孔小而圆 → 射流聚焦、音更清亮（口径大或嘴角漏气 → 噪声/“噗”声）。本页合成器里，唇孔还会把音高微移大约几十音分（孔小略高）；气息滑杆改响度与气流噪声，不改音高。真实口哨里这些旋钮都会耦合，必须靠听觉协同。",
   c4b3a: "3) 音域：", c4b3b: "成人常用本调基频约 0.7–2.6 kHz（≈1.5–2 个八度）；熟练者约 2.5–3.5 个八度（0.5–4 kHz+）；世界级口哨手音域更宽。低音要“大腔＋大唇孔＋缓气”，高音要“小腔＋小孔＋强而细的射流”——正是第 1 节的几何规律。",
   c4b4a: "4) 为什么“传得远、有点刺耳”？", c4b4b: "口哨基频大多落在人耳最灵敏的 2–5 kHz（响度敏感峰），声压不高也“扎耳”；且方向性强（唇前），像一支小号角。",
-  foot1: "<b>教学简化声明：</b>本页把口腔腔体近似为“一端开口、由舌位决定长度的空气柱/腔”来解释几何规律（音高≈常数÷有效长度）。真实口哨还含唇孔声阻抗与射流-腔体非线性耦合，Hz 数值为演示值而非实测。口哨声合成＝WebAudio 正弦基频＋微量谐波＋气流噪声。",
+  foot1: "<b>教学简化声明：</b>本页并用两套模型，请勿合成一套公式。(1) 第 1–4 节：把“有效长度 ℓ”按开管/弦的 1/ℓ 几何来画对数尺，并与小提琴 E 弦对照；超吹开关按长笛开管 ×2。(2) 第 5.2 节：亥姆霍兹 f∝√(A/V)，更接近真出口哨（体积+瓶口），没有谐波梯子。真实口哨还有射流–腔体非线性耦合，Hz 为演示值。合成＝正弦基频＋微量谐波＋气流噪声。",
   foot2: "延伸关键词：边棱音 edge tone · 亥姆霍兹共鸣器 · 气柱驻波 / 超吹 overblowing · 等响曲线与对数听觉 · 1/f 弦长律 · 本体感觉与听觉-运动闭环。",
   // canvas labels (zh)
   c_title: "口哨发声链剖面 · 点按/拖动口内＝移动舌位（青蓝＝空气腔）", c_hintTop: "肺→气管→喉(声门开)→咽→口腔腔体→唇孔射流拍棱：腔体即“可变管/瓶”，舌位=调音钮",
@@ -379,13 +390,13 @@ const I18N = {
   c_eff: "等效腔长 ℓ", c_wall: "舌隆起 = “有效末端”", c_wall2: "有效腔长端点",
   c_open: "唇孔(哨口)", c_back: "咽",
   c_flow: "气流路径", c_overblow: "超吹：同舌位 激发第2号泛音 → ×2 高八度",
-  c_mode1: "腔内驻波（第1号·本调）", c_mode2: "腔内驻波（第2号·超吹）",
+  c_mode1: "开管驻波示意（第1号·本调）", c_mode2: "开管驻波示意（第2号·超吹 ×2）",
   c_noteLow: "腔大 → 音低", c_noteHigh: "腔短小 → 音高",
   c_wave: "压力驻波(共鸣振荡)",
   c_hintLow: "舌后低平", c_hintHigh: "舌前上拱",
   octLbl: "八度：频率×2",
   r1t: "1) 线性 Hz 尺（低音挤在左，格越往高越宽）", r2t: "2) 听感尺·对数（八度/半音都等距）", r3t: "3) 舌位长度尺 ℓ∝1/f（音程占的“毫米”等比收缩）",
-  r1note: "Hz 线性：659→1318 的距离 ＜ 1318→2637", r2note: "听感：E5→E6 与 E6→E7 “一样宽”", r3note: "舌：低音每步 ~6%，高音每步 ~3%——越细",
+  r1note: "Hz 线性：659→1318 的距离 ＜ 1318→2637", r2note: "听感：E5→E6 与 E6→E7 “一样宽”", r3note: "舌：每半音都缩短当前腔长 ≈5.6%；毫米数随 ℓ 缩小（E7 约为 E5 的 ¼）",
   lowNote: "低音区", highNote: "高音区", moveTiny: "每一步只差几毫米",
   cmpMouthTitle: "口哨“口腔指板”：舌位 = 把位", cmpViolinTitle: "小提琴 E 弦指板：手指 = 把位(示意)",
   cmpNut: "琴枕", cmpBridge: "琴桥", cmpStrLive: "振动弦段", cmpStrDead: "按死的弦段(不振)",
@@ -408,33 +419,34 @@ const I18N = {
   dToneLbl: "🎚 同一音高试听不同音色（上方频谱实时变化）：", dToneSine: "● 纯音（正弦）", dToneWhistle: "🎺 口哨（气簧·本页音色）", dToneViolin: "🎻 小提琴（谐波一串）", dToneCycleBtn: "🔀 循环对比：纯音→口哨→小提琴", dRangeBtn: "🔊 听口哨全音域：E5→E7 再超吹上 E8（×2）",
   dToneHint: "点“●纯音 / 🎺口哨 / 🎻小提琴”即用当前音高发声（再点一次停止），频谱同步显示：纯音＝单根尖峰；口哨＝尖峰＋弱谐波＋少量气流噪声；小提琴＝一串递减谐波。",
   t5Title: "5. 原理名词扩展：边棱音 · 亥姆霍兹共鸣器 · 气柱驻波 · 超吹",
-  t5Tag: "把“脚注”里的名词展开成小图＋一句话机制；每条的对应演示控件也一并标注",
+  t5Tag: "三种模型分开对照：边棱音声源 · 亥姆霍兹（真出口哨的一阶模型）· 开管驻波/长笛超吹（几何类比，不是同一个腔）",
   t5L1: "1) 边棱音（edge tone / 气簧）：", t5L2: "2) 亥姆霍兹共鸣器（瓶腔）：", t5L3: "3) 气柱驻波与泛音：", t5L4: "4) 超吹（overblowing）：",
   t5B1: "口腔/笛子的声源不是弦也不是簧片，而是“会自己振荡的空气”：从唇孔喷出的射流（jet）在唇齿棱上被周期性切开、交替卷出涡（主图唇口旋涡示意）。这层空气动力失稳产生宽频扰动，只有接近口腔共鸣频率的成分被放大存活——所以换腔形（舌位/唇孔）就能在同一口气上换音，这正是“气簧”乐器的核心。",
-  t5B2: "频率 f≈(c/2π)·√(A/(V·ℓ))：V＝瓶身（口腔主体）体积，A 与 ℓ＝瓶口（唇孔）的截面积与“颈长”。腔大音低（V↑f↓）、唇孔大音高（A↑f↑）。口哨＝一只“可变形的瓶子”：舌位滑杆≈把瓶子捏小变大变音，唇孔滑杆≈调瓶口。无需“预先调好的弦”，谐振器本身连续可调。",
-  t5B3: "共振的本质是驻波：波在唇孔（近似开口端）与舌/软腭形成的“有效末端”之间往返叠加。一端开口的近似：f1≈c/(4ℓ)，于是“等效腔长 ℓ 越短音越高”——第 2 节的 1/f 舌位尺由此而来；同一腔还能驻出 f2=2f1、f3=3f1……（模式号 n＝半波数，上图画线：第 2 号模式中间有个不动的点＝节点）。",
-  t5B4: "舌位/指法不动，只把气流加急（或微调射流与棱相遇的相位），驻波跳到更高的模式：音高×2（高八度）、×3……长笛、竖笛、埙与口哨都这样取高音。演示：主图“超吹”开关＝同舌位×2；下方“听口哨全音域”在 E7 处再次超吹上 E8≈5.3 kHz。",
+  t5B2: "真出口哨更接近亥姆霍兹共鸣器，不是一根开管。f≈(c/2π)·√(A/(V·ℓ_neck))：V＝瓶身体积（本页用舌位滑杆代表，V∝ℓ），A＝瓶口面积（用本节的“孔径 A”滑杆，不是上面的唇孔音色滑杆）。于是 f∝1/√V、f∝√A：同样把 V 缩到 ¼，音高只翻一个八度（E5→E6），而 1/ℓ 尺会翻两个八度。亥姆霍兹基本上只有一个峰，没有“超吹 ×2”的谐波梯子。点“亥姆霍兹试音”开关后拖动 A 和舌位，听的就是这条公式。",
+  t5B3: "第 1–4 节的 1/f 尺来自开管/弦的几何类比：两端开口时 f1≈c/(2ℓ)，f2=2f1、f3=3f1（模式号＝半波数；第 2 号中间有节点）。闭管（一端开口）则是 f、3f、5f，超吹到十二度而不是八度——本页不采用闭管模型。这套驻波图画的是开管，用来解释“为什么长度减半音高翻倍”，不是说口腔就是一根长笛。",
+  t5B4: "长笛、竖笛等开管气簧乐器：指法不动、气流加急，驻波跳到第 2 号模式，音高×2。本页主图“超吹”开关演示的就是这个同族技巧，不是亥姆霍兹瓶腔的行为（埙/陶笛更接近亥姆霍兹，通常不能像长笛那样干净地翻八度）。下方“听口哨全音域”在 E7 再 ×2 到 E8≈5.3 kHz，是演示用的开管超吹，不是主张人口腔真能稳定驻出第 2 谐波。",
   t5p1: "边棱音（气簧）", t5p2: "亥姆霍兹共鸣器", t5p3: "气柱驻波", t5p4: "超吹",
   t5a1: "缝/孔喷出＝射流", t5a2: "棱切开→涡街＝声源", t5a3: "腔体“选频”定音高",
   t5b1: "体积 V＋瓶口 A、ℓ", t5b2: "腔大音低 孔大音高", t5b3: "f≈(c/2π)√(A/Vℓ)",
-  t5c1: "基频 f1≈c/(4ℓ)", t5c2: "模式 n：f＝n·f1", t5c3: "越高＝ℓ 越短（1/f）",
+  t5c1: "基频 f1≈c/(2ℓ)（开管类比）", t5c2: "模式 n：f＝n·f1", t5c3: "越高＝ℓ 越短（1/f）",
   t5d1: "同一舌位/指法", t5d2: "气流加急→跳模式", t5d3: "音高×2、×3",
-  t5nod: "节点", t5air: "气流", t5Vbig: "V 大", t5Vsmall: "V 小", cmpNote2: "刻度：上方=绝对音名（E5…E7），下方=唱名（相对音高）", vsOpen: "E5 空弦", vsOpenHz: "E5 空弦 659 Hz · n 半音", demoScale: "🎵 音阶示范 E5→E7", demoGliss: "↗ 滑奏示范", demoSong: "🎶 《欢乐颂》", bOctL: "🔊 试听：E5→E6→E7（听感每步等距）", bGlissL: "▶ 滑奏 E5→E7", cWhisL: "🎺 口哨音色试听", cViolL: "🎻 小提琴音色试听", cAltL: "🔀 交替对比", fEdge: "吹口(棱)", fHole: "指孔", fBow: "弓", fHammer: "琴槌→弦",
+  t5nod: "节点", t5air: "气流", t5Vbig: "V 大", t5Vsmall: "V 小", cmpNote2: "刻度：上方=绝对音名（E5…E7），下方=唱名（相对音高）", vsOpen: "E5 空弦", vsOpenHz: "E5 空弦 659 Hz · n 半音", demoScale: "🎵 音阶示范（E 大调 E5→E7）", demoGliss: "↗ 滑奏示范", demoSong: "🎶 《欢乐颂》", bOctL: "🔊 试听：E5→E6→E7（听感每步等距）", bGlissL: "▶ 滑奏 E5→E7", cWhisL: "🎺 口哨音色试听", cViolL: "🎻 小提琴音色试听", cAltL: "🔀 交替对比", fEdge: "吹口(棱)", fHole: "指孔", fBow: "弓", fHammer: "琴槌→弦",
   mvsHint: "点/拖琴弦可调音高（与主图口哨同步）", mvsSame: "同一音高：小提琴靠按弦，口哨靠舌位",
   d5Lbl: "🔊 每条原理都带“有声小实验”（示意图随播放高亮）：", d5Edge: "1) 先“嘶”（射流噪声）→ 加腔定音", d5Bottle: "2) 瓶腔调音：V 大→小", d5Mode: "3) 驻波：第1号→第2号(八度)", d5Overb: "4) 超吹：同舌位 ×2",
-  d5Hint: "听法：1 和 2 用当前舌位/音高直接演示“无腔＝嘶、加腔＝定音 / 腔大→小 音低→高”；3 和 4 在舌位不变时把驻波从第1号推到第2号——音高×2（高八度）。播放时上方示意图高亮对应格子并显示阶段说明。",
+  d5Hint: "听法：1) 无腔＝嘶、加腔＝定音（边棱音+选频）。2) 亥姆霍兹：V 大→小，同样舌位行程大约只滑一个八度（f∝1/√V），孔径 A 越大音越高。3–4) 开管类比：舌位不动，第 1 号→第 2 号，音高×2。播放时上方示意图高亮对应格子。",
   t5phIdle: "· 点上方四个按钮，这里会高亮当前原理并播报演示阶段 ·",
   t5phE1: "1) 无腔：只有射流“嘶——”噪声（没有稳定音高）",
   t5phE2: "1) 加上口腔腔体→同一口气变成稳定的音高（腔体“选频”）",
-  t5phH: "2) 等效腔体 V 从大变小→音从低滑到高（瓶腔调音）",
-  t5phS1: "3) 第 1 号驻波（基频）",
-  t5phS2: "3) 第 2 号驻波（中间出现节点）→ 音高 ×2",
-  t5phO1: "4) 本调（第 1 号泛音）",
-  t5phO2: "4) 超吹 → 第 2 号泛音，同舌位音高 ×2（高八度）",
-  xFold: "讲解与要点（点击展开）", c34Title: "3+4. 舌位↔把位 · 音色与音域 —— 同一屏联动观察（说明已收起，便于对照）", c34Tag: "两个主题共用同一个音高控制：调节上方舌位/按弦并发声，下方频谱与音域读数即时跟随",
+  t5phH: "2) 亥姆霍兹：V 从大变小 → 音从低滑到高（约一个八度，f∝1/√V）",
+  t5phS1: "3) 开管第 1 号驻波（半波 · 基频）",
+  t5phS2: "3) 开管第 2 号驻波（中间节点）→ 音高 ×2",
+  t5phO1: "4) 长笛式本调（第 1 号）",
+  t5phO2: "4) 长笛式超吹 → 第 2 号，同长度音高 ×2（不是亥姆霍兹）",
+  xFold: "讲解与要点（点击展开）", c34Title: "3+4. 舌位↔把位 · 音色与音域 —— 同一屏联动观察（说明已收起，便于对照）", c34Tag: "两个主题共用同一个音高控制：点/拖左侧口腔或右侧琴弦、底尺；频谱与音域读数即时跟随",
   rLeg: "绝对音高锚点 E5(659Hz)→E6(1319)→E7(2637)；高刻度＝E大调音阶音（下方唱名表示相对音高：do re mi…，′ 为高八度）",
-  aLbl: "瓶口孔径 A（大 → 音更高）：", hBtn: "🔊 亥姆霍兹试音（孔径调音高）", hBtnStop: "⏹ 停止亥姆霍兹试音", hHint: "按住试音后拖动“孔径 A”：孔越大音越高（f∝√A）；腔体 V 用主图舌位滑杆控制——V 越大音越低（f∝1/√V）。瓶子面板会同步张缩。", t5Asmall: "孔小", t5Abig: "孔大",
+  aLbl: "瓶口孔径 A（大 → 音更高）：", hBtn: "🔊 亥姆霍兹试音（孔径调音高）", hBtnStop: "⏹ 停止亥姆霍兹试音", hHint: "点一下开/关试音（不是按住）。拖动本节“孔径 A”：孔越大音越高（f∝√A）。体积 V 由第 1 节舌位滑杆控制——V 越大音越低（f∝1/√V）。此试音不叠加“超吹”。瓶子面板会同步张缩。", t5Asmall: "孔小", t5Abig: "孔大",
   cur: "当前", pos: "位置",
+  ariaMain: "口腔剖面与发声链", ariaFam: "乐器族谱系对比", ariaLog: "三种频率尺对比", ariaCmp: "舌位与小提琴把位对比", ariaSpec: "实时频谱", ariaRange: "音域范围图", ariaTerms: "边棱音、亥姆霍兹、驻波与超吹示意图",
  },
  en: {
   pageTitle: "🎺 Whistle Acoustics — Interactive Diagram",
@@ -442,12 +454,12 @@ const I18N = {
   btnHelp: "📖 Help", helpTitle: "📖 How to read this page",
   c1Title: "1. Sound production: lungs → air reed (edge tone) → mouth as a tunable pipe/cavity — like a flute, no string, no reed",
   c1Tag: "Drag tongue / lip aperture / breath · live audio · overblow = +1 octave",
-  lblS: "Tongue / effective cavity (semitones 0…24: low→high)", lblLip: "Lip hole (aperture·timbre)", lblBreath: "Breath", lblVib: "Vibrato",
+  lblS: "Tongue / effective cavity (semitones 0…24: 0=E5 low → 24=E7 high)", lblLip: "Lip hole (aperture·timbre)", lblBreath: "Breath", lblVib: "Vibrato",
   c1Note: "How to read: air from the lungs (below) passes the open glottis into the mouth cavity (cyan = air). It exits the lip hole as a <b>jet</b>; the jet strikes the lip/tooth edge and sheds alternating vortices = <b>edge tone</b> (the sound source; its oscillation ≈ the fundamental). The mouth cavity acts as a tube that can be <b>shortened/reshaped</b> and picks the pitch by resonance — same as flute/recorder/ocarina: an <b>aerophone (edge/air-reed)</b> with no string and no reed: the air itself oscillates. Tongue forward & arched → cavity smaller → higher pitch (like uncovering flute holes shortens the tube).",
   c1b1a: "1) vs keyboard (piano): ", c1b1b: "the piano is struck strings (impulse excitation) with a fixed, discrete set of pre-tuned strings — to change pitch you must press another key. The whistle has ONE cavity whose geometry sets pitch continuously, with no stepping.",
   c1b2a: "2) vs strings (violin): ", c1b2b: "a string instrument’s source is the vibrating string (bow hair drives stick-slip self-oscillation). A whistle has no string — the source is aerodynamic instability of the jet (edge tone). What they share: the sounding point (finger / tongue) can slide continuously with no marks. See §3.",
   c1b3a: "3) vs reeds / voice: ", c1b3b: "no reed, no vocal-fold vibration (the glottis is just an open passage) — same “air-reed” family as flutes; reeds (oboe, harmonica) and singing (vocal folds) are different classes.",
-  c1b4a: "4) Try it: ", c1b4b: "raise Breath and turn on Overblow — the tongue does NOT move, yet the pitch jumps one octave (like overblowing a flute); that is how whistlers reach their top register.",
+  c1b4a: "4) Try it: ", c1b4b: "turn on Overblow — the tongue does NOT move, yet the pitch jumps one octave. That is this page’s <b>flute-style open-pipe</b> switch, not “push Breath and it overblows” (Breath only changes loudness and jet noise). Real whistling uses a fast jet; a human mouth is closer to the Helmholtz bottle in §5.2 than to a flute.",
   cFamTitle: "1+. Instrument families: what actually vibrates?",
   cFamTag: "Aerophones (edge tone) vs chordophones (bowed/struck) · discrete keys vs continuous slides",
   fam1: "Whistle / flute / recorder / ocarina = aerophone · edge tone (no string, no reed)",
@@ -456,26 +468,26 @@ const I18N = {
   c2Title: "2. Tongue control = a precise map of the ear’s logarithmic pitch scale",
   c2Tag: "One run of notes drawn on three rulers: linear Hz / perceptual log / tongue “1÷f” length",
   logHint: "Click anywhere on the three rulers to place the pitch (whistle sounds).",
-  c2Note: "How to read: all three rows show the same <b>E5→E7 semitone ladder (12-TET: every 12 semitones = one ×2 octave)</b> drawn differently. <b>Top linear-Hz ruler</b>: the low octave is squeezed left and gaps widen upward. <b>Middle perceptual ruler</b>: every octave is equally wide — that is what the ear calls “equal”. <b>Bottom tongue-length ruler</b> (effective cavity ℓ ∝ 1/f): the millimetres per interval shrink geometrically (~6% per whole tone down low, only ~3% up high). Tall coloured ticks are the E-major scale tones, labelled with their <b>actual note names</b> (E5, F#5, G#5, A5, B5, C#6, D#6 … E7); on the middle ruler each scale tone also carries its <b>solfège</b> (do=E5, re=F#5, mi=G#5…), so you can sing the tongue positions — whistling = recreating this logarithmic ruler with a breathing muscle.",
+  c2Note: "How to read: all three rows show the same <b>E5→E7 semitone ladder (12-TET: every 12 semitones = one ×2 octave)</b> drawn differently. <b>Top linear-Hz ruler</b>: the low octave is squeezed left and gaps widen upward. <b>Middle perceptual ruler</b>: every octave is equally wide — that is what the ear calls “equal”. <b>Bottom tongue-length ruler</b> (ℓ ∝ 1/f, a geometry analogy): each semitone shortens the <b>current</b> cavity by ≈5.6% (a whole tone ≈10.9%) — that percentage does not change with pitch. What shrinks is millimetres: E7 is ¼ of E5, so the same 5.6% is about ¼ as many mm. Tall ticks are E-major scale tones with <b>note names</b> (E5, F#5…E7) and <b>solfège</b> (do=E5…). This 1/f ruler matches string / open-pipe geometry, not the Helmholtz law (see §5).",
   c2b1a: "1) Hearing is logarithmic: ", c2b1b: "doubling frequency = one octave up (perceptually equal), not “+X Hz”. Higher notes need larger Hz differences for the same interval — musical intervals are frequency RATIOS.",
-  c2b2a: "2) The tongue faces a reciprocal ruler: ", c2b2b: "cavity resonance ≈ constant ÷ effective length ℓ (higher = “shorter”). Equal musical steps therefore require ℓ to shrink in geometric series (×½ per octave, ×2^(−1/12) per semitone) — equal millimetres would be out of tune.",
+  c2b2a: "2) The tongue faces a reciprocal ruler: ", c2b2b: "geometry analogy (same as a string / open pipe): resonance ≈ constant ÷ effective length ℓ. Equal musical steps require ℓ to shrink geometrically (×½ per octave, ×2^(−1/12) per semitone). That is not Helmholtz (f∝1/√V, see §5.2); §§1–4 use 1/ℓ only to line up with log hearing and violin string length.",
   c2b3a: "3) Precision lives up high: ", c2b3b: "the higher the pitch, the smaller the tongue travel per cent. The same positional error is harmless down low but clearly out of tune up high — players calibrate in real time by ear (their internal log ruler): a textbook case of turning logarithmic hearing into motor control.",
-  c2b4a: "4) It’s not “blowing”, it’s “tuning”: ", c2b4b: "breath supplies energy and selects the overtone (see overblow in §1); the real “fingers” are tongue position and lip geometry — whistling is like playing a fluteless flute: fingering = tongue position.",
+  c2b4a: "4) It’s not “blowing”, it’s “tuning”: ", c2b4b: "on this page Breath only supplies energy (loudness/noise); which partial you hear is the Overblow switch, not an automatic jump from airflow. The real “fingers” are still tongue and lips.",
   c3Title: "3. Whistle “tongue position” ↔ violin “position sense”",
   c3Tag: "The same pitch n semitones: continuous positioning in the mouth (tongue) and on the fingerboard (finger) — both slide & vibrate",
   c3Sld: "Same pitch (semitones above E5, 0…24 = two octaves)",
   c3Note: "How to read: left = whistle mouth profile, right = violin E-string fingerboard (open E5 ≈ 659 Hz). The two “rulers” are the same: as pitch rises the effective length shrinks by ×½, ×¼… and the sounding point moves forward (mouth) / toward the bridge (finger), with spacing getting tighter. On the violin we call it “shifting position”; in the mouth it is “moving the tongue”. Position sense = muscle memory calibrated by the logarithmic ear — the two instruments train the same skill.",
   c3b1a: "1) Both are continuous and markless: ", c3b1b: "no frets on the violin, intonation from fingertip + ear; no marks in the mouth, intonation from tongue + ear. Every intermediate pitch (glissando, microtones) is available.",
   c3b2a: "2) Both train position by auditory feedback: ", c3b2b: "a wrong placement sounds out of tune → the brain corrects tongue/finger by millimetres. After thousands of repetitions it becomes “feel” without thinking.",
-  c3b3a: "3) Same geometry: ", c3b3b: "string: f ∝ 1/string length; whistle cavity: f ≈ const/length. Their semitone spacings shrink identically (geometric). Analogy: low/mid/high “tongue positions” ≈ first/third/fifth positions on the violin.",
+  c3b3a: "3) Same geometry: ", c3b3b: "string: f ∝ 1/string length; this page’s whistle ruler: f ≈ const/length (same map, for comparison). Semitone spacings shrink identically. Read the ticks already drawn: <b>open E5 / octave E6 (×½) / two octaves E7 (×¼)</b> — not violin 1st/3rd/5th position (E6 sits around 7th–8th; E7 is near the bridge).",
   c3b4a: "4) Shared techniques: ", c3b4b: "glissando (slide tongue/finger), vibrato (finger roll ↔ breath/jaw ripple), and landing precisely when shifting. Difference: violin has 4 strings + body amplification; the whistle is a single cavity radiating directly.",
   c4Title: "4. Timbre & range: an almost-pure “air whistle” sitting exactly in the ear’s most sensitive zone",
   c4Tag: "Live spectrum (energy at the fundamental = pure tone) · range · compared with flute/voice",
   c4b1a: "1) Timbre is “pure”: ", c4b1b: "almost all energy sits at the fundamental (live spectrum above: tall peak + very weak harmonics + breath noise). It sounds like a pure tone / flute — no string metallic edge, no reed roughness — because the source is the air stream itself, naturally near-sinusoidal.",
-  c4b2a: "2) Timbre “knobs”: ", c4b2b: "small round lip hole → focused jet, brighter tone (wide hole / leaking corners → noise); the tongue’s midline groove bundles the air stream → cleaner sound; slightly moist lips and steady breath → fewer artifacts, long notes. These knobs also nudge the pitch, so they must be coordinated by ear.",
+  c4b2a: "2) Timbre “knobs”: ", c4b2b: "small round lip hole → focused jet, brighter tone (wide hole / leak → noise). On this page the lip slider also shifts pitch by a few tens of cents (smaller hole slightly sharper); Breath changes loudness and jet noise, not pitch. In real whistling those knobs couple and must be coordinated by ear.",
   c4b3a: "3) Range: ", c4b3b: "typical adult fundamentals ≈ 0.7–2.6 kHz (≈1.5–2 octaves); skilled ≈ 2.5–3.5 octaves (0.5–4 kHz+); world-class whistlers wider. Low notes need a large cavity + wide lip hole + gentle air; high notes need a small cavity + small hole + a strong, thin jet — exactly the geometry of §1.",
   c4b4a: "4) Why so piercing / audible from afar? ", c4b4b: "fundamentals land mostly in the ear’s most sensitive 2–5 kHz region, so even low sound pressure is loud; the beam is directional (straight from the lips) like a tiny horn.",
-  foot1: "<b>Pedagogical simplification:</b> the mouth cavity is modelled as an open tube whose length is set by the tongue, to explain the geometry (pitch ≈ const ÷ effective length). Real whistling adds lip-aperture impedance and jet–cavity nonlinear coupling, so Hz values are demo values, not measurements. The whistle voice = WebAudio sine fundamental + faint harmonics + breath noise.",
+  foot1: "<b>Pedagogical simplification:</b> this page uses two models on purpose — do not fuse them. (1) §§1–4: an “effective length ℓ” drawn with open-pipe / string 1/ℓ geometry, lined up with the violin E string; the Overblow switch is flute-style ×2. (2) §5.2: Helmholtz f∝√(A/V), closer to a real mouth (volume + neck), with no harmonic ladder. Real whistling also has jet–cavity nonlinear coupling; Hz values are demos. Synth = sine fundamental + faint harmonics + breath noise.",
   foot2: "Keywords: edge tone · Helmholtz resonator · standing waves / overblowing · equal-loudness & logarithmic hearing · 1/f string law · proprioception & auditory–motor loop.",
   c_title: "Whistle sound-production profile — click/drag in the mouth to move the tongue (cyan = air)", c_hintTop: "lungs → trachea → open glottis → pharynx → mouth cavity → lip-jet edge tone: the cavity is a tunable tube/bottle, the tongue is its tuning knob",
   c_lungs: "lungs", c_diaph: "diaphragm", c_trachea: "Trachea", c_larynx: "larynx (open)", c_pharynx: "Pharynx",
@@ -486,7 +498,7 @@ const I18N = {
   c_eff: "cavity length ℓ", c_wall: "Tongue ridge = “effective end”", c_wall2: "Effective end",
   c_open: "lip hole", c_back: "pharynx",
   c_flow: "Air path", c_overblow: "Overblow: same tongue → 2nd partial, ×2 (octave up)",
-  c_mode1: "Standing wave (1st partial)", c_mode2: "Standing wave (2nd partial, overblown)",
+  c_mode1: "Open-pipe standing wave (1st partial)", c_mode2: "Open-pipe standing wave (2nd partial, ×2)",
   c_noteLow: "Big cavity → low pitch", c_noteHigh: "Small cavity → high pitch",
   c_wave: "Standing pressure wave",
   c_hintLow: "tongue low & back", c_hintHigh: "tongue front & arched",
@@ -494,7 +506,7 @@ const I18N = {
   r1t: "1) Linear Hz ruler (low notes squeezed left; spacing widens)",
   r2t: "2) Perceptual (log) ruler — octaves/semitones equally spaced",
   r3t: "3) Tongue-length ruler ℓ ∝ 1/f (interval “mm” shrink geometrically)",
-  r1note: "Hz: 659→1318 shorter than 1318→2637", r2note: "Perception: E5→E6 = E6→E7 “same width”", r3note: "Tongue: ~6% per step low, ~3% high — finer & finer",
+  r1note: "Hz: 659→1318 shorter than 1318→2637", r2note: "Perception: E5→E6 = E6→E7 “same width”", r3note: "Tongue: each semitone shortens current ℓ by ≈5.6%; mm shrink as ℓ shrinks (E7 ≈ ¼ of E5)",
   lowNote: "low register", highNote: "high register", moveTiny: "only millimetres per step",
   cmpMouthTitle: "Whistle “mouth fingerboard”: tongue = position", cmpViolinTitle: "Violin E string: finger = position (schematic)",
   cmpNut: "Nut", cmpBridge: "Bridge", cmpStrLive: "vibrating segment", cmpStrDead: "stopped segment (silent)",
@@ -517,34 +529,35 @@ const I18N = {
   dToneLbl: "🎚 Same pitch, different timbres (live spectrum above):", dToneSine: "● Pure sine", dToneWhistle: "🎺 Whistle (air reed)", dToneViolin: "🎻 Violin (harmonics ladder)", dToneCycleBtn: "🔀 Cycle: sine → whistle → violin", dRangeBtn: "🔊 Whistle range: E5→E7, then overblow to E8 (×2)",
   dToneHint: "Press one timbre button to play at the current pitch (press again to stop); the spectrum shows it live — sine: one spike; whistle: spike + faint harmonics + breath noise; violin: a ladder of decreasing harmonics.",
   t5Title: "5. Principle glossary: edge tone · Helmholtz resonator · standing waves · overblowing",
-  t5Tag: "The footnote terms expanded as mini-diagrams + one-line mechanics, with links to the demo controls",
+  t5Tag: "Three models kept apart: edge-tone source · Helmholtz (first-order real whistle) · open-pipe standing wave / flute overblow (geometry analogy, not the same cavity)",
   t5L1: "1) Edge tone (air reed): ", t5L2: "2) Helmholtz resonator (bottle): ", t5L3: "3) Standing waves & partials: ", t5L4: "4) Overblowing: ",
   t5B1: "The source of a whistle (or flute) is not a string or reed but “air that oscillates by itself”: the jet leaving the lip hole is sliced periodically by the lip/tooth edge, shedding alternating vortices (see the swirls at the lips in §1). That aerodynamic instability is broadband; only components near the mouth-cavity resonance survive and grow — so changing the cavity (tongue/lips) retunes the pitch on the same breath: the essence of air-reed instruments.",
-  t5B2: "f≈(c/2π)·√(A/(V·ℓ)): V = bottle (mouth cavity) volume; A and ℓ = area and “neck length” of the lip hole. Big cavity → low (V↑); bigger aperture → higher (A↑). A whistle is a “deformable bottle”: the tongue slider reshapes V, the lip slider reshapes A. No pre-tuned string needed — the resonator itself is continuously tunable.",
-  t5B3: "Resonance is a standing wave: waves bounce between the lip opening (≈ open end) and the “effective end” made by tongue/soft palate. One-end-open approximation: f1≈c/(4ℓ) — which is exactly the 1/f tongue ruler of §2. The same cavity also supports f2=2f1, f3=3f1… (mode number = number of half-waves; the 2nd mode has a stationary point in the middle = the node).",
-  t5B4: "Keep the tongue/fingering fixed and push more air (or shift the jet–edge phase): the standing wave jumps to a higher mode — pitch ×2 (octave), ×3… Flutes, recorders, ocarinas and whistles all use this trick for high notes. Demo: the Overblow switch in §1 doubles the pitch on the same tongue; the “full range” demo in §4 overblows E7 up to E8 ≈ 5.3 kHz.",
+  t5B2: "A real human whistle is closer to a Helmholtz resonator than to an open pipe. f≈(c/2π)·√(A/(V·ℓ_neck)): V = bottle volume (the tongue slider here, V∝ℓ), A = mouth area (the “Aperture A” slider in this section — not the lip-timbre slider above). So f∝1/√V and f∝√A: shrinking V to ¼ only raises pitch one octave (E5→E6), whereas the 1/ℓ ruler jumps two. Helmholtz is essentially a single peak — no ×2 overblow ladder. Turn on “Helmholtz test” and drag A and the tongue: that is this formula.",
+  t5B3: "The 1/f ruler in §§1–4 is an open-pipe / string analogy: both ends open, f1≈c/(2ℓ), f2=2f1, f3=3f1 (mode number = half-waves; the 2nd mode has a mid-tube node). A closed–open pipe would be f, 3f, 5f and overblow to a twelfth — this page does not use that model. The standing-wave drawing is an open pipe, to show “half the length → double the pitch”, not to claim the mouth is a flute.",
+  t5B4: "Flutes and recorders (open air-reeds): keep the fingering, push more air, jump to the 2nd mode, pitch ×2. The Overblow switch demos that family trick; it is not what a Helmholtz bottle does (ocarinas are Helmholtz-like and usually cannot overblow a clean octave). The “full range” demo ×2 at E7 up to E8 ≈ 5.3 kHz is that open-pipe switch, not a claim that a mouth stably supports the 2nd harmonic.",
   t5p1: "Edge tone (air reed)", t5p2: "Helmholtz resonator", t5p3: "Standing waves", t5p4: "Overblowing",
   t5a1: "aperture → air jet", t5a2: "edge → vortex street", t5a3: "cavity locks the pitch",
   t5b1: "volume V + neck A, ℓ", t5b2: "big V → low; big A → high", t5b3: "f≈(c/2π)√(A/Vℓ)",
-  t5c1: "f1 ≈ c/(4ℓ)", t5c2: "mode n: f = n·f1", t5c3: "higher = shorter ℓ (1/f)",
+  t5c1: "f1 ≈ c/(2ℓ) (open-pipe analogy)", t5c2: "mode n: f = n·f1", t5c3: "higher = shorter ℓ (1/f)",
   t5d1: "same tongue/fingering", t5d2: "more air → higher mode", t5d3: "pitch ×2, ×3",
-  t5nod: "node", t5air: "air stream", t5Vbig: "V big", t5Vsmall: "V small", cmpNote2: "Ticks: absolute pitch names above (E5…E7), solfège below (relative)", vsOpen: "E5 open", vsOpenHz: "E5 open 659 Hz · n semitones", demoScale: "🎵 Scale demo E5→E7", demoGliss: "↗ Glissando demo", demoSong: "🎶 “Ode to Joy”", bOctL: "🔊 Hear: E5→E6→E7 (equally spaced to the ear)", bGlissL: "▶ Gliss E5→E7", cWhisL: "🎺 Whistle timbre", cViolL: "🎻 Violin timbre", cAltL: "🔀 Alternate A/B", fEdge: "embouchure", fHole: "holes", fBow: "bow", fHammer: "hammer→string",
+  t5nod: "node", t5air: "air stream", t5Vbig: "V big", t5Vsmall: "V small", cmpNote2: "Ticks: absolute pitch names above (E5…E7), solfège below (relative)", vsOpen: "E5 open", vsOpenHz: "E5 open 659 Hz · n semitones", demoScale: "🎵 Scale demo (E major E5→E7)", demoGliss: "↗ Glissando demo", demoSong: "🎶 “Ode to Joy”", bOctL: "🔊 Hear: E5→E6→E7 (equally spaced to the ear)", bGlissL: "▶ Gliss E5→E7", cWhisL: "🎺 Whistle timbre", cViolL: "🎻 Violin timbre", cAltL: "🔀 Alternate A/B", fEdge: "embouchure", fHole: "holes", fBow: "bow", fHammer: "hammer→string",
   mvsHint: "click/drag the string to tune (synced with the mouth whistle)", mvsSame: "same pitch — violin by finger, whistle by tongue",
   d5Lbl: "🔊 Each principle comes with an audible mini-demo (the panel highlights while playing):", d5Edge: "1) hiss (jet) → cavity locks a pitch", d5Bottle: "2) bottle tuning: V big→small", d5Mode: "3) standing wave: 1st → 2nd partial (octave)", d5Overb: "4) overblow: same tongue ×2",
-  d5Hint: "1) shows raw jet noise (no cavity = unstable hiss) then the cavity locking a stable pitch; 2) sweeps the effective cavity from large to small (low→high); 3 and 4 hold the tongue still and push the standing wave from the 1st to the 2nd partial — pitch ×2 (octave). The diagram above highlights the active panel and shows a phase caption.",
+  d5Hint: "1) no cavity = hiss, cavity on = a locked pitch. 2) Helmholtz: V big→small, the same tongue travel is only about one octave (f∝1/√V); bigger Aperture A → higher. 3–4) open-pipe analogy: tongue still, 1st → 2nd partial, pitch ×2. The panel above highlights while playing.",
   t5phIdle: "· Press the four buttons above — the active principle highlights here ·",
   t5phE1: "1) no cavity: only the jet hiss (no stable pitch)",
   t5phE2: "1) cavity added → the same breath becomes a stable pitch (cavity “selects”)",
-  t5phH: "2) effective cavity V shrinks → pitch glides low→high (bottle tuning)",
-  t5phS1: "3) 1st standing wave (fundamental)",
-  t5phS2: "3) 2nd standing wave (a node appears mid-tube) → pitch ×2",
-  t5phO1: "4) fundamental (1st partial)",
-  t5phO2: "4) overblown → 2nd partial, pitch ×2 (octave) on the same tongue",
+  t5phH: "2) Helmholtz: V shrinks → pitch glides low→high (about one octave, f∝1/√V)",
+  t5phS1: "3) open-pipe 1st standing wave (half-wave · fundamental)",
+  t5phS2: "3) open-pipe 2nd standing wave (mid-tube node) → pitch ×2",
+  t5phO1: "4) flute-style fundamental (1st partial)",
+  t5phO2: "4) flute-style overblow → 2nd partial, same length ×2 (not Helmholtz)",
   xFold: "notes & key points (click to expand)", c34Title: "3+4. Tongue ↔ position & timbre/range — watched together on one screen (notes collapsed)",
-  c34Tag: "Both topics share one pitch control: adjust tongue/finger above while sounding; the spectrum & range readings below follow instantly",
+  c34Tag: "Both topics share one pitch control: click/drag the left-hand mouth or the string/bottom ruler; spectrum and range follow",
   rLeg: "Absolute anchors E5(659Hz)→E6(1319)→E7(2637); tall ticks = E-major scale tones labelled by solfège (relative pitch); ′ marks the next octave",
-  aLbl: "Aperture A of the bottle mouth (bigger → higher):", hBtn: "🔊 Helmholtz test tone (aperture tuning)", hBtnStop: "⏹ Stop Helmholtz test", hHint: "Keep the tone on and drag Aperture A: bigger mouth → higher pitch (f∝√A). Volume V is the tongue slider in §1 — bigger V → lower pitch (f∝1/√V); the bottle panel shrinks/grows with it.", t5Asmall: "small A", t5Abig: "big A",
+  aLbl: "Aperture A of the bottle mouth (bigger → higher):", hBtn: "🔊 Helmholtz test tone (aperture tuning)", hBtnStop: "⏹ Stop Helmholtz test", hHint: "Click to toggle the test (not press-and-hold). Drag Aperture A in this section: bigger mouth → higher (f∝√A). Volume V is the tongue slider in §1 — bigger V → lower (f∝1/√V). This tone does not add Overblow. The bottle panel shrinks/grows with it.", t5Asmall: "small A", t5Abig: "big A",
   cur: "now", pos: "position",
+  ariaMain: "Mouth profile and sound-production chain", ariaFam: "Instrument-family comparison", ariaLog: "Three frequency rulers", ariaCmp: "Tongue versus violin fingerboard", ariaSpec: "Live spectrum", ariaRange: "Whistle range chart", ariaTerms: "Edge tone, Helmholtz, standing wave and overblow diagrams",
  }
 };
 let LANG = "zh";
@@ -556,6 +569,10 @@ function setLang(l){
     const k = el.getAttribute("data-i18n");
     if (I18N[l] && I18N[l][k] !== undefined) el.innerHTML = I18N[l][k];
   });
+  document.querySelectorAll("[data-aria-i18n]").forEach(function (el) {
+    var k = el.getAttribute("data-aria-i18n");
+    if (I18N[l] && I18N[l][k] !== undefined) el.setAttribute("aria-label", I18N[l][k]);
+  });
   const bt = document.getElementById("btnLang"); if (bt) bt.textContent = (l === "zh") ? "EN" : "中文";
   var _pt = (I18N[l].pageTitle || "").replace(/<[^>]*>/g, ""); document.title = _pt;
   var hz = document.getElementById("helpZh"), he = document.getElementById("helpEn");
@@ -563,10 +580,8 @@ function setLang(l){
   document.querySelectorAll(".xdet summary").forEach(function (s) { s.textContent = "📖 " + T("xFold"); });
   syncTexts();
   redrawAll();
+  kick();
 }
-
-
-"use strict";
 /* ==================== helpers ==================== */
 var $ = function (id) { return document.getElementById(id); };
 function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
@@ -596,14 +611,27 @@ function semisToNote(s) {
 }
 /* ==================== state ==================== */
 var S = {
-  s: 12, reg: 0, lip: 0.55, breath: 0.6, vib: 0.12, a: 0.5, helmOn: false,
+  s: 12, reg: 0, lip: 0.55, breath: 0.6, vib: 0.25, a: 0.5, helmOn: false,
   playing: false, voice: "whistle",
-  demo: null, demoSteps: null, demoT0: 0,
-  t: 0, lastT: 0,
-  runStart: performance.now()
+  demo: null, t: 0, dirty: true, _blipT: null, _helpPrev: null
 };
-function liveF0() { return s2f(S.s) * (S.reg ? 2 : 1); }
-function tongueState() { return { t: clamp(S.s / 24, 0, 1), lr: lrOfS(clamp(S.s, 0, 24)) }; }
+var rafOn = false;
+function wantAnim() { return !!(S.playing || S.demo); }
+function kick() {
+  S.dirty = true;
+  if (!rafOn) { rafOn = true; requestAnimationFrame(frame); }
+}
+function lipRatio(lip) {
+  return Math.pow(2, ((0.55 - clamp(lip, 0, 1)) * 40) / 1200);
+}
+function liveF0() { return s2f(S.s) * (S.reg ? 2 : 1) * lipRatio(S.lip); }
+function helmArel() { return 0.25 + 1.5 * clamp(S.a, 0, 1); }
+function helmVrel() { return lrOfS(clamp(S.s, 0, 24)); }
+function helmFreq() { return clamp(E5 * Math.sqrt(helmArel() / helmVrel()), 260, 7800); }
+function vibDepthHz(f0, vib) {
+  var cents = clamp(vib, 0, 1) * 80;
+  return f0 * (Math.pow(2, cents / 1200) - 1);
+}
 /* ==================== audio ==================== */
 var AC = null, ANA = null, MASTER = null;
 var WV = null, VG2 = null, NOISE = null;
@@ -652,30 +680,34 @@ function buildVoiceWhistle() {
 function updateWhistle(s, reg, lip, breath, vib, on, pure) {
   var v = WV; if (!v) return;
   var ctx = AC, t = ctx.currentTime;
-  var f0 = s2f(s) * (reg ? 2 : 1);
+  var f0 = s2f(s) * (reg ? 2 : 1) * lipRatio(lip);
   if (f0 > 7600) f0 = 7600;
   var b = clamp(breath, 0, 1);
-  for (var i = 0; i < v.oscs.length; i++) {
-    v.oscs[i].frequency.setTargetAtTime(f0 * (i + 1), t, 0.02);
-  }
-  // pure-sine / raw-jet modes (used by the timbre and glossary demos)
   var isPure = (pure === true);
   var isJet = (pure === "jet");
   var br = clamp(0.25 * lip + 0.45 * b, 0.05, 0.9);
   var amp = on ? (0.05 + 0.34 * b) : 0.0;
-  var g1 = isJet ? 0 : 1.0;
-  var g2 = (isPure || isJet) ? 0 : 0.035 + 0.16 * br;
-  var g3 = (isPure || isJet) ? 0 : 0.01 + 0.05 * br * br;
-  var g4 = (isPure || isJet) ? 0 : 0.004 + 0.02 * br * br;
+  var gs = [
+    isJet ? 0 : 1.0,
+    (isPure || isJet) ? 0 : 0.035 + 0.16 * br,
+    (isPure || isJet) ? 0 : 0.01 + 0.05 * br * br,
+    (isPure || isJet) ? 0 : 0.004 + 0.02 * br * br
+  ];
+  var ny = AC.sampleRate * 0.49;
+  for (var i = 0; i < v.oscs.length; i++) {
+    var fi = f0 * (i + 1);
+    if (fi >= ny) {
+      v.gains[i].gain.setTargetAtTime(0, t, 0.03);
+    } else {
+      v.oscs[i].frequency.setTargetAtTime(fi, t, 0.02);
+      v.gains[i].gain.setTargetAtTime(gs[i] * amp, t, 0.03);
+    }
+  }
   var nz = on ? (isJet ? 0.30 : (isPure ? 0.002 : 0.012 + 0.05 * br * br)) : 0;
-  v.gains[0].gain.setTargetAtTime(g1 * amp, t, 0.03);
-  v.gains[1].gain.setTargetAtTime(g2 * amp, t, 0.03);
-  v.gains[2].gain.setTargetAtTime(g3 * amp, t, 0.03);
-  v.gains[3].gain.setTargetAtTime(g4 * amp, t, 0.03);
   v.ng.gain.setTargetAtTime(nz, t, 0.05);
   v.bp.frequency.setTargetAtTime(isJet ? 3000 : 1200 + 2600 * b, t, 0.1);
   v.bp.Q.setTargetAtTime(isJet ? 0.3 : 0.6, t, 0.1);
-  v.vg.gain.setTargetAtTime(isJet ? 0 : (on ? vib : 0) * f0 * 0.006, t, 0.05);
+  v.vg.gain.setTargetAtTime(isJet ? 0 : (on ? vibDepthHz(f0, vib) : 0), t, 0.05);
   v.vib.frequency.setTargetAtTime(4.6 + 1.6 * vib, t, 0.1);
 }
 function buildVoiceViolin() {
@@ -688,21 +720,25 @@ function buildVoiceViolin() {
   var g = ctx.createGain(); g.gain.value = 0;
   o.connect(lp); lp.connect(g); g.connect(out); o.start();
   var vib = ctx.createOscillator(); vib.frequency.value = 5.6;
-  var vg = ctx.createGain(); vg.gain.value = 24;
+  var vg = ctx.createGain(); vg.gain.value = 0;
   vib.connect(vg); vg.connect(o.frequency); vib.start();
-  VG2 = { out: out, o: o, lp: lp, g: g };
+  VG2 = { out: out, o: o, lp: lp, g: g, vib: vib, vg: vg };
   return VG2;
 }
 function updateViolin(s, on) {
   var v = VG2; if (!v) return;
   var ctx = AC, t = ctx.currentTime;
-  var f0 = s2f(s);
+  var f0 = s2f(s) * (S.reg ? 2 : 1) * lipRatio(S.lip);
+  if (f0 > 7600) f0 = 7600;
   v.o.frequency.setTargetAtTime(f0, t, 0.03);
   v.lp.frequency.setTargetAtTime(900 + 1500 * (1 - Math.min(1, s / 24)), t, 0.1);
   v.g.gain.setTargetAtTime(on ? 0.16 : 0, t, on ? 0.05 : 0.25);
+  if (v.vg) v.vg.gain.setTargetAtTime(on ? vibDepthHz(f0, S.vib) : 0, t, 0.05);
+  if (v.vib) v.vib.frequency.setTargetAtTime(4.6 + 1.6 * S.vib, t, 0.1);
 }
 function setVoiceOn(on, forceVoice) {
   if (!ensureAudio()) return;
+  if (on && forceVoice) S.helmOn = false;
   var use = forceVoice || S.voice;
   S.playing = on;
   var isW = (use === "whistle" || use === "sine" || use === "jet");
@@ -713,8 +749,9 @@ function setVoiceOn(on, forceVoice) {
   var pf = use === "sine" ? true : (use === "jet" ? "jet" : false);
   if (WV) updateWhistle(S.s, S.reg, S.lip, S.breath, S.vib, on && isW, pf);
   if (VG2) updateViolin(S.s, on && isV);
+  kick();
 }
-function stopAllVoice() { S.helmOn = false; stopDemo(); S.playing = false; var _pf = S.voice === "sine" ? true : (S.voice === "jet" ? "jet" : false); if (WV) updateWhistle(S.s, S.reg, S.lip, S.breath, S.vib, false, _pf); if (VG2) updateViolin(S.s, false); }
+function stopAllVoice() { S.helmOn = false; stopDemo(); S.playing = false; var _pf = S.voice === "sine" ? true : (S.voice === "jet" ? "jet" : false); if (WV) updateWhistle(S.s, S.reg, S.lip, S.breath, S.vib, false, _pf); if (VG2) updateViolin(S.s, false); kick(); }
 
 /* ==================== mouth geometry (local frame ~940x640) ==================== */
 var ROOF_P0 = { x: 214, y: 300 }, ROOF_C1 = { x: 400, y: 314 }, ROOF_C2 = { x: 560, y: 328 }, ROOF_P1 = { x: 700, y: 344 };
@@ -841,11 +878,6 @@ function drawMouthLocal(ctx, o) {
   tg.addColorStop(0, "#c9826f"); tg.addColorStop(0.5, "#b96f5e"); tg.addColorStop(1, "#9e5f55");
   ctx.fillStyle = tg; ctx.fill();
   ctx.strokeStyle = "#eda28b"; ctx.lineWidth = 1.6; ctx.stroke();
-  /* tongue texture hint */
-  ctx.strokeStyle = "rgba(237,162,139,0.25)"; ctx.lineWidth = 1;
-  ctx.beginPath();
-  for (var x3 = 300; x3 < 640; x3 += 34) { ctx.moveTo(x3 + 10, roofY(0) * 0 + 480); }
-  ctx.stroke();
   /* ---- soft palate (velum, raised) ---- */
   ctx.strokeStyle = "#c98f6f"; ctx.lineWidth = 5;
   ctx.beginPath(); ctx.moveTo(560, roofY(560) + 3); ctx.bezierCurveTo(620, roofY(620) - 6, 668, 306, 700, 296); ctx.stroke();
@@ -863,7 +895,6 @@ function drawMouthLocal(ctx, o) {
   ctx.beginPath();
   for (var st = 0; st <= 24; st++) {
     var wx = wallXOf(st);
-    var deg = ((st % 12 + 12) % 12);
     ctx.moveTo(wx, bracketY - 4);
     ctx.lineTo(wx, bracketY + 4);
   }
@@ -886,7 +917,7 @@ function drawMouthLocal(ctx, o) {
     ctx.beginPath();
     var x0w = 222, lenW = wallX - x0w;
     for (var wx2 = x0w; wx2 <= wallX; wx2 += 4) {
-      var ph = Math.PI * m * ((wx2 - x0w) / (lenW || 1)) * 0.5;
+      var ph = Math.PI * m * ((wx2 - x0w) / (lenW || 1));
       var yy2 = midCavityY(wx2, s) - Math.sin(ph) * 16 * (0.55 + 0.45 * Math.sin(tt / 240));
       if (wx2 === x0w) ctx.moveTo(wx2, yy2); else ctx.lineTo(wx2, yy2);
     }
@@ -911,12 +942,14 @@ function drawMouthLocal(ctx, o) {
     ctx.beginPath(); ctx.moveTo(202, openTop + 3); ctx.lineTo(64, 300 - openR * 0.3);
     ctx.moveTo(202, openBot - 3); ctx.lineTo(70, 306 + openR * 0.3); ctx.stroke();
   }
-  ctx.strokeStyle = "rgba(98,215,255,0.9)"; ctx.lineWidth = 1.7;
-  for (var vi = 0; vi < 2; vi++) {
-    var vc = vi === 0 ? { x: 148, y: openBot + 4 } : { x: 122, y: openTop - 8 };
-    ctx.beginPath();
-    ctx.arc(vc.x, vc.y, 7, tt / 300 + vi * Math.PI, tt / 300 + vi * Math.PI + 4.6);
-    ctx.stroke();
+  if (playing) {
+    ctx.strokeStyle = "rgba(98,215,255,0.9)"; ctx.lineWidth = 1.7;
+    for (var vi = 0; vi < 2; vi++) {
+      var vc = vi === 0 ? { x: 148, y: openBot + 4 } : { x: 122, y: openTop - 8 };
+      ctx.beginPath();
+      ctx.arc(vc.x, vc.y, 7, tt / 300 + vi * Math.PI, tt / 300 + vi * Math.PI + 4.6);
+      ctx.stroke();
+    }
   }
   /* ---- air flow particles ---- */
   if (playing || o.particlesAlways) {
@@ -1248,7 +1281,6 @@ function drawLog() {
       var up = oct ? 17 : (isScale ? 12 : 6);
       ctx.beginPath(); ctx.moveTo(x, y - up); ctx.lineTo(x, y + up); ctx.stroke();
       if (isScale) {
-        /* 上：绝对音名（E5…E7 全音阶音）；下：唱名（相对音高） */
         var octMark = st >= 24 ? "″" : (st >= 12 ? "′" : "");
         var solIdx = SCALE.indexOf(pc);
         if (oct) {
@@ -1374,8 +1406,14 @@ function cmpSFromXY(ev) {
   }
   if (my > 90 && my < 360 && mx > 810 && mx < 1170) {
     var nx = 810, bx = 1170;
-    var ratio = clamp(1 - (mx - nx) / (bx - nx), 0.26, 1);
-    return clamp(-12 * Math.log2(ratio), 0, 24);
+    var ratio = clamp(1 - (mx - nx) / (bx - nx), 0.25, 1);
+    return clamp(-12 * Math.log2(Math.max(ratio, 0.25)), 0, 24);
+  }
+  var kM = 0.6, oxM = 20, oyM = 96;
+  var lxM = (mx - oxM) / kM, lyM = (my - oyM) / kM;
+  if (lxM > 214 && lxM < 720 && lyM > 250 && lyM < 520) {
+    var lrM = 0.25 + 0.75 * (clamp(lxM, 230, 700) - 230) / 470;
+    return clamp(-12 * Math.log2(Math.max(lrM, 0.25)), 0, 24);
   }
   return null;
 }
@@ -1409,7 +1447,7 @@ function drawSpec() {
     txt(ctx, noteName(eAnch[ea]), ex, y0 + 12, "#7be0a0", 9.5, "center", true);
     txt(ctx, (Math.round(eAnch[ea])) + " Hz", ex, y0 + 24, "#6f81a3", 8.5, "center", false);
   }
-  var f0 = liveF0();
+  var f0 = S.helmOn ? helmFreq() : liveF0();
   var playing = !!(S.playing || S.demo);
   if (playing && ANA && AC && AC.state === "running") {
     var data = new Uint8Array(ANA.frequencyBinCount);
@@ -1417,8 +1455,7 @@ function drawSpec() {
     var sr = AC.sampleRate;
     ctx.strokeStyle = "#ffcf6e"; ctx.lineWidth = 2;
     ctx.beginPath();
-    var started = false;
-    var prevX = null, prevY = null;
+    var prevX = null;
     for (var fx = x0; fx <= x0 + w; fx += 3) {
       var fl = fmin * Math.pow(fmax / fmin, (fx - x0) / w);
       var fr = fl * Math.pow(fmax / fmin, 3 / w);
@@ -1437,6 +1474,8 @@ function drawSpec() {
     }
     ctx.stroke();
     txt(ctx, T("specFund"), x0, y0 + h + 30, "#7be0a0", 10);
+    txt(ctx, T("specH2"), x0 + 220, y0 + h + 30, "#8fa3c4", 10);
+    txt(ctx, T("specNoise"), x0 + 400, y0 + h + 30, "#6f81a3", 10);
   } else {
     /* expected pure-tone spectrum preview */
     var peaks = [[f0, 0.95], [f0 * 2, 0.06], [f0 * 3, 0.02], [f0 * 4, 0.01]];
@@ -1455,6 +1494,7 @@ function drawSpec() {
     }
     ctx.stroke();
     txt(ctx, T("specIdle"), 24, y0 + h + 30, "#6f81a3", 11);
+    txt(ctx, T("specFund") + " · " + T("specH2") + " · " + T("specNoise"), 24, y0 + h + 46, "#6f81a3", 10);
   }
   /* fundamental marker */
   if (f0 > fmin * 1.05 && f0 < fmax * 0.95) {
@@ -1538,7 +1578,7 @@ function drawTerms() {
   bgc(ctx, cv.width, cv.height);
   var dpr = cv._dpr || 1;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  var tm = performance.now() / 1000;
+  var tm = (S.playing || S.demo) ? (performance.now() / 1000) : 0;
   var cw = 286, gxs = [20, 320, 620, 920];
   var capt = function (s, x, y, col) { txt(ctx, s, x, y, col || "#cfd9ea", 11, "left", false); };
   var title = function (s, x) { txt(ctx, s, x, 22, "#ffcf6e", 14, "left", true); };
@@ -1589,8 +1629,7 @@ function drawTerms() {
   var sT = clamp(S.s, 0, 24) / 24;          // 0 = large volume (low) ... 1 = small (high)
   var lipA = clamp(S.a, 0, 1);             // aperture size (A) from the §5 slider
   var sc = 1 - sT * 0.45;                   // belly scale: shrinks as pitch rises
-  var neckHalf = 7 + lipA * 7;              // bottle mouth (A) follows the lip slider
-  var puls = 1 + Math.sin(tm * 4) * 0.05;
+  var neckHalf = 7 + lipA * 7;
   ctx.strokeStyle = "#62d7ff"; ctx.lineWidth = 2.2;
   ctx.beginPath();
   ctx.moveTo(c2 - neckHalf, 88); ctx.lineTo(c2 - neckHalf, 120);
@@ -1619,7 +1658,7 @@ function drawTerms() {
   txt(ctx, "A", c2 + neckHalf + 8, 88, "#7be0a0", 13, "left", true);
   txt(ctx, "ℓ", c2 - neckHalf - 8, 88, "#ffcf6e", 13, "right", true);
   var hf0 = helmFreq();
-  txt(ctx, "≈ " + noteName(hf0) + " " + Math.round(hf0) + " Hz  (A×" + Math.pow(2, S.a - 0.5).toFixed(2) + ")", gxs[1] + 10, 46, "#ffcf6e", 11, "left", true);
+  txt(ctx, "≈ " + noteName(hf0) + " " + Math.round(hf0) + " Hz  √(A/V)", gxs[1] + 10, 46, "#ffcf6e", 11, "left", true);
   txt(ctx, (S.a < 0.45 ? T("t5Asmall") : S.a > 0.55 ? T("t5Abig") : "") + "  " + (sT < 0.5 ? T("t5Vbig") : T("t5Vsmall")), gxs[1] + 10, 62, "#7be0a0", 10, "left", true);
   capt(T("t5b1"), gxs[1] + 10, 220);
   capt(T("t5b2"), gxs[1] + 10, 240);
@@ -1713,22 +1752,37 @@ function syncTexts() {
   var b5 = $("valN2"); if (b5) b5.textContent = r2(S.s);
   var b6 = $("valA"); if (b6) b6.textContent = r2(S.a);
   var hb = $("helBtn"); if (hb) hb.textContent = S.helmOn ? T("hBtnStop") : T("hBtn");
+  function pressed(id, on, extra) {
+    var el = $(id);
+    if (!el) return;
+    el.classList.toggle("on", !!on);
+    if (extra) el.classList.toggle(extra, !!on);
+    el.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+  var latched = !!(S.playing && !S.demo);
+  pressed("playBtn", latched, "stop");
+  pressed("regBtn", !!S.reg);
+  pressed("helBtn", !!S.helmOn);
+  var demoMap = [["demoScaleBtn", "scale"], ["demoGlissBtn", "gliss"], ["demoSongBtn", "song"], ["bOct", "oct"], ["bGliss2", "gliss"], ["cAltBtn", "alt"], ["dToneCycle", "tone"], ["dRangeX", "rangex"], ["dEdge", "edge"], ["dBottle", "bottle"], ["dMode", "mode"], ["dOverb", "overb"]];
+  for (var di = 0; di < demoMap.length; di++) pressed(demoMap[di][0], S.demo === demoMap[di][1]);
+  var timbreOn = latched && !S.helmOn;
+  pressed("cWhistleBtn", timbreOn && S.voice === "whistle");
+  pressed("cViolinBtn", timbreOn && S.voice === "violin");
+  pressed("btnVoiceSine", timbreOn && S.voice === "sine");
+  pressed("btnVoiceWhistle", timbreOn && S.voice === "whistle");
+  pressed("btnVoiceViolin", timbreOn && S.voice === "violin");
 }
 function syncSliderFromState() {
   var a = $("sldS"), b = $("sldN2");
   if (a && Math.abs(parseFloat(a.value) - S.s) > 0.001) a.value = String(S.s);
   if (b && Math.abs(parseFloat(b.value) - S.s) > 0.001) b.value = String(S.s);
 }
-function redrawAll() { drawStatic(); drawMain(); syncTexts(); }
-function helmFreq() {
-  var f = s2f(S.s) * (S.reg ? 2 : 1) * Math.pow(2, 1.0 * (S.a - 0.5));
-  return clamp(f, 260, 7800);
-}
+function redrawAll() { drawStatic(); drawMain(); syncTexts(); S.dirty = true; }
 function updateAudioFromState() {
   if (!AC || !S.playing) return;
   if (S.helmOn) {
     buildVoiceWhistle();
-    if (WV) { WV.out.gain.setTargetAtTime(1, AC.currentTime, 0.05); updateWhistle(f2s(helmFreq()), 0, S.lip, S.breath, S.vib, true, false); }
+    if (WV) { WV.out.gain.setTargetAtTime(1, AC.currentTime, 0.05); updateWhistle(f2s(helmFreq()), 0, 0.55, S.breath, S.vib, true, false); }
     if (VG2) VG2.out.gain.setTargetAtTime(0, AC.currentTime, 0.12);
     return;
   }
@@ -1748,6 +1802,7 @@ function setPitch(sv) {
   drawStatic();
   drawMain();
   updateAudioFromState();
+  kick();
 }
 /* ==================== demos ==================== */
 var DR = null;
@@ -1755,6 +1810,7 @@ var MEL_DEGS = [3, 3, 4, 5, 5, 4, 3, 2, 1, 1, 2, 3, 3, 2, 2, 3, 3, 4, 5, 5, 4, 3
 var DEG_SEMI = [0, 2, 4, 5, 7];
 function stopDemo() {
   if (DR && DR.changedReg) S.reg = DR.initReg;
+  if (DR && DR.changedHelm) S.helmOn = DR.initHelm;
   DR = null; S.demo = null;
 }
 function startDemo(type) {
@@ -1768,8 +1824,15 @@ function startDemo(type) {
     DR.dur = 4.3;
   } else if (type === "scale") {
     DR.steps = [];
-    for (var i = 0; i <= 24; i++) DR.steps.push([i * 0.21, i]);
-    DR.dur = 24 * 0.21 + 0.6;
+    var tAccS = 0;
+    for (var oct = 0; oct <= 1; oct++) {
+      for (var si = 0; si < SCALE.length; si++) {
+        DR.steps.push([tAccS, SCALE[si] + 12 * oct]);
+        tAccS += 0.32;
+      }
+    }
+    DR.steps.push([tAccS, 24]);
+    DR.dur = tAccS + 0.7;
   } else if (type === "gliss") {
     DR.kind = "ramp"; DR.a = 0; DR.b = 24; DR.dur = 4.4; DR.hold = 0.6;
   } else if (type === "song") {
@@ -1794,24 +1857,25 @@ function startDemo(type) {
     DR.steps.push([6.1, 24, 0]);
     DR.dur = 7.4;
   } else if (type === "edge") {
-    /* §⑤①: first only the raw jet (no cavity = hiss), then the cavity locks a pitch */
     DR.steps = [[0, 12, 0, "jet"], [1.9, 12, 0, "whistle"]];
     DR.dur = 3.6;
   } else if (type === "bottle") {
-    /* §⑤②: sweep the effective cavity volume big -> small (bottle effect) */
     DR.kind = "ramp"; DR.a = 0; DR.b = 24; DR.dur = 3.2; DR.hold = 0.4;
+    S.helmOn = true;
+    DR.changedHelm = true;
+    updateAudioFromState();
   } else if (type === "mode") {
-    /* §⑤③: same cavity, 1st partial then 2nd partial (octave, node appears) */
     DR.steps = [[0, 12, 0], [1.6, 12, 1], [3.1, 12, 0]];
     DR.dur = 4.2;
   } else if (type === "overb") {
-    /* §⑤④: fixed tongue, overblow -> x2 octave and back */
     var s0 = clamp(S.s, 0, 24);
     DR.steps = [[0, s0, 0], [1.3, s0, 1], [2.6, s0, 0]];
     DR.dur = 3.9;
   }
-  DR.initReg = S.reg; DR.changedReg = false;
+  DR.initReg = S.reg; DR.changedReg = !!DR.changedReg;
+  DR.initHelm = false;
   S.demo = type;
+  kick();
 }
 function stepDemo() {
   if (!DR) return;
@@ -1861,19 +1925,32 @@ function mainPointer(ev) {
     setPitch(sv);
   } else if (mx >= geoP.x0 && mx <= geoP.x1 && my >= geoP.nutY && my <= geoP.brY) {
     var yy = clamp(my, geoP.nutY, geoP.brY);
-    var ratio = clamp(1 - (yy - geoP.nutY) / (geoP.brY - geoP.nutY), 0.26, 1);
-    setPitch(clamp(-12 * Math.log2(ratio), 0, 24));
+    var ratio = clamp(1 - (yy - geoP.nutY) / (geoP.brY - geoP.nutY), 0.25, 1);
+    setPitch(clamp(-12 * Math.log2(Math.max(ratio, 0.25)), 0, 24));
   }
 }
 function blipPitch(sv) {
   S.s = clamp(sv, 0, 24);
-  if (S.playing && !S.demo) { setPitch(S.s); return; }
+  syncSliderFromState();
+  syncTexts();
+  drawStatic();
+  drawMain();
+  if (S.playing && !S.demo && !S._blipT) { setPitch(S.s); return; }
   if (!ensureAudio()) return;
   stopDemo(); S.helmOn = false; S.voice = "whistle";
   setVoiceOn(true, "whistle");
   if (S._blipT) clearTimeout(S._blipT);
-  S._blipT = setTimeout(function () { if (S.playing && !S.demo) { S.playing = false; if (WV) updateWhistle(S.s, S.reg, S.lip, S.breath, S.vib, false, false); syncTexts(); } }, 1100);
-  syncTexts();
+  S._blipT = setTimeout(function () {
+    S._blipT = null;
+    if (S.playing && !S.demo) {
+      S.playing = false;
+      if (WV) updateWhistle(S.s, S.reg, S.lip, S.breath, S.vib, false, false);
+      if (VG2) updateViolin(S.s, false);
+      syncTexts();
+      kick();
+    }
+  }, 1100);
+  kick();
 }
 function logPointer(ev) {
   var sv = logSFromXY(ev);
@@ -1885,14 +1962,24 @@ function cmpPointer(ev) {
 }
 /* ==================== main loop ==================== */
 function frame() {
-  requestAnimationFrame(frame);
   stepDemo();
-  if (S.playing) { updateAudioFromState(); syncTexts(); }
-  if (S.playing || S.demo) { drawStatic(); }
-  drawMain();
-  drawSpec();
-  drawTerms();
-  S.t = (performance.now()) % 1000000;
+  var hot = wantAnim();
+  if (hot) {
+    if (S.playing) { updateAudioFromState(); syncTexts(); }
+    drawStatic();
+    drawMain();
+    drawSpec();
+    S.t = performance.now() % 1000000;
+    rafOn = true;
+    requestAnimationFrame(frame);
+    return;
+  }
+  if (S.dirty) {
+    S.dirty = false;
+    redrawAll();
+    drawSpec();
+  }
+  rafOn = false;
 }
 /* ==================== events & init ==================== */
 function foldSetup() {
@@ -1923,16 +2010,47 @@ function toggleHelm() {
     if (!ensureAudio()) return;
     S.helmOn = true; S.voice = "whistle"; S.playing = true;
     updateAudioFromState();
+    kick();
   }
   syncTexts();
 }
+function helpOpen() {
+  S._helpPrev = document.activeElement;
+  $("scrim").classList.add("show");
+  $("helpPanel").classList.add("show");
+  $("helpClose").focus();
+}
+function helpClose() {
+  $("scrim").classList.remove("show");
+  $("helpPanel").classList.remove("show");
+  if (S._helpPrev && S._helpPrev.focus) {
+    try { S._helpPrev.focus(); } catch (e) {}
+  }
+  S._helpPrev = null;
+}
 function bind() {
   $("btnLang").addEventListener("click", function () { setLang(LANG === "zh" ? "en" : "zh"); });
-  $("btnHelp").addEventListener("click", function () { $("scrim").classList.add("show"); $("helpPanel").classList.add("show"); });
-  function closeHelp() { $("scrim").classList.remove("show"); $("helpPanel").classList.remove("show"); }
-  $("helpClose").addEventListener("click", closeHelp);
-  $("scrim").addEventListener("click", closeHelp);
+  $("btnHelp").addEventListener("click", helpOpen);
+  $("helpClose").addEventListener("click", helpClose);
+  $("scrim").addEventListener("click", helpClose);
+  $("helpPanel").addEventListener("keydown", function (ev) {
+    if (ev.key !== "Tab") return;
+    var nodes = $("helpPanel").querySelectorAll("button, [href], input, select, textarea");
+    if (!nodes.length) return;
+    var first = nodes[0], last = nodes[nodes.length - 1];
+    if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+    else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+  });
   $("playBtn").addEventListener("click", function () {
+    if (S._blipT) {
+      clearTimeout(S._blipT); S._blipT = null;
+      stopDemo();
+      if (!ensureAudio()) return;
+      S.helmOn = false; S.voice = "whistle";
+      setVoiceOn(true, "whistle");
+      syncTexts();
+      return;
+    }
     if (S.playing && !S.demo) { stopAllVoice(); }
     else {
       stopDemo();
@@ -1946,6 +2064,7 @@ function bind() {
     S.reg = S.reg ? 0 : 1;
     if (S.playing) updateAudioFromState();
     redrawAll();
+    kick();
   });
   var demoBtns = [
     ["demoScaleBtn", "scale"], ["demoGlissBtn", "gliss"], ["demoSongBtn", "song"],
@@ -1960,7 +2079,10 @@ function bind() {
     });
   });
   function playVoice(v) {
-    if (S.playing && S.voice === v && !S.demo) { stopAllVoice(); }
+    if (S._blipT) { clearTimeout(S._blipT); S._blipT = null; }
+    var wasHelm = S.helmOn;
+    S.helmOn = false;
+    if (!wasHelm && S.playing && S.voice === v && !S.demo) { stopAllVoice(); }
     else {
       stopDemo();
       if (!ensureAudio()) return;
@@ -1977,9 +2099,9 @@ function bind() {
   var sliders = [
     ["sldS", function (v) { setPitch(parseFloat(v)); }],
     ["sldN2", function (v) { setPitch(parseFloat(v)); }],
-    ["sldLip", function (v) { S.lip = parseFloat(v); if (S.playing) updateAudioFromState(); redrawAll(); }],
-    ["sldBreath", function (v) { S.breath = parseFloat(v); if (S.playing) updateAudioFromState(); syncTexts(); }],
-    ["sldVib", function (v) { S.vib = parseFloat(v); if (S.playing) updateAudioFromState(); syncTexts(); }]
+    ["sldLip", function (v) { S.lip = parseFloat(v); if (S.playing) updateAudioFromState(); redrawAll(); kick(); }],
+    ["sldBreath", function (v) { S.breath = parseFloat(v); if (S.playing) updateAudioFromState(); syncTexts(); kick(); }],
+    ["sldVib", function (v) { S.vib = parseFloat(v); if (S.playing) updateAudioFromState(); syncTexts(); kick(); }]
   ];
   sliders.forEach(function (pr) {
     var el = $(pr[0]);
@@ -1989,7 +2111,8 @@ function bind() {
   if (aS) aS.addEventListener("input", function () {
     S.a = parseFloat(aS.value);
     if (S.playing) updateAudioFromState();
-    syncTexts();
+    redrawAll();
+    kick();
   });
   var hB = $("helBtn");
   if (hB) hB.addEventListener("click", toggleHelm);
@@ -1998,8 +2121,21 @@ function bind() {
   var cv2 = $("cvLog"); cv2.addEventListener("pointerdown", logPointer);
   var cv3 = $("cvCmp"); cv3.addEventListener("pointerdown", cmpPointer);
   document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape") { helpClose(); return; }
+    if ($("helpPanel").classList.contains("show")) return;
+    var tag = (ev.target && ev.target.tagName) || "";
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
     if (ev.key === "ArrowLeft" || ev.key === "ArrowDown") { ev.preventDefault(); setPitch(S.s - 1); }
     if (ev.key === "ArrowRight" || ev.key === "ArrowUp") { ev.preventDefault(); setPitch(S.s + 1); }
+  });
+  var rzT = 0;
+  window.addEventListener("resize", function () {
+    clearTimeout(rzT);
+    rzT = setTimeout(function () { prepCrisp(); redrawAll(); drawSpec(); kick(); }, 120);
+  });
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) { rafOn = false; }
+    else { kick(); }
   });
 }
 function prepCrisp() {
@@ -2024,7 +2160,7 @@ function init() {
   setLang("zh");
   foldSetup();
   redrawAll();
-  requestAnimationFrame(frame);
+  drawSpec();
 }
 init();
 
