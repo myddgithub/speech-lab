@@ -3,12 +3,12 @@
 import { spawn } from 'node:child_process';
 import { readFileSync, rmSync } from 'node:fs';
 const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-const url = process.argv[2] || 'file:///D:/mypy/shengmu-anim/index.html';
+const url = process.argv[2] || 'file:///D:/mypy/speech-lab/shengmu-anim/index.html';
 const exprArg = process.argv[3] || 'document.title';
 const expr = exprArg.startsWith('@') ? readFileSync(exprArg.slice(1), 'utf8') : exprArg;
 const wait = parseInt(process.argv[4] || '3500');
 const port = 9400 + Math.floor(Math.random() * 300);
-const profile = 'D:/mypy/shengmu-anim/tools/.cdp-' + port;
+const profile = 'D:/mypy/speech-lab/shengmu-anim/tools/.cdp-' + port;
 const chrome = spawn(CHROME, [
   '--headless=new', '--no-sandbox', '--disable-gpu',
   '--remote-debugging-port=' + port,
